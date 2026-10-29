@@ -1,4 +1,4 @@
-// Founder OS - Appendix E Step 2: Typed Local Note Repository (Dexie / IndexedDB)
+// Founder OS - local Human Vault / Machine Vault / append-only revisions.
 import Dexie, { type Table } from "dexie";
 
 export type Note = {
@@ -12,6 +12,25 @@ export type Note = {
 
 export type PrincipalRole = "human" | "machine";
 
+export type HumanRevision = {
+  noteId: string;
+  revision: number;
+  content: string;
+  projectId: string;
+  vault: "human";
+  updatedAt: string;
+};
+
+export type SettingRow = {
+  key: string;
+  value: string;
+};
+
+/** Read at call time so a SessionContext can swap the signed-in principal. */
+export type SessionSource = {
+  principal: PrincipalRole;
+};
+
 export interface NoteRepository {
   get(id: string): Promise<Note | undefined>;
   saveHumanEdit(note: Note, principal?: PrincipalRole): Promise<void>;
@@ -19,42 +38,130 @@ export interface NoteRepository {
   listByProject(projectId: string): Promise<Note[]>;
 }
 
-export class FounderOSLocalDatabase extends Dexie {
-  notes!: Table<Note, string>;
+const LEGACY_NOTES = "id, projectId, vault, revision, updatedAt";
 
-  constructor() {
-    super("FounderOSLocalDB");
+export class FounderOSLocalDatabase extends Dexie {
+  humanNotes!: Table<Note, string>;
+  humanRevisions!: Table<HumanRevision, [string, number]>;
+  machineNotes!: Table<Note, string>;
+  settings!: Table<SettingRow, string>;
+
+  constructor(name = "FounderOSLocalDB") {
+    super(name);
     this.version(1).stores({
-      notes: "id, projectId, vault, revision, updatedAt",
+      notes: LEGACY_NOTES,
     });
+    this.version(2)
+      .stores({
+        notes: null,
+        humanNotes: "id, projectId, vault, revision, updatedAt",
+        humanRevisions: "[noteId+revision], noteId",
+        machineNotes: "id, projectId, vault, revision, updatedAt",
+        settings: "key",
+      })
+      .upgrade(async (tx) => {
+        const legacy = await tx.table("notes").toArray();
+        for (const row of legacy as Note[]) {
+          if (row.vault === "machine") {
+            await tx.table("machineNotes").put(row);
+            continue;
+          }
+          const human: Note = { ...row, vault: "human" };
+          await tx.table("humanNotes").put(human);
+          const revision: HumanRevision = {
+            noteId: human.id,
+            revision: human.revision,
+            content: human.content,
+            projectId: human.projectId,
+            vault: "human",
+            updatedAt: human.updatedAt,
+          };
+          await tx.table("humanRevisions").put(revision);
+        }
+      });
   }
 }
 
 export class IndexedDBNoteRepository implements NoteRepository {
-  constructor(private readonly db: FounderOSLocalDatabase) {}
+  constructor(
+    private readonly db: FounderOSLocalDatabase,
+    private readonly session: SessionSource,
+  ) {}
 
-  async get(id: string): Promise<Note | undefined> {
-    return this.db.notes.get(id);
+  private actor(explicit?: PrincipalRole): PrincipalRole {
+    return explicit ?? this.session.principal;
   }
 
-  async saveHumanEdit(note: Note, principal: PrincipalRole = "human"): Promise<void> {
-    if (principal !== "human") {
+  async get(id: string): Promise<Note | undefined> {
+    await this.db.open();
+    const human = await this.db.humanNotes.get(id);
+    if (human) return human;
+    return this.db.machineNotes.get(id);
+  }
+
+  async getRevision(noteId: string, revision: number): Promise<HumanRevision | undefined> {
+    await this.db.open();
+    return this.db.humanRevisions.get([noteId, revision]);
+  }
+
+  async saveHumanEdit(note: Note, principal?: PrincipalRole): Promise<void> {
+    const actor = this.actor(principal);
+    if (actor !== "human") {
       throw new Error("SECURITY_BOUNDARY_VIOLATION: Non-human principal cannot write to Human Vault.");
     }
     if (note.vault !== "human") {
       throw new Error("VAULT_MISMATCH: saveHumanEdit only accepts human vault records.");
     }
-    await this.db.notes.put(note);
+    if (!note.id.startsWith("HN-")) {
+      throw new Error("ID_PREFIX: Human Vault ids must start with HN-.");
+    }
+
+    await this.db.open();
+    const existing = await this.db.humanNotes.get(note.id);
+    const expected = existing ? existing.revision + 1 : 1;
+    const prior = await this.db.humanRevisions.get([note.id, note.revision]);
+    if (note.revision !== expected || prior) {
+      throw new Error("REVISION_CONFLICT");
+    }
+
+    const revision: HumanRevision = {
+      noteId: note.id,
+      revision: note.revision,
+      content: note.content,
+      projectId: note.projectId,
+      vault: "human",
+      updatedAt: note.updatedAt,
+    };
+    await this.db.transaction("rw", this.db.humanNotes, this.db.humanRevisions, async () => {
+      await this.db.humanRevisions.add(revision);
+      await this.db.humanNotes.put(note);
+    });
   }
 
-  async saveMachineOutput(note: Note, principal: PrincipalRole = "machine"): Promise<void> {
+  async saveMachineOutput(note: Note, principal?: PrincipalRole): Promise<void> {
+    void principal;
     if (note.vault !== "machine") {
       throw new Error("SECURITY_BOUNDARY_VIOLATION: Machine output must reside in Machine Vault.");
     }
-    await this.db.notes.put(note);
+    await this.db.open();
+    const humanHit = await this.db.humanNotes.get(note.id);
+    if (humanHit || note.id.startsWith("HN-")) {
+      throw new Error("SECURITY_BOUNDARY_VIOLATION: Machine output cannot write a Human Vault id.");
+    }
+    if (!note.id.startsWith("MN-")) {
+      throw new Error("ID_PREFIX: Machine Vault ids must start with MN-.");
+    }
+    await this.db.machineNotes.put(note);
   }
 
+  /** Human Vault only. Machine notes stay in listMachineByProject so the layers never merge. */
   async listByProject(projectId: string): Promise<Note[]> {
-    return this.db.notes.where("projectId").equals(projectId).toArray();
+    await this.db.open();
+    return this.db.humanNotes.where("projectId").equals(projectId).toArray();
+  }
+
+  async listMachineByProject(projectId: string): Promise<Note[]> {
+    await this.db.open();
+    return this.db.machineNotes.where("projectId").equals(projectId).toArray();
   }
 }

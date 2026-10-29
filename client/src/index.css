@@ -1,0 +1,452 @@
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("./fonts/PressStart2P-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--night);
+  color: var(--paper);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+.wordmark,
+.continue,
+.toggle [role="tab"] {
+  font-family: "Press Start 2P", monospace;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.7;
+}
+
+h1 {
+  font-size: 16px;
+  margin: 0;
+}
+
+h2 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  background: var(--slate);
+  color: var(--paper);
+  border: 3px solid var(--darkwood);
+  min-height: 48px;
+  min-width: 48px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+a.text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 8px 14px;
+  background: var(--slate);
+  color: var(--paper);
+  text-decoration: none;
+  border: 3px solid var(--darkwood);
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+:focus-visible {
+  outline: 3px solid var(--flame);
+  outline-offset: 2px;
+}
+
+.sprite {
+  image-rendering: pixelated;
+  display: block;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--night);
+  color: var(--paper);
+}
+
+.offline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 16px;
+  background: var(--slate);
+  color: var(--paper);
+  border-bottom: 4px solid var(--flame);
+}
+
+.splash {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 40px;
+}
+
+.splash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  text-align: center;
+  max-width: 760px;
+}
+
+.continue {
+  min-width: 220px;
+  min-height: 64px;
+  padding: 16px 28px;
+  background: var(--ember);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
+  font-size: 12px;
+}
+
+.hint {
+  font-size: 16px;
+}
+
+.app[data-layout="desktop"] .splash-card {
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--wood);
+  padding: 48px 72px 40px;
+}
+
+.app[data-layout="desktop"] .splash-card .hint {
+  color: var(--darkwood);
+}
+
+.hall {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 12px;
+}
+
+.rail {
+  display: none;
+}
+
+.stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.compact-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stage-title {
+  display: none;
+}
+
+.door-wrap {
+  flex: 1;
+}
+
+.door-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.door {
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  border: 3px solid var(--wood);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px 16px;
+}
+
+.door-name {
+  font-family: system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.toggle-dock {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  background: var(--night);
+  border-top: 4px solid var(--darkwood);
+}
+
+.toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: min(100%, 640px);
+  height: 48px;
+}
+
+.toggle [role="tab"] {
+  height: 48px;
+  min-height: 48px;
+  font-size: 12px;
+  background: var(--slate);
+  color: var(--paper);
+}
+
+.toggle [role="tab"] + [role="tab"] {
+  border-left-width: 0;
+}
+
+.toggle [aria-selected="true"] {
+  background: var(--ember);
+  color: var(--night);
+}
+
+.app[data-layout="landscape"] .door-grid,
+.app[data-layout="desktop"] .door-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.app[data-layout="landscape"] .hall {
+  padding: 12px 20px 8px;
+}
+
+.app[data-layout="desktop"] .hall {
+  display: flex;
+  flex-direction: column;
+  margin-left: 300px;
+  padding: 0;
+  min-height: calc(100vh - 72px);
+  background: var(--paper);
+  color: var(--night);
+}
+
+.app[data-layout="desktop"] .rail {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 36px 28px;
+  border-right: 4px solid var(--darkwood);
+  background: var(--night);
+  color: var(--paper);
+}
+
+.app[data-layout="desktop"] .rail-copy {
+  max-width: 26ch;
+  color: var(--paper);
+}
+
+.app[data-layout="desktop"] .stage {
+  flex: 1;
+  background: var(--paper);
+  color: var(--night);
+  padding: 36px 40px 28px;
+}
+
+.app[data-layout="desktop"] .rail .wordmark {
+  font-size: 12px;
+}
+
+.app[data-layout="desktop"] .compact-brand,
+.app[data-layout="desktop"] .stage-settings {
+  display: none;
+}
+
+.app[data-layout="desktop"] .stage-title {
+  display: block;
+  margin: 0;
+}
+
+.app[data-layout="desktop"] .stage-head {
+  margin-bottom: 28px;
+}
+
+.app[data-layout="desktop"] .door {
+  background: var(--paper);
+}
+
+.app[data-layout="desktop"] .offline {
+  margin-left: 300px;
+}
+
+.app[data-layout="desktop"] .toggle-dock {
+  margin-left: 300px;
+  background: var(--paper);
+  border-top: 4px solid var(--wood);
+}
+
+.app[data-layout="desktop"] .toggle {
+  width: min(100%, 420px);
+}
+
+.app[data-layout="desktop"] .toggle [role="tab"] {
+  background: var(--paper);
+  color: var(--night);
+}
+
+.app[data-layout="desktop"] .toggle [aria-selected="true"] {
+  background: var(--ember);
+  color: var(--night);
+}
+
+.stub {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 20px 40px;
+}
+
+.app[data-layout="desktop"] .stub {
+  width: min(880px, calc(100% - 48px));
+  margin: 32px auto;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--wood);
+  padding: 32px;
+}
+
+.sheet {
+  position: relative;
+  width: calc(32 * 8px);
+  max-width: 100%;
+}
+
+.sheet-copy {
+  position: absolute;
+  inset: 36px 28px 28px;
+  color: var(--night);
+  text-align: center;
+}
+
+.sheet-copy h1 {
+  font-size: 12px;
+}
+
+.sheet-copy p {
+  margin-top: 16px;
+  font-size: 16px;
+}
+
+.settings {
+  max-width: 720px;
+}
+
+.design {
+  padding: 24px 20px 48px;
+}
+
+.design-grid {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.app[data-layout="portrait"] .design-grid {
+  grid-template-columns: 1fr;
+}
+
+.swatch-column ul {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+
+.swatch {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--darkwood);
+  display: block;
+  flex: none;
+}
+
+.sprite-block {
+  margin-bottom: 28px;
+}
+
+.sprite-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.sprite-card {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sprite-card figcaption {
+  font-size: 14px;
+}
+
+.app[data-layout="portrait"] .wordmark {
+  font-size: 14px;
+}
