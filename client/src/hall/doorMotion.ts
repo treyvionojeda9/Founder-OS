@@ -43,3 +43,14 @@ export function doorOpenSchedule(reduceMotion: boolean): readonly DoorOpenStep[]
 export function doorPath(door: Pick<Door, "id" | "section">): string {
   return door.section === "work" ? `/team/${door.id}` : `/learn/${door.id}`;
 }
+
+export type PortalKind = "team" | "learn";
+
+/** Team and school doors share one portal. Other paths are not rooms. */
+export function roomFromPath(path: string): { kind: PortalKind; id: string } | null {
+  const match = /^\/(team|learn)\/([^/?#]+)/.exec(path);
+  if (!match) return null;
+  const id = decodeURIComponent(match[2]);
+  if (!id) return null;
+  return { kind: match[1] === "learn" ? "learn" : "team", id };
+}

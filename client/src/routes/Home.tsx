@@ -112,7 +112,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
                       scale={scale}
                       pose={pose}
                       onArm={(chosen, frame) => {
-                        if (chosen.section === "work") armDoor(doorPath(chosen), frame);
+                        armDoor(doorPath(chosen), frame);
                       }}
                       onOpen={(chosen) => {
                         openDoor(doorPath(chosen));

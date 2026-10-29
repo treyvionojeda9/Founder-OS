@@ -855,9 +855,9 @@ html:has(.door.is-opening) body {
   }
 }
 
-.door.is-team.is-opening .spill,
-.door.is-team.is-opening .wash,
-.door.is-team.is-opening .interior-dark {
+.door.is-opening .spill,
+.door.is-opening .wash,
+.door.is-opening .interior-dark {
   opacity: 0;
   animation: none;
 }
@@ -885,6 +885,7 @@ html:has(.door.is-opening) body {
 }
 
 .room-portal .study {
+  flex: none;
   height: 100%;
   max-height: 100%;
 }
@@ -949,7 +950,8 @@ html:has(.room-portal-layer) body {
 }
 
 .study {
-  height: 100%;
+  flex: 1 1 auto;
+  height: auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1011,31 +1013,120 @@ html:has(.room-portal-layer) body {
 }
 
 .study-scene {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  padding: 8px 0 10px;
-}
-
-.desk {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--wood);
-  border: 4px solid var(--darkwood);
-  box-shadow: 0 8px 0 var(--darkwood);
+  position: relative;
 }
 
-.figures {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 12px;
-  padding: 8px 12px 0;
-  background: var(--slate);
-  border-bottom: 4px solid var(--plum);
+.study-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  position: relative;
+  perspective: 980px;
+  perspective-origin: 50% 34%;
+  overflow: hidden;
+  background: var(--night);
 }
+
+.study-world {
+  position: absolute;
+  inset: 0;
+}
+
+.back-wall {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 6%;
+  height: 28%;
+  background: var(--slate);
+  border-bottom: 4px solid var(--darkwood);
+  transform: translateZ(-90px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 82%, transparent 100%);
+}
+
+.floor-plane {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 6%;
+  height: 16%;
+  background: var(--slate);
+  transform: rotateX(62deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 24%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to top, transparent 0%, #000 24%, #000 78%, transparent 100%);
+}
+
+.behind-cast {
+  position: absolute;
+  left: 50%;
+  top: 23%;
+  z-index: 1;
+  transform: translateX(-50%);
+}
+
+.desk-rig {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 30%;
+  height: 46%;
+  z-index: 2;
+}
+
+.desk-top {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 8%;
+  height: 52%;
+  background: var(--wood);
+  border: 4px solid var(--darkwood);
+  transform: rotateX(28deg);
+  transform-origin: 50% 100%;
+}
+
+.plank {
+  position: absolute;
+  top: 12%;
+  height: 76%;
+  width: 4px;
+  background: var(--darkwood);
+  pointer-events: none;
+}
+
+.plank-a { left: 22%; }
+.plank-b { left: 70%; }
+.plank-c { left: 86%; }
+
+.desk-front {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  height: 18%;
+  background: var(--darkwood);
+  box-shadow: inset 0 6px 0 var(--wood);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.desk-leg {
+  position: absolute;
+  top: 100%;
+  width: 22px;
+  height: 28px;
+  background: var(--darkwood);
+  box-shadow: inset -4px 0 0 var(--plum);
+}
+
+.leg-left { left: 10%; }
+.leg-right { right: 10%; }
 
 .figure {
   margin: 0;
@@ -1050,18 +1141,116 @@ html:has(.room-portal-layer) body {
   font-size: 10px;
   line-height: 1.6;
   color: var(--paper);
+  background: var(--slate);
+  padding: 2px 4px;
+}
+
+.lamp-spot {
+  position: absolute;
+  left: 3%;
+  top: 10%;
+  z-index: 4;
+}
+
+.note-spot {
+  position: absolute;
+  left: 22%;
+  top: 28%;
+  z-index: 3;
+  transform: rotateX(28deg);
+  transform-origin: 50% 100%;
+}
+
+.book-stack {
+  position: absolute;
+  left: 18%;
+  top: 4%;
+  z-index: 4;
+}
+
+.notebook {
+  position: absolute;
+  left: 38%;
+  top: 30%;
+  z-index: 3;
+}
+
+.desk-pool {
+  position: absolute;
+  left: 0;
+  top: 4%;
+  z-index: 2;
+  pointer-events: none;
+  transform: translateZ(6px);
+}
+
+.paper-slot {
+  position: absolute;
+  z-index: 4;
+  transform-style: preserve-3d;
+  transform-origin: 50% 60%;
+  transition:
+    transform 280ms steps(4, end),
+    left 280ms steps(4, end),
+    top 280ms steps(4, end),
+    width 280ms steps(4, end),
+    height 280ms steps(4, end);
+}
+
+.paper-slot[data-still="true"] {
+  transition: none;
+}
+
+.paper-slot[data-pose="desk"] {
+  left: 30%;
+  width: 62%;
+  top: 38%;
+  height: 40%;
+  transform: rotateX(26deg);
+  transform-origin: 50% 78%;
+}
+
+.paper-slot[data-pose="lifted"] {
+  left: 4%;
+  width: 92%;
+  top: 3%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  max-height: 86%;
+  transform: none;
+}
+
+.stage-caption {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 5%;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.learn-label {
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 11px;
 }
 
 .paper {
   position: relative;
-  flex: 1;
+  height: 100%;
   min-height: 0;
-  margin: 12px;
+  margin: 0;
   display: flex;
   flex-direction: column;
   background: var(--paper);
   color: var(--night);
   border: 4px solid var(--darkwood);
+  overflow: hidden;
 }
 
 .paper.is-lit {
@@ -1079,21 +1268,36 @@ html:has(.room-portal-layer) body {
   clip-path: polygon(100% 0, 0 0, 100% 100%);
 }
 
-.paper-glow {
-  align-self: end;
-  margin: 0 4px 8px;
+.paper-wash {
+  position: absolute;
+  left: 10px;
+  top: 72px;
+  z-index: 2;
   pointer-events: none;
+}
+
+.set-down {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  align-self: flex-start;
+  margin: 8px 8px 0;
 }
 
 .paper-log {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 16px 28px 8px 20px;
+  padding: 16px 28px 10px 22px;
 }
 
 .paper-log h1 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   margin-bottom: 12px;
+  padding-bottom: 8px;
+  background: var(--paper);
   color: var(--night);
 }
 
@@ -1205,8 +1409,28 @@ html:has(.room-portal-layer) body {
   gap: 6px;
 }
 
-.app[data-layout="landscape"] .paper {
-  margin: 8px;
+.app[data-layout="landscape"] .study-stage,
+.app[data-layout="desktop"] .study-stage {
+  perspective: 1280px;
+}
+
+.app[data-layout="landscape"] .paper-slot[data-pose="desk"],
+.app[data-layout="desktop"] .paper-slot[data-pose="desk"] {
+  left: 32%;
+  width: 54%;
+  top: 38%;
+  height: 42%;
+}
+
+.app[data-layout="landscape"] .paper-slot[data-pose="lifted"],
+.app[data-layout="desktop"] .paper-slot[data-pose="lifted"] {
+  left: 50%;
+  width: min(920px, 70%);
+  top: 6%;
+  height: auto;
+  aspect-ratio: 5 / 3;
+  max-height: 82%;
+  transform: translateX(-50%);
 }
 
 .app[data-layout="landscape"] .paper-log,
@@ -1231,6 +1455,10 @@ html:has(.room-portal-layer) body {
   .door-ghost .leaf {
     animation: none;
   }
+
+  .paper-slot {
+    transition: none;
+  }
 }
 
 @media (update: slow) {
@@ -1241,5 +1469,9 @@ html:has(.room-portal-layer) body {
   .door.is-opening .spill,
   .door-slot:has(.door.is-opening) .pose {
     animation: none;
+  }
+
+  .paper-slot {
+    transition: none;
   }
 }
