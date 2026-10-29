@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { poolSpec, washSpec } from "./lightPool";
+import { lampPoolPalette, poolSpec, schoolAccentFitsLampPool, washSpec } from "./lightPool";
 
 describe("desk light pool", () => {
   it("uses a different shape for lamp on, off, and failed", () => {
@@ -13,5 +13,11 @@ describe("desk light pool", () => {
     expect(on.rows).toBeGreaterThan(off.rows);
     expect(washSpec("working").rows).toBeGreaterThan(washSpec("idle").rows);
     expect(washSpec("failed")).not.toEqual(washSpec("working"));
+  });
+
+  it("keeps the ember pool on a school desk because school accent is not lighter than wood", () => {
+    expect(schoolAccentFitsLampPool()).toBe(false);
+    expect(lampPoolPalette("school")).toBe("ember");
+    expect(lampPoolPalette("work")).toBe("ember");
   });
 });

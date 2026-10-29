@@ -161,9 +161,10 @@ test("school door opens into the learning desk", async ({ page }, info) => {
   await keep(page, "school-door-mid-tablet-portrait");
   await page.clock.runFor(ENTER_MS + 500);
   await expect(page).toHaveURL(/\/learn\/reading-room$/);
-  await expect(page.getByRole("heading", { name: "AI University — coming later" })).toBeVisible();
-  await expect(page.getByRole("img", { name: "Stacked books" })).toBeVisible();
-  await expect(page.getByRole("img", { name: "Open notebook" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ponder" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open the current path" })).toBeVisible();
+  await expect(page.locator(".desk-apron")).toBeVisible();
+  await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
   await expect(page.locator(".paper-glow")).toHaveCount(0);
   await keep(page, "school-landed-tablet-portrait");
 });
