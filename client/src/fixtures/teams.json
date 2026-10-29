@@ -37,6 +37,29 @@
             "kind": "publish",
             "label": "Publish the forge note"
           }
+        },
+        {
+          "id": "hale-a1",
+          "author": "machine",
+          "agentId": "atelier",
+          "record": "machine",
+          "body": "The desk is quiet. A swatch sheet is waiting on this paper.",
+          "source": "Atelier agent · Hale Design Lab",
+          "timestamp": "2026-10-29T08:20:00Z",
+          "action": {
+            "id": "file-swatch",
+            "kind": "write",
+            "label": "File the swatch"
+          }
+        },
+        {
+          "id": "hale-c1",
+          "author": "machine",
+          "agentId": "courier",
+          "record": "machine",
+          "body": "The lamp is out. I stopped before the errand left this desk.",
+          "source": "Courier agent · Hale Design Lab",
+          "timestamp": "2026-10-29T08:22:00Z"
         }
       ]
     },
@@ -70,6 +93,15 @@
             "kind": "contact",
             "label": "Contact the channel"
           }
+        },
+        {
+          "id": "cloud-r1",
+          "author": "machine",
+          "agentId": "relay",
+          "record": "machine",
+          "body": "Relay is idle. No packet is sitting on this desk.",
+          "source": "Relay agent · Cloud Agent Team",
+          "timestamp": "2026-10-29T09:12:00Z"
         }
       ]
     },
@@ -103,6 +135,15 @@
             "kind": "write",
             "label": "Write the bench handoff"
           }
+        },
+        {
+          "id": "local-b1",
+          "author": "machine",
+          "agentId": "bench",
+          "record": "machine",
+          "body": "Bench is working. The handoff stays on this sheet.",
+          "source": "Bench agent · Local Agent Team",
+          "timestamp": "2026-10-29T07:48:00Z"
         }
       ]
     }

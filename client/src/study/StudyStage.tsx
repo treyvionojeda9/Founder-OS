@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { Sprite } from "../design/Sprite";
-import { deskLampFailed, deskLampOff, deskLampOn } from "../design/sprites";
 import type { AgentStatus } from "../team/chatStore";
+import { lampArt } from "./lampArt";
 import { paintDeskPool, paintPaperWash } from "./lightPool";
 
 export type PaperPose = "desk" | "lifted";
@@ -82,13 +82,11 @@ function DeskPool({ status }: { status: AgentStatus }) {
 }
 
 function Lamp({ status, scale }: { status: AgentStatus; scale: number }) {
-  const rows = status === "working" ? deskLampOn : status === "failed" ? deskLampFailed : deskLampOff;
-  const title =
-    status === "working" ? "Desk lamp, lit" : status === "failed" ? "Desk lamp, failed" : "Desk lamp, dark";
+  const lamp = lampArt(status);
   return (
     <figure className="figure lamp-spot">
-      <Sprite rows={rows} scale={scale} title={title} />
-      <figcaption>{status === "working" ? "Working" : status === "failed" ? "Failed" : "Idle"}</figcaption>
+      <Sprite rows={lamp.rows} scale={scale} title={lamp.title} />
+      <figcaption>{lamp.caption}</figcaption>
     </figure>
   );
 }
