@@ -61,7 +61,10 @@ describe("learning desk", () => {
     expect(document.querySelector(".desk-top")).toBeTruthy();
     expect(document.querySelector(".desk-apron")).toBeTruthy();
     expect(document.querySelector(".apron-rail")).toBeTruthy();
-    expect(document.querySelector(".floor-plane")).toBeTruthy();
+    expect(document.querySelector(".floor-plane")).toHaveAttribute("data-material", "floor");
+    expect(document.querySelector(".back-wall")).toHaveAttribute("data-material", "plaster");
+    expect(document.querySelector(".wainscot")).toHaveAttribute("data-material", "wainscot");
+    expect(document.querySelector(".apron-rail")).toHaveAttribute("data-accent", "school");
     expect(document.querySelector(".desk-pool")).toHaveAttribute("data-pool", "working");
     expect(document.querySelector(".desk-pool")).toHaveAttribute("data-pool-palette", "ember");
     expect(screen.getByRole("img", { name: "Desk lamp, lit" })).toBeInTheDocument();
