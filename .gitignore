@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+playwright-report/
+test-results/
+blob-report/
+data/
+.env
+.env.*
+*.log
+.DS_Store

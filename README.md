@@ -17,6 +17,23 @@ This repository is the reproducible Appendix E training scaffold from *Founder O
 
 Founder OS is built around one architectural rule: the machine may analyze permitted human notes, but it never writes into the human-authored record.
 
+## Known boundary gap
+
+The api `X-Actor-Role` header is self-asserted. Future webhook/API team ingestion must use team-scoped machine principals with **no Human Vault write**.
+
+## Milestone 1 shell
+
+The browser shell lives in `client/`. From `client/`:
+
+```bash
+npm ci
+npm run typecheck
+npm test
+npx playwright test
+```
+
+From the repo root, the API boundary tests are `pytest tests/`.
+
 ```text
 founder-os-data/
   human-vault/
