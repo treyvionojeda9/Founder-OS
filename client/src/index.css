@@ -8,6 +8,7 @@
 
 /* Keep in step with client/src/design/type.ts. applyType() writes the same variables. */
 :root {
+  --mat-size: 64px;
   --font-pixel: "Press Start 2P", monospace;
   --type-meta: 8px;
   --type-body: 16px;
@@ -1151,9 +1152,19 @@ html:has(.room-portal-layer) body {
   left: 0;
   right: 0;
   top: 0;
-  height: 38%;
-  background: var(--slate);
-  border-bottom: 4px solid var(--darkwood);
+  height: 34%;
+  z-index: 0;
+}
+
+.agent-desk-wainscot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 16%;
+  height: 36%;
+  z-index: 0;
+  border-top: 4px solid var(--wood);
+  pointer-events: none;
 }
 
 .agent-desk-floor {
@@ -1161,25 +1172,37 @@ html:has(.room-portal-layer) body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 26%;
-  background: var(--plum);
+  height: 52%;
+  z-index: 0;
+  border-top: 4px solid var(--darkwood);
 }
 
 .agent-desk-top {
   position: absolute;
   left: 8%;
   right: 8%;
-  bottom: 14%;
-  height: 28px;
-  background: var(--wood);
-  border: 3px solid var(--darkwood);
+  bottom: 20%;
+  height: 36px;
+  border: 4px solid var(--darkwood);
+  box-shadow: inset 0 -4px 0 var(--darkwood);
   z-index: 1;
+}
+
+.agent-desk-top::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 8px;
+  background: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--wood);
 }
 
 .agent-desk-sheet {
   position: absolute;
   right: 16%;
-  bottom: 24%;
+  bottom: 30%;
   width: 42px;
   height: 28px;
   background: var(--paper);
@@ -1201,7 +1224,7 @@ html:has(.room-portal-layer) body {
 .agent-desk-lamp {
   position: absolute;
   left: 14%;
-  bottom: 20%;
+  bottom: 26%;
   z-index: 3;
 }
 
@@ -1246,36 +1269,43 @@ html:has(.room-portal-layer) body {
 
 .back-wall {
   position: absolute;
-  left: 14%;
-  right: 14%;
-  top: 6%;
-  height: 28%;
-  background: var(--slate);
-  border-bottom: 4px solid var(--darkwood);
-  transform: translateZ(-90px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 82%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 82%, transparent 100%);
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 70%;
+}
+
+.wainscot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 36%;
+  height: 36%;
+  border-top: 4px solid var(--wood);
+  pointer-events: none;
 }
 
 .floor-plane {
   position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 6%;
-  height: 16%;
-  background: var(--slate);
-  transform: rotateX(62deg);
-  transform-origin: 50% 100%;
-  -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 24%, #000 78%, transparent 100%);
-  mask-image: linear-gradient(to top, transparent 0%, #000 24%, #000 78%, transparent 100%);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  border-top: 4px solid var(--darkwood);
 }
 
 .behind-cast {
   position: absolute;
   left: 50%;
-  top: 23%;
+  top: auto;
+  bottom: 58%;
   z-index: 1;
   transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.figure.agent-stand {
+  flex-direction: column-reverse;
 }
 
 .desk-rig {
@@ -1293,7 +1323,6 @@ html:has(.room-portal-layer) body {
   right: 0;
   top: 8%;
   height: 52%;
-  background: var(--wood);
   border: 4px solid var(--darkwood);
   transform: rotateX(28deg);
   transform-origin: 50% 100%;
@@ -1318,8 +1347,10 @@ html:has(.room-portal-layer) body {
   right: 0;
   top: 52%;
   height: 18%;
-  background: var(--darkwood);
-  box-shadow: inset 0 6px 0 var(--wood);
+  box-shadow:
+    inset 0 4px 0 var(--wood),
+    inset 0 8px 0 var(--darkwood),
+    inset 0 -4px 0 var(--night);
   pointer-events: none;
   z-index: 2;
 }
@@ -1722,19 +1753,14 @@ html:has(.room-portal-layer) body {
   }
 }
 
-.study-stage[data-variant="school"] .back-wall {
-  background: var(--school-slate);
-  border-bottom-color: var(--navy);
-}
-
 .desk-apron {
   position: absolute;
   left: 4%;
   right: 4%;
   top: 8%;
   bottom: 0;
-  background: var(--wood);
-  border: 3px solid var(--darkwood);
+  border: 4px solid var(--darkwood);
+  box-shadow: inset 0 -4px 0 var(--darkwood);
   pointer-events: none;
 }
 
@@ -1743,7 +1769,7 @@ html:has(.room-portal-layer) body {
   left: 10%;
   right: 10%;
   top: 42%;
-  height: 6px;
+  height: 4px;
   background: var(--navy);
 }
 
@@ -1945,9 +1971,7 @@ html:has(.room-portal-layer) body {
   flex-direction: column;
   background: var(--darkwood);
   border: 8px solid var(--darkwood);
-  box-shadow:
-    inset 0 0 0 6px var(--wood),
-    10px 0 0 var(--plum);
+  box-shadow: inset 0 0 0 4px var(--wood);
   padding: 10px 16px 12px;
 }
 
@@ -1974,7 +1998,6 @@ html:has(.room-portal-layer) body {
   overflow: auto;
   display: flex;
   flex-direction: column;
-  background: var(--slate);
   border: 4px solid var(--night);
 }
 
@@ -1986,8 +2009,7 @@ html:has(.room-portal-layer) body {
   min-height: 120px;
   padding: 8px 12px 0;
   border-bottom: 16px solid var(--wood);
-  box-shadow: inset 0 -6px 0 var(--darkwood);
-  background: var(--slate);
+  box-shadow: inset 0 -4px 0 var(--darkwood);
 }
 
 .shelf-bay[data-empty="true"] {
@@ -2111,15 +2133,13 @@ html:has(.room-portal-layer) body {
 }
 
 .library-floor {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 12%;
-  background: var(--slate);
+  position: relative;
+  flex: none;
+  width: 100%;
+  height: 64px;
+  border-top: 4px solid var(--darkwood);
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(to top, #000 20%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 20%, transparent 100%);
+  z-index: 1;
 }
 
 .library-room[data-open="true"] .bookcase {
@@ -2201,32 +2221,49 @@ html:has(.room-portal-layer) body {
 }
 
 .team-board {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   display: flex;
   justify-content: center;
-  background: var(--night);
 }
 
 .board-void {
   position: relative;
+  z-index: 1;
   width: min(920px, 100%);
-  margin: auto;
-  padding: 18px 8px 28px;
+  margin: 20px auto 22%;
+  padding: 8px 8px 16px;
   perspective: 1100px;
   perspective-origin: 50% 18%;
 }
 
-.board-wall {
+.board-wall,
+.board-wainscot,
+.board-floor {
   position: absolute;
-  left: 16%;
-  right: 16%;
-  top: 28px;
-  height: 22%;
-  background: var(--slate);
-  border-bottom: 4px solid var(--darkwood);
+  left: 0;
+  right: 0;
+  z-index: 0;
   pointer-events: none;
+}
+
+.board-wall {
+  top: 0;
+  bottom: 0;
+}
+
+.board-wainscot {
+  bottom: 14%;
+  height: 32%;
+  border-top: 4px solid var(--wood);
+}
+
+.board-floor {
+  bottom: 0;
+  height: 18%;
+  border-top: 4px solid var(--darkwood);
 }
 
 .board-hanger {
@@ -2248,7 +2285,7 @@ html:has(.room-portal-layer) body {
   border: 8px solid var(--wood);
   box-shadow:
     inset 0 0 0 4px var(--ember),
-    10px 14px 0 var(--night);
+    8px 8px 0 var(--darkwood);
   transform-style: preserve-3d;
 }
 
@@ -2691,4 +2728,47 @@ button:disabled {
 textarea,
 input {
   border-radius: 0;
+}
+
+/* Tiled room fills. Hard pixels from applyMaterials(). No mask fades. */
+[data-material] {
+  background-repeat: repeat;
+  background-position: 0 0;
+  background-size: var(--mat-size) var(--mat-size);
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+[data-material="plaster"] {
+  background-color: var(--night);
+  background-image: var(--mat-plaster);
+}
+
+[data-material="wainscot"] {
+  background-color: var(--darkwood);
+  background-image: var(--mat-wainscot);
+  background-size: 128px 128px;
+}
+
+[data-material="floor"] {
+  background-color: var(--wood);
+  background-image: var(--mat-floor);
+}
+
+[data-material="desk"] {
+  background-color: var(--wood);
+  background-image: var(--mat-desk);
+}
+
+[data-material="panel"] {
+  background-color: var(--darkwood);
+  background-image: var(--mat-panel);
+}
+
+.app .study-scene:has(.study-stage),
+.app .study-scene:has(.library-room),
+.app .study-scene:has(.team-board) {
+  padding: 0;
 }

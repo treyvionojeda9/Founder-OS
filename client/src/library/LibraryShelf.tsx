@@ -125,6 +125,7 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
       data-empty={ready && notes.length === 0 ? "true" : "false"}
       data-open={open ? "true" : "false"}
       data-vault="human"
+      data-material="plaster"
       aria-label="Human shelf"
     >
       {open ? null : (
@@ -138,7 +139,7 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
           <Sprite rows={deskLampOn} scale={2} title="Desk lamp, lit" />
         </figure>
         <div className="case-crown" aria-hidden="true" />
-        <div className="shelf-bays">
+        <div className="shelf-bays" data-material="panel">
           {bays.map((bay, bayIndex) => (
             <div key={bayIndex} className="shelf-bay" data-empty={bay.length === 0 ? "true" : "false"}>
               {bay.map((note) => {
@@ -175,7 +176,7 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
           </button>
         </div>
       </div>
-      <div className="library-floor" aria-hidden="true" />
+      <div className="library-floor" data-material="floor" aria-hidden="true" />
       {open ? (
         <div className="library-paper paper-slot" data-pose="lifted" data-still={still ? "true" : "false"}>
           <div className="paper is-lit">
