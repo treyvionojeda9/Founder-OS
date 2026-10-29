@@ -1,23 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Sprite } from "../design/Sprite";
-import { archDoorClosed, archDoorOpen, closedLogoSlot, openLogoSlot } from "../design/sprites";
+import {
+  archDoorClosed,
+  archDoorOpen,
+  closedLogoSlot,
+  groundContact,
+  openLogoSlot,
+} from "../design/sprites";
 import type { Door } from "../fixtures/doors";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+
+type Phase = "closed" | "ajar" | "through";
 
 type DoorButtonProps = {
   door: Door;
   onOpen: (door: Door) => void;
 };
 
+const AJAR_MS = 560;
+const ENTER_MS = 1560;
+
 export function DoorButton({ door, onOpen }: DoorButtonProps) {
   const reduce = useReducedMotion();
-  const [openFrame, setOpenFrame] = useState(false);
-  const timer = useRef<number | null>(null);
+  const [phase, setPhase] = useState<Phase>("closed");
+  const timers = useRef<number[]>([]);
   const busy = useRef(false);
 
   useEffect(() => {
     return () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
+      for (const id of timers.current) window.clearTimeout(id);
     };
   }, []);
 
@@ -28,25 +39,40 @@ export function DoorButton({ door, onOpen }: DoorButtonProps) {
       onOpen(door);
       return;
     }
-    setOpenFrame(true);
-    timer.current = window.setTimeout(() => onOpen(door), 240);
+    setPhase("ajar");
+    timers.current.push(window.setTimeout(() => setPhase("through"), AJAR_MS));
+    timers.current.push(window.setTimeout(() => onOpen(door), ENTER_MS));
   }
 
-  const slot = openFrame ? openLogoSlot : closedLogoSlot;
+  const open = phase !== "closed";
+  const slot = open ? openLogoSlot : closedLogoSlot;
   const layers = useMemo(
     () => [{ rows: door.logo, x: slot.x, y: slot.y }],
     [door.logo, slot.x, slot.y],
   );
 
   return (
-    <button type="button" className="door" onClick={activate} aria-label={`Open ${door.name}`}>
-      <Sprite
-        rows={openFrame ? archDoorOpen : archDoorClosed}
-        scale={4}
-        title=""
-        layers={layers}
-      />
-      <span className="door-name">{door.name}</span>
+    <button
+      type="button"
+      className="door"
+      data-phase={phase}
+      onClick={activate}
+      aria-label={`Open ${door.name}`}
+    >
+      <span className="door-stage">
+        <span className="door-figure">
+          <Sprite
+            rows={open ? archDoorOpen : archDoorClosed}
+            scale={4}
+            title=""
+            layers={layers}
+          />
+        </span>
+        <span className="ground-contact">
+          <Sprite rows={groundContact} scale={4} title="" />
+        </span>
+        <span className="door-name">{door.name}</span>
+      </span>
     </button>
   );
 }

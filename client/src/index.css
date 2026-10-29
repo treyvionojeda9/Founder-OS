@@ -166,6 +166,11 @@ a.text-link {
   display: none;
 }
 
+.stage {
+  background: var(--night);
+  color: var(--paper);
+}
+
 .stage-head {
   display: flex;
   align-items: center;
@@ -191,25 +196,84 @@ a.text-link {
 .door-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 36px 24px;
+  align-items: end;
+  justify-items: center;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 8px 0 12px;
 }
 
 .door {
-  width: 100%;
+  width: auto;
   background: transparent;
-  color: inherit;
-  border: 3px solid var(--wood);
+  color: var(--paper);
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+}
+
+.door-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  perspective: 640px;
+}
+
+.door-figure {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 12px 8px 16px;
+  transform: rotateX(18deg);
+  transform-origin: 50% 100%;
+}
+
+.door-grid li:nth-child(3n + 1) .door-figure {
+  transform: rotateX(18deg) rotateY(-11deg);
+}
+
+.door-grid li:nth-child(3n + 2) .door-figure {
+  transform: rotateX(16deg) rotateY(9deg);
+}
+
+.door-grid li:nth-child(3n) .door-figure {
+  transform: rotateX(18deg) rotateY(-4deg);
+}
+
+.ground-contact {
+  display: block;
+  margin-top: -10px;
+}
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .door-figure {
+    transition: transform 420ms steps(3, start);
+  }
+}
+
+.door-grid:has([data-phase="ajar"]) .door:not([data-phase="ajar"]) {
+  opacity: 0.4;
+}
+
+.door-grid:has([data-phase="through"]) .door:not([data-phase="through"]) {
+  opacity: 0;
+}
+
+.door-grid li .door[data-phase="through"] {
+  z-index: 3;
+}
+
+.door-grid li .door[data-phase="through"] .door-figure {
+  transform: rotateX(2deg) rotateY(0deg) scale(3.3) translateY(6%);
+  transition: none;
 }
 
 .door-name {
+  margin-top: 6px;
   font-family: system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.3;
@@ -264,8 +328,8 @@ a.text-link {
   margin-left: 300px;
   padding: 0;
   min-height: calc(100vh - 72px);
-  background: var(--paper);
-  color: var(--night);
+  background: var(--night);
+  color: var(--paper);
 }
 
 .app[data-layout="desktop"] .rail {
@@ -291,8 +355,8 @@ a.text-link {
 
 .app[data-layout="desktop"] .stage {
   flex: 1;
-  background: var(--paper);
-  color: var(--night);
+  background: var(--night);
+  color: var(--paper);
   padding: 36px 40px 28px;
 }
 
@@ -315,7 +379,7 @@ a.text-link {
 }
 
 .app[data-layout="desktop"] .door {
-  background: var(--paper);
+  background: transparent;
 }
 
 .app[data-layout="desktop"] .offline {
@@ -324,8 +388,8 @@ a.text-link {
 
 .app[data-layout="desktop"] .toggle-dock {
   margin-left: 300px;
-  background: var(--paper);
-  border-top: 4px solid var(--wood);
+  background: var(--night);
+  border-top: 4px solid var(--darkwood);
 }
 
 .app[data-layout="desktop"] .toggle {
@@ -333,8 +397,8 @@ a.text-link {
 }
 
 .app[data-layout="desktop"] .toggle [role="tab"] {
-  background: var(--paper);
-  color: var(--night);
+  background: var(--slate);
+  color: var(--paper);
 }
 
 .app[data-layout="desktop"] .toggle [aria-selected="true"] {
