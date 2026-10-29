@@ -32,6 +32,39 @@ export const bookStack: SpriteGrid = [
   "......................",
 ];
 
+/** Closed reading book. Navy cover, a sky band, and a paper fore-edge. */
+export const closedBook: SpriteGrid = [
+  "....................",
+  "..dddddddddddddddd..",
+  "..dvvvvvvvvvvvvvpd..",
+  "..dvvvvvvvvvvvvvpd..",
+  "..dvbvvvvvvvvvvvpd..",
+  "..dvvvvvvvvvvvvvpd..",
+  "..dvvvvvvvvvvvvvpd..",
+  "..dvbvvvvvvvvvvvpd..",
+  "..dvvvvvvvvvvvvvpd..",
+  "..dvvvvvvvvvvvvvpd..",
+  "..dvvvvvvvvvvvvvpd..",
+  "..dddddddddddddddd..",
+  "....................",
+];
+
+/** Key left on the desk when a fixture assignment is waiting. */
+export const assignmentKey: SpriteGrid = [
+  "..............",
+  "...iiiiii.....",
+  "...i....i.....",
+  "...i.pp.i.....",
+  "...i....i.....",
+  "...iiiiii.....",
+  ".....ii.......",
+  ".....ii.i.....",
+  ".....iiii.....",
+  ".....ii.......",
+  ".....iiii.....",
+  "..............",
+];
+
 /** Empty open notebook. The crease is the only mark on the pages. */
 export const openNotebook: SpriteGrid = [
   "dddddddddddddddddddddddddddd",

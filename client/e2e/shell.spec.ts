@@ -118,9 +118,10 @@ test("a school door opens the learning stub", async ({ page }) => {
   await page.goto("/home");
   await page.getByRole("tab", { name: "School" }).click();
   await page.getByRole("button", { name: /Reading Room/ }).click();
-  await expect(page.getByRole("heading", { name: "AI University — coming later" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ponder" })).toBeVisible();
   await expect(page.locator(".desk-top")).toBeVisible();
-  await expect(page.getByRole("img", { name: "Open notebook" })).toBeVisible();
+  await expect(page.locator(".desk-apron")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open the current path" })).toBeVisible();
 });
 
 test("offline indicator appears and home still renders", async ({ page }, info) => {
