@@ -27,6 +27,8 @@ export type FounderLine = {
   teamId: string;
   author: "founder";
   record: "chat";
+  /** Which desk this line was written on. Unset lines stay on the CEO sheet. */
+  agentId?: string;
   body: string;
 };
 
@@ -93,7 +95,14 @@ function asTeam(raw: (typeof teamsJson.teams)[number]): TeamRecord {
 
 function asLine(teamId: string, line: RawLine): ChatLine {
   if (line.author === "founder") {
-    return { id: line.id, teamId, author: "founder", record: "chat", body: line.body };
+    return {
+      id: line.id,
+      teamId,
+      author: "founder",
+      record: "chat",
+      agentId: line.agentId,
+      body: line.body,
+    };
   }
   return {
     id: line.id,
@@ -114,11 +123,13 @@ const teams: TeamRecord[] = teamsJson.teams.map(asTeam);
 
 const extras: FounderLine[] = [];
 const cache = new Map<string, ChatLine[]>();
+const agentCache = new Map<string, ChatLine[]>();
 const listeners = new Set<() => void>();
 let sequence = 0;
 
 function emit() {
   cache.clear();
+  agentCache.clear();
   for (const listener of listeners) listener();
 }
 
@@ -139,17 +150,33 @@ export function transcriptFor(teamId: string): ChatLine[] {
   return next;
 }
 
+function belongsToAgent(line: ChatLine, agentId: string): boolean {
+  if (isMachineLine(line)) return line.agentId === agentId;
+  return (line.agentId ?? "ceo") === agentId;
+}
+
+/** Paper for one desk. Founder lines stay `record: "chat"` and never enter a vault. */
+export function linesForAgent(teamId: string, agentId: string): ChatLine[] {
+  const key = `${teamId}:${agentId}`;
+  const hit = agentCache.get(key);
+  if (hit) return hit;
+  const next = transcriptFor(teamId).filter((line) => belongsToAgent(line, agentId));
+  agentCache.set(key, next);
+  return next;
+}
+
 export function subscribeChat(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-export function appendFounderLine(teamId: string, body: string): FounderLine {
+export function appendFounderLine(teamId: string, body: string, agentId = "ceo"): FounderLine {
   const line: FounderLine = {
     id: `chat-${++sequence}`,
     teamId,
     author: "founder",
     record: "chat",
+    agentId,
     body,
   };
   extras.push(line);
@@ -160,6 +187,7 @@ export function appendFounderLine(teamId: string, body: string): FounderLine {
 export function resetChatForTests() {
   extras.length = 0;
   cache.clear();
+  agentCache.clear();
   sequence = 0;
   emit();
 }

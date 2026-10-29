@@ -1020,6 +1020,154 @@ html:has(.room-portal-layer) body {
   position: relative;
 }
 
+.desk-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px 12px;
+}
+
+.overview-title,
+.overview-legend {
+  color: var(--paper);
+}
+
+.overview-legend {
+  max-width: 62ch;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.desk-grid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.agent-desk {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px;
+  background: var(--night);
+  color: var(--paper);
+  border: 4px solid var(--darkwood);
+  text-align: left;
+}
+
+.agent-desk[data-status="working"] {
+  box-shadow: inset 0 0 0 4px var(--ember);
+}
+
+.agent-desk[data-expanding="true"] {
+  transform: scale(1.03);
+  transition: transform 280ms steps(4, end);
+}
+
+.desk-grid[data-still="true"] .agent-desk,
+.agent-desk[data-expanding="false"] {
+  transition: none;
+}
+
+.agent-desk-room {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  background: var(--night);
+  border: 4px solid var(--darkwood);
+  overflow: hidden;
+}
+
+.agent-desk-wall {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 38%;
+  background: var(--slate);
+  border-bottom: 4px solid var(--darkwood);
+}
+
+.agent-desk-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26%;
+  background: var(--plum);
+}
+
+.agent-desk-top {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 14%;
+  height: 28px;
+  background: var(--wood);
+  border: 3px solid var(--darkwood);
+  z-index: 1;
+}
+
+.agent-desk-sheet {
+  position: absolute;
+  right: 16%;
+  bottom: 24%;
+  width: 42px;
+  height: 28px;
+  background: var(--paper);
+  border: 3px solid var(--darkwood);
+  z-index: 2;
+}
+
+.agent-desk-sheet::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--wood);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.agent-desk-lamp {
+  position: absolute;
+  left: 14%;
+  bottom: 20%;
+  z-index: 3;
+}
+
+.agent-desk-plate {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 4px 2px;
+}
+
+.agent-desk-name {
+  font-family: "Press Start 2P", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--paper);
+}
+
+.agent-desk-state {
+  font-size: 18px;
+  line-height: 1.3;
+  color: var(--paper);
+}
+
 .study-stage {
   flex: 1 1 auto;
   min-height: 0;
@@ -1414,6 +1562,16 @@ html:has(.room-portal-layer) body {
   perspective: 1280px;
 }
 
+.app[data-layout="landscape"] .desk-grid-list,
+.app[data-layout="desktop"] .desk-grid-list {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.app[data-layout="landscape"] .agent-desk-room,
+.app[data-layout="desktop"] .agent-desk-room {
+  height: 280px;
+}
+
 .app[data-layout="landscape"] .paper-slot[data-pose="desk"],
 .app[data-layout="desktop"] .paper-slot[data-pose="desk"] {
   left: 32%;
@@ -1456,7 +1614,8 @@ html:has(.room-portal-layer) body {
     animation: none;
   }
 
-  .paper-slot {
+  .paper-slot,
+  .agent-desk {
     transition: none;
   }
 }
@@ -1471,7 +1630,8 @@ html:has(.room-portal-layer) body {
     animation: none;
   }
 
-  .paper-slot {
+  .paper-slot,
+  .agent-desk {
     transition: none;
   }
 }
