@@ -1,7 +1,9 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { founderEmber } from "../design/palette";
+import { keepPonderNote } from "../study/ponderNote";
 import ponderSource from "../study/ponderNote.ts?raw";
 import { localDb, noteRepo, sessionSource } from "../storage/services";
 import { SessionProvider } from "../storage/session";
@@ -39,6 +41,28 @@ function renderDesk(id = "reading-room") {
         <LearnStub doorId={id} />
       </MemoryRouter>
     </SessionProvider>,
+  );
+}
+
+function drawPenStroke(canvas: HTMLCanvasElement) {
+  canvas.getBoundingClientRect = () => new DOMRect(0, 0, 200, 120);
+  const base = {
+    bubbles: true,
+    cancelable: true,
+    pointerId: 1,
+    pointerType: "pen" as const,
+    clientX: 20,
+    clientY: 30,
+    pressure: 0.65,
+    width: 2,
+    height: 2,
+  };
+  canvas.dispatchEvent(new PointerEvent("pointerdown", { ...base, button: 0, buttons: 1 }));
+  canvas.dispatchEvent(
+    new PointerEvent("pointermove", { ...base, clientX: 140, clientY: 80, pressure: 0.9, buttons: 1 }),
+  );
+  canvas.dispatchEvent(
+    new PointerEvent("pointerup", { ...base, clientX: 140, clientY: 80, pressure: 0, button: 0, buttons: 0 }),
   );
 }
 
@@ -185,5 +209,105 @@ describe("learning desk", () => {
   it("has no machine vault write in the ponder save path", () => {
     expect(ponderSource).not.toMatch(/saveMachineOutput|machineNotes/);
     expect(ponderSource).toMatch(/saveHumanEdit/);
+  });
+
+  it("shows a saved typed note without an ink sheet on the desk", async () => {
+    await keepPonderNote({
+      doorId: "reading-room",
+      content: "Already on the sheet.",
+      principal: "human",
+      existing: null,
+      repo: noteRepo,
+      createId: () => "HN-TYPEDONLY",
+    });
+    await readyDesk();
+    expect(screen.getByText("Already on the sheet.")).toBeInTheDocument();
+    expect(document.querySelector("canvas.ponder-ink")).toBeNull();
+  });
+
+  it("draws on the lifted sheet, discards that ink on set down, and keeps it when asked", async () => {
+    const user = userEvent.setup();
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    await readyDesk();
+    await user.click(screen.getByRole("heading", { name: "Ponder" }));
+    const canvas = document.querySelector("canvas.ponder-ink");
+    if (!(canvas instanceof HTMLCanvasElement)) throw new Error("ink sheet missing");
+    expect(canvas).toHaveAttribute("data-live", "true");
+    expect(canvas).toHaveAttribute("data-strokes", "0");
+    expect(screen.getByText("Draw with a stylus, finger, or mouse.")).toBeInTheDocument();
+
+    await act(async () => {
+      drawPenStroke(canvas);
+    });
+    expect(canvas).toHaveAttribute("data-strokes", "1");
+
+    await user.click(screen.getByRole("button", { name: "Set it down" }));
+    expect(document.querySelector("canvas.ponder-ink")).toBeNull();
+    expect(screen.getByText("A blank sheet. Lift it to write.")).toBeInTheDocument();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+
+    await user.click(screen.getByRole("heading", { name: "Ponder" }));
+    const again = document.querySelector("canvas.ponder-ink");
+    if (!(again instanceof HTMLCanvasElement)) throw new Error("ink sheet missing");
+    expect(again).toHaveAttribute("data-strokes", "0");
+    await act(async () => {
+      drawPenStroke(again);
+    });
+    expect(again).toHaveAttribute("data-strokes", "1");
+    await user.type(screen.getByRole("textbox", { name: "Your note" }), "Beside the ink.");
+    await user.click(screen.getByRole("button", { name: "Keep this note" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Kept with your notes.");
+
+    const kept = await localDb.humanNotes.toArray();
+    expect(kept).toHaveLength(1);
+    expect(kept[0]).toMatchObject({
+      vault: "human",
+      projectId: "school:reading-room",
+      content: "Beside the ink.",
+    });
+    expect(kept[0].ink?.[0].color).toBe(founderEmber.darkwood);
+    expect(kept[0].ink?.[0].points[0]).toMatchObject({ p: 0.65 });
+    expect(kept[0].ink?.[0].points.length).toBeGreaterThan(1);
+    expect(await localDb.machineNotes.count()).toBe(0);
+
+    cleanup();
+    await readyDesk();
+    expect(screen.getByText("Beside the ink.")).toBeInTheDocument();
+    expect(document.querySelector("canvas.ponder-ink")).toHaveAttribute("data-strokes", "1");
+    expect(document.querySelector("canvas.ponder-ink")).toHaveAttribute("data-live", "false");
+  });
+
+  it("refuses machine ink before any human vault write", async () => {
+    sessionSource.principal = "machine";
+    const user = userEvent.setup();
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    await readyDesk();
+    await user.click(screen.getByRole("heading", { name: "Ponder" }));
+    const canvas = document.querySelector("canvas.ponder-ink");
+    if (!(canvas instanceof HTMLCanvasElement)) throw new Error("ink sheet missing");
+    await act(async () => {
+      drawPenStroke(canvas);
+    });
+    expect(canvas).toHaveAttribute("data-strokes", "1");
+    await user.click(screen.getByRole("button", { name: "Keep this note" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Only you can keep this note.");
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+  });
+
+  it("still takes ink when motion is reduced", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    await readyDesk();
+    await user.click(screen.getByRole("heading", { name: "Ponder" }));
+    const canvas = document.querySelector("canvas.ponder-ink");
+    if (!(canvas instanceof HTMLCanvasElement)) throw new Error("ink sheet missing");
+    expect(document.querySelector(".paper-slot")).toHaveAttribute("data-still", "true");
+    await act(async () => {
+      drawPenStroke(canvas);
+    });
+    expect(canvas).toHaveAttribute("data-strokes", "1");
+    expect(document.querySelector(".paper-slot")).toHaveAttribute("data-still", "true");
   });
 });

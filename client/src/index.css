@@ -1622,7 +1622,8 @@ html:has(.room-portal-layer) body {
   .paper-slot,
   .agent-desk,
   .library-paper,
-  .plaque {
+  .plaque,
+  .ponder-ink {
     transition: none;
   }
 }
@@ -1640,7 +1641,8 @@ html:has(.room-portal-layer) body {
   .paper-slot,
   .agent-desk,
   .library-paper,
-  .plaque {
+  .plaque,
+  .ponder-ink {
     transition: none;
   }
 }
@@ -1732,21 +1734,38 @@ html:has(.room-portal-layer) body {
   z-index: 3;
 }
 
+.learn-room .paper-log {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .learn-room .paper-slot[data-pose="desk"] .paper-log {
   padding: 12px 16px 8px 14px;
 }
 
 .learn-room .paper-slot[data-pose="lifted"] {
-  left: 3%;
-  width: 76%;
+  left: 2%;
+  width: 68%;
+  top: 2%;
+  height: 92%;
+  max-height: 92%;
+  aspect-ratio: auto;
   transform: none;
+}
+
+.learn-room .paper-slot[data-pose="lifted"] .paper-wash {
+  display: none;
 }
 
 .app[data-layout="landscape"] .learn-room .paper-slot[data-pose="lifted"],
 .app[data-layout="desktop"] .learn-room .paper-slot[data-pose="lifted"] {
-  left: 3%;
-  width: min(820px, 72%);
-  top: 6%;
+  left: 4%;
+  width: min(860px, 66%);
+  top: 4%;
+  height: 88%;
+  max-height: 88%;
+  aspect-ratio: auto;
   transform: none;
 }
 
@@ -1756,6 +1775,44 @@ html:has(.room-portal-layer) body {
   align-items: stretch;
   gap: 10px;
   margin-top: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ponder-hint {
+  margin: 0;
+  color: var(--darkwood);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.ponder-ink {
+  display: block;
+  width: 100%;
+  flex: 1 1 auto;
+  height: 0;
+  min-height: 180px;
+  touch-action: none;
+  cursor: crosshair;
+  user-select: none;
+  background-color: transparent;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    rgba(79, 53, 46, 0.28) 31px,
+    rgba(79, 53, 46, 0.28) 32px
+  );
+  border: 3px solid var(--darkwood);
+}
+
+.ponder-ink[data-live="false"] {
+  flex: 1 1 auto;
+  height: 0;
+  min-height: 64px;
+  border-color: transparent;
+  pointer-events: none;
+  cursor: default;
 }
 
 .ponder-label {
@@ -1768,7 +1825,7 @@ html:has(.room-portal-layer) body {
 
 .ponder-label textarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 72px;
   resize: vertical;
   background: var(--paper);
   color: var(--ink);
