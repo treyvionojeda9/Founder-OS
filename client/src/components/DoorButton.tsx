@@ -19,22 +19,25 @@ import {
   sideHeight,
 } from "../design/sprites/doorFaces";
 import type { Door } from "../fixtures/doors";
+import { frameFromRig, type DoorFrame } from "../hall/doorFrame";
 import { DOLLY_MS, ENTER_MS, doorOpenSchedule, type DoorPhase } from "../hall/doorMotion";
 import type { DoorPose } from "../hall/layout";
-import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useStillFrame } from "../hooks/useStillFrame";
 
 type DoorButtonProps = {
   door: Door;
   scale: number;
   pose: DoorPose;
   onOpen: (door: Door) => void;
+  onArm?: (door: Door, frame: DoorFrame) => void;
 };
 
-export function DoorButton({ door, scale, pose, onOpen }: DoorButtonProps) {
-  const reduce = useReducedMotion();
+export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps) {
+  const still = useStillFrame();
   const [phase, setPhase] = useState<DoorPhase>("closed");
   const timers = useRef<number[]>([]);
   const busy = useRef(false);
+  const rootRef = useRef<HTMLButtonElement>(null);
   const px = (cells: number) => `${cells * scale}px`;
   const depth = doorSpec.depth * scale;
 
@@ -47,7 +50,9 @@ export function DoorButton({ door, scale, pose, onOpen }: DoorButtonProps) {
   function activate() {
     if (busy.current) return;
     busy.current = true;
-    for (const step of doorOpenSchedule(reduce)) {
+    const rig = rootRef.current?.querySelector(".door-rig");
+    if (!still && onArm && rig instanceof HTMLElement) onArm(door, frameFromRig(rig, scale));
+    for (const step of doorOpenSchedule(still)) {
       const run = () => {
         if (step.phase === "enter") onOpen(door);
         else setPhase(step.phase);
@@ -74,9 +79,11 @@ export function DoorButton({ door, scale, pose, onOpen }: DoorButtonProps) {
 
   return (
     <button
+      ref={rootRef}
       type="button"
-      className={opening ? "door is-opening" : "door"}
+      className={["door", door.section === "work" ? "is-team" : "", opening ? "is-opening" : ""].filter(Boolean).join(" ")}
       data-phase={phase}
+      data-door-id={door.id}
       style={{ ...poseStyle, width: px(doorSpec.frameW) }}
       onClick={activate}
       aria-label={`Open ${door.name}`}

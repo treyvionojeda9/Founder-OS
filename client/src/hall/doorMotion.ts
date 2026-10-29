@@ -9,6 +9,16 @@ export const DOLLY_MS = 300;
 export const ENTER_MS = 720;
 export const REVEAL_MS = 180;
 export const SEQUENCE_MS = ENTER_MS + REVEAL_MS;
+/** Reverse: the room recedes into the doorway, then the leaf shuts. */
+export const SHUT_MS = 560;
+
+/**
+ * Reduced motion and slow updates (e-ink) skip the dolly.
+ * The route swaps in one frame instead of a multi-frame approach.
+ */
+export function prefersStillFrames(reducedMotion: boolean, slowUpdate: boolean): boolean {
+  return reducedMotion || slowUpdate;
+}
 
 export type DoorPhase = "closed" | "swing" | "dolly";
 

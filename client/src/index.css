@@ -784,9 +784,10 @@ html:has(.door.is-opening) body {
 
 @keyframes frame-fade {
   0%,
-  58% {
+  45% {
     opacity: 1;
   }
+  80%,
   100% {
     opacity: 0;
   }
@@ -854,6 +855,369 @@ html:has(.door.is-opening) body {
   }
 }
 
+.door.is-team.is-opening .spill,
+.door.is-team.is-opening .wash,
+.door.is-team.is-opening .interior-dark {
+  opacity: 0;
+  animation: none;
+}
+
+.room-portal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.room-portal-layer.is-shut {
+  z-index: 60;
+}
+
+.room-portal {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  animation: room-through var(--enter-ms, 720ms) linear forwards;
+}
+
+.room-portal.is-shut {
+  animation: room-recede var(--shut-ms, 560ms) linear forwards;
+}
+
+.room-portal .study {
+  height: 100%;
+  max-height: 100%;
+}
+
+.door-ghost {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  perspective: 900px;
+}
+
+.door-ghost .leaf {
+  animation: leaf-shut var(--shut-ms, 560ms) linear forwards;
+}
+
+html:has(.room-portal-layer),
+html:has(.room-portal-layer) body {
+  overflow: hidden;
+}
+
+.route-shell:has(.route-content > .study) {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.route-shell:has(.route-content > .study) .app,
+.route-shell:has(.route-content > .study) .route-content {
+  height: 100%;
+  min-height: 0;
+}
+
+@keyframes room-through {
+  0%,
+  42% {
+    transform: translate(calc(var(--ox) - 50vw), calc(var(--oy) - 50vh)) scale(var(--door-scale));
+  }
+  96%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes room-recede {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  70%,
+  100% {
+    transform: translate(calc(var(--ox) - 50vw), calc(var(--oy) - 50vh)) scale(var(--door-scale));
+  }
+}
+
+@keyframes leaf-shut {
+  0%,
+  35% {
+    transform: translateZ(2px) rotateY(-100deg);
+  }
+  100% {
+    transform: translateZ(2px) rotateY(0deg);
+  }
+}
+
+.study {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  background: var(--night);
+  color: var(--paper);
+  overflow: hidden;
+}
+
+.study-bar,
+.study-tabs,
+.study-side,
+.approval-actions,
+.paper-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.study-bar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.study-team {
+  flex: 1;
+  min-width: 12ch;
+  font-family: "Press Start 2P", monospace;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.study-tabs {
+  flex-wrap: wrap;
+}
+
+.study-tabs [role="tab"],
+.study-side button,
+.paper-form button,
+.approval-actions button,
+.action-chip,
+.sheet-close {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+.study-tabs [role="tab"] {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  background: var(--slate);
+  color: var(--paper);
+}
+
+.study-tabs [role="tab"][aria-selected="true"] {
+  background: var(--ember);
+  color: var(--night);
+}
+
+.study-scene {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 8px 0 10px;
+}
+
+.desk {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--wood);
+  border: 4px solid var(--darkwood);
+  box-shadow: 0 8px 0 var(--darkwood);
+}
+
+.figures {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 8px 12px 0;
+  background: var(--slate);
+  border-bottom: 4px solid var(--plum);
+}
+
+.figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.figure figcaption {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--paper);
+}
+
+.paper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 12px;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+}
+
+.paper.is-lit {
+  border-color: var(--ember);
+}
+
+.paper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--wood);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.paper-glow {
+  align-self: end;
+  margin: 0 4px 8px;
+  pointer-events: none;
+}
+
+.paper-log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 28px 8px 20px;
+}
+
+.paper-log h1 {
+  margin-bottom: 12px;
+  color: var(--night);
+}
+
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.machine-line,
+.founder-line {
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--ember);
+}
+
+.machine-line p,
+.founder-line p,
+.placeholder-copy,
+.approval p,
+.ran-nothing {
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--night);
+}
+
+.who {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.stamp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--darkwood);
+}
+
+.action-chip {
+  margin-top: 10px;
+  background: var(--flame);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
+  font-size: 16px;
+}
+
+.paper-form {
+  flex-shrink: 0;
+  align-items: flex-end;
+  padding: 8px;
+  border-top: 3px solid var(--ember);
+}
+
+.composer-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--darkwood);
+}
+
+.composer-label textarea {
+  width: 100%;
+  min-height: 48px;
+  resize: none;
+  background: var(--paper);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
+  padding: 8px;
+}
+
+.sheet-close {
+  margin-top: 12px;
+}
+
+.approval {
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  padding: 20px;
+  max-width: min(480px, calc(100vw - 32px));
+}
+
+.approval::backdrop {
+  background: rgba(27, 26, 36, 0.82);
+}
+
+.approval h2 {
+  margin-bottom: 12px;
+}
+
+.approval-actions {
+  margin-top: 16px;
+}
+
+.approval-actions .approve {
+  background: var(--ember);
+  color: var(--night);
+}
+
+.app[data-layout="landscape"] .study {
+  padding: 8px 16px 8px;
+  gap: 6px;
+}
+
+.app[data-layout="landscape"] .paper {
+  margin: 8px;
+}
+
+.app[data-layout="landscape"] .paper-log,
+.app[data-layout="desktop"] .paper-log {
+  padding: 16px 28px 8px 20px;
+}
+
+.app[data-layout="desktop"] .study {
+  padding: 20px 28px 24px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .light-pool,
   .light-pool .pool-b,
@@ -862,7 +1226,20 @@ html:has(.door.is-opening) body {
   .door.is-opening .spill,
   .door-slot:has(.door.is-opening) .pose,
   .route-shell[data-cover="out"] .route-content,
-  .route-cover[data-phase="out"] {
+  .route-cover[data-phase="out"],
+  .room-portal,
+  .door-ghost .leaf {
+    animation: none;
+  }
+}
+
+@media (update: slow) {
+  .room-portal,
+  .door-ghost .leaf,
+  .door.is-opening .leaf,
+  .door.is-opening .dolly-target,
+  .door.is-opening .spill,
+  .door-slot:has(.door.is-opening) .pose {
     animation: none;
   }
 }
