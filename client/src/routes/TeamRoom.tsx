@@ -5,6 +5,7 @@ import { agent, forgeNote } from "../design/sprites";
 import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
+import { LibraryShelf } from "../library/LibraryShelf";
 import { DeskGrid } from "../study/DeskGrid";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
 import {
@@ -156,6 +157,11 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   };
 
   const leave = () => {
+    if (drawer === "library") {
+      setDrawer(null);
+      setPose("desk");
+      return;
+    }
     if (fromDesks && selected !== "overview") {
       if (expandTimer.current !== null) {
         window.clearTimeout(expandTimer.current);
@@ -197,7 +203,13 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   ];
 
   return (
-    <main className="study" data-lamp={lampStatus} data-paper={pose} data-preview={preview ? "true" : "false"}>
+    <main
+      className="study"
+      data-room={drawer === "library" ? "library" : "team"}
+      data-lamp={lampStatus}
+      data-paper={pose}
+      data-preview={preview ? "true" : "false"}
+    >
       <header className="study-bar">
         <button type="button" className="text-link" onClick={leave}>
           Back
@@ -263,7 +275,9 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
         })}
       </div>
       <div className="study-scene">
-        {showGrid ? (
+        {drawer === "library" ? (
+          <LibraryShelf teamId={team.id} preview={preview} />
+        ) : showGrid ? (
           <DeskGrid
             agents={team.agents}
             still={still}
@@ -378,7 +392,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
 }
 
 function drawerCopy(drawer: Exclude<Drawer, null>): string {
-  if (drawer === "library") return "Library is a stub. The shelves are not in this pass.";
+  if (drawer === "library") return "Human notes for this team.";
   return "Team is a stub. The roster beyond this chat comes later.";
 }
 
