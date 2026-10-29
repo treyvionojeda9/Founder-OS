@@ -52,7 +52,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
             Settings
           </Link>
         </aside>
-        <main className="stage">
+        <main className="stage" data-hall="void">
           <header className="stage-head">
             <div className="compact-brand">
               <Sprite rows={flame} scale={4} title="Spark of Freedom flame" />

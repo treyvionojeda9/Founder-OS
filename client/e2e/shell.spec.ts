@@ -21,12 +21,21 @@ test("splash, work hall, school hall, and a work door", async ({ page }, info) =
   await expect(page).toHaveURL(/\/home$/);
   await expect(page.getByRole("tab", { name: "Work" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeVisible();
+  const hall = page.locator("[data-hall=void]");
+  await expect(hall).toBeVisible();
+  await expect(hall).toHaveCSS("background-color", "rgb(27, 26, 36)");
+  const door = page.getByRole("button", { name: /Hale Design Lab/ });
+  await expect(door).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator(".ground-contact").first()).toBeVisible();
   await page.screenshot({ path: shot(`home-work-${proj}`) });
 
   if (proj === "tablet-portrait") {
     await page.evaluate(() => {
       document.documentElement.style.filter = "grayscale(1)";
     });
+    await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Work" })).toBeVisible();
+    await expect(page.locator(".ground-contact").first()).toBeVisible();
     await page.screenshot({ path: shot("home-work-tablet-portrait-grayscale") });
     await page.evaluate(() => {
       document.documentElement.style.filter = "";
@@ -43,6 +52,22 @@ test("splash, work hall, school hall, and a work door", async ({ page }, info) =
   await expect(page.getByRole("heading", { name: "CEO chat — PR #2" })).toBeVisible();
   await page.getByRole("link", { name: "Back" }).click();
   await expect(page).toHaveURL(/\/home$/);
+});
+
+test("door opens, then the route changes", async ({ page }, info) => {
+  const proj = info.project.name;
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/home");
+  await page.getByRole("button", { name: /Hale Design Lab/ }).click();
+  const opening = page.getByRole("button", { name: /Hale Design Lab/ });
+  await expect(opening).toHaveAttribute("data-phase", "ajar");
+  await expect(page).toHaveURL(/\/home$/);
+  await page.screenshot({ path: shot(`door-open-mid-${proj}`) });
+  await expect(opening).toHaveAttribute("data-phase", "through");
+  await expect(page).toHaveURL(/\/home$/);
+  await page.screenshot({ path: shot(`door-open-end-${proj}`) });
+  await expect(page).toHaveURL(/\/team\/hale-design-lab$/, { timeout: 4000 });
+  await expect(page.getByRole("heading", { name: "CEO chat — PR #2" })).toBeVisible();
 });
 
 test("a school door opens the learning stub", async ({ page }) => {
