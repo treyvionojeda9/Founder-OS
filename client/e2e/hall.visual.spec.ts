@@ -177,6 +177,7 @@ test.describe("open frames", () => {
     await page.clock.runFor(ENTER_MS + 400);
     await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
     await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+    await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
     await page.screenshot({
       path: `${dir}/door-landed-${info.project.name}.png`,
       animations: "allow",

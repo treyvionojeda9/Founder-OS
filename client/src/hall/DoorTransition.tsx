@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { WarmCover } from "../components/HallLight";
+import { doors } from "../fixtures/doors";
 import { useStillFrame } from "../hooks/useStillFrame";
+import { LearnStub } from "../routes/LearnStub";
 import { TeamRoom } from "../routes/TeamRoom";
 import { DoorApiContext, type HallLocationState } from "./doorApi";
 import { DoorGhost } from "./DoorGhost";
 import { fallbackFrame, type DoorFrame } from "./doorFrame";
-import { ENTER_MS, REVEAL_MS, SHUT_MS } from "./doorMotion";
+import { ENTER_MS, REVEAL_MS, roomFromPath, SHUT_MS, type PortalKind } from "./doorMotion";
 
 type Cover = "idle" | "on" | "out";
 
@@ -15,11 +17,11 @@ type Reveal = {
   frame: DoorFrame;
   mode: "open" | "shut";
   doorId: string;
+  kind: PortalKind;
 };
 
-function teamIdFromPath(path: string): string {
-  const match = path.match(/\/team\/([^/?#]+)/);
-  return match?.[1] ?? "";
+function kindForDoor(doorId: string): PortalKind {
+  return doors.find((door) => door.id === doorId)?.section === "school" ? "learn" : "team";
 }
 
 export type { HallLocationState } from "./doorApi";
@@ -46,8 +48,9 @@ export function DoorTransition({ children }: { children: ReactNode }) {
   }, []);
 
   const arm = useCallback((path: string, frame: DoorFrame) => {
-    if (!path.startsWith("/team/")) return;
-    const next: Reveal = { path, frame, mode: "open", doorId: teamIdFromPath(path) };
+    const room = roomFromPath(path);
+    if (!room) return;
+    const next: Reveal = { path, frame, mode: "open", doorId: room.id, kind: room.kind };
     frameRef.current = frame;
     revealRef.current = next;
     setReveal(next);
@@ -94,7 +97,14 @@ export function DoorTransition({ children }: { children: ReactNode }) {
         return;
       }
       const frame = frameRef.current ?? fallbackFrame();
-      const next: Reveal = { path: `/team/${doorId}`, frame, mode: "shut", doorId };
+      const kind = kindForDoor(doorId);
+      const next: Reveal = {
+        path: kind === "learn" ? `/learn/${doorId}` : `/team/${doorId}`,
+        frame,
+        mode: "shut",
+        doorId,
+        kind,
+      };
       revealRef.current = next;
       setReveal(next);
       navigate("/home", { state });
@@ -130,7 +140,11 @@ function RoomPortal({ reveal }: { reveal: Reveal }) {
   return (
     <div className={reveal.mode === "shut" ? "room-portal-layer is-shut" : "room-portal-layer"} aria-hidden="true">
       <div className={reveal.mode === "shut" ? "room-portal is-shut" : "room-portal"} style={style} data-mode={reveal.mode}>
-        <TeamRoom teamId={reveal.doorId} preview />
+        {reveal.kind === "learn" ? (
+          <LearnStub doorId={reveal.doorId} preview />
+        ) : (
+          <TeamRoom teamId={reveal.doorId} preview />
+        )}
       </div>
       {reveal.mode === "shut" ? <DoorGhost frame={reveal.frame} /> : null}
     </div>

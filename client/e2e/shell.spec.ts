@@ -118,7 +118,9 @@ test("a school door opens the learning stub", async ({ page }) => {
   await page.goto("/home");
   await page.getByRole("tab", { name: "School" }).click();
   await page.getByRole("button", { name: /Reading Room/ }).click();
-  await expect(page.getByRole("heading", { name: "Learning desk — PR #4" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI University — coming later" })).toBeVisible();
+  await expect(page.locator(".desk-top")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Open notebook" })).toBeVisible();
 });
 
 test("offline indicator appears and home still renders", async ({ page }, info) => {
@@ -195,7 +197,7 @@ test("a slow e-ink update cuts straight into the CEO chat", async ({ page }, inf
 });
 
 test("axe has no serious or critical issues on the shell routes", async ({ page }) => {
-  for (const path of ["/", "/home", "/design", "/settings", "/team/hale-design-lab"]) {
+  for (const path of ["/", "/home", "/design", "/settings", "/team/hale-design-lab", "/learn/reading-room"]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
     const bad = results.violations.filter((item) => item.impact === "serious" || item.impact === "critical");
