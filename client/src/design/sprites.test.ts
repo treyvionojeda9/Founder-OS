@@ -11,6 +11,7 @@ import {
   deskLampOn,
   doorFrame,
   doorLeaf,
+  doorSpill,
   lightPoolA,
   spriteCatalog,
 } from "./sprites";
@@ -68,6 +69,17 @@ describe("sprite grids", () => {
     expect(book.filter((luma) => luma === navy).length).toBeGreaterThan(book.filter((luma) => luma === sky).length);
     expect(key.length).toBeGreaterThan(0);
     for (const luma of key) expect(Math.abs(luma - wood)).toBeGreaterThanOrEqual(30);
+  });
+
+  it("paints the door spill as solid ember steps, not a checker", () => {
+    const y = Math.floor(doorSpill.length / 2);
+    const row = doorSpill[y] ?? "";
+    const x = Math.floor(row.length / 2);
+    expect(row[x]).toBe("f");
+    expect(row[x - 1]).toBe("f");
+    expect(row[x + 1]).toBe("f");
+    expect(doorSpill.some((line) => line.includes("e"))).toBe(true);
+    expect(doorSpill.some((line) => line.includes("."))).toBe(true);
   });
 
   it("cuts a hole in the frame and keeps the leaf inside that opening", () => {

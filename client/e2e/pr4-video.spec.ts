@@ -11,14 +11,15 @@ test("door into the room, lift the paper, set it down, and come back", async ({ 
   await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeVisible();
   await page.getByRole("button", { name: /Hale Design Lab/ }).click();
   await expect(page).toHaveURL(/\/team\/hale-design-lab$/, { timeout: 5000 });
-  await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
+  const sheet = page.locator(".route-content .paper-slot");
+  await expect(sheet).toHaveAttribute("data-pose", "desk");
   await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
   await page.waitForTimeout(450);
   await page.getByRole("heading", { name: "CEO chat" }).click();
-  await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "lifted");
+  await expect(sheet).toHaveAttribute("data-pose", "lifted");
   await page.waitForTimeout(500);
   await page.getByRole("button", { name: "Set it down" }).click();
-  await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
+  await expect(sheet).toHaveAttribute("data-pose", "desk");
   await page.waitForTimeout(450);
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page).toHaveURL(/\/home$/, { timeout: 5000 });

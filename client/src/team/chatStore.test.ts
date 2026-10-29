@@ -3,6 +3,7 @@ import source from "./chatStore.ts?raw";
 import { localDb, noteRepo } from "../storage/services";
 import {
   appendFounderLine,
+  formatMachineTime,
   isMachineLine,
   linesForAgent,
   listTeams,
@@ -102,5 +103,13 @@ describe("team chat store", () => {
 
   it("has no human-vault write path in the chat store", () => {
     expect(source).not.toMatch(/humanNotes|humanRevisions|saveHumanEdit|vault:\s*"human"/);
+  });
+
+  it("prints machine time in America/Chicago and leaves the UTC label off the sheet", () => {
+    expect(formatMachineTime("2026-10-29T08:10:00Z")).toBe("29 Oct 2026, 03:10");
+    expect(formatMachineTime("2026-10-29T08:14:00Z")).toBe("29 Oct 2026, 03:14");
+    expect(formatMachineTime("2026-01-15T06:00:00Z")).toBe("15 Jan 2026, 00:00");
+    expect(formatMachineTime("not-a-time")).toBe("");
+    expect(formatMachineTime("2026-10-29T08:10:00Z")).not.toMatch(/UTC/);
   });
 });

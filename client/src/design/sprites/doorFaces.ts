@@ -173,42 +173,43 @@ function paintInterior(): SpriteGrid {
   return join(rows);
 }
 
+/** Stepped flame, ember, then wood. The gap shows light, not a Bayer checker. */
 function paintSpill(): SpriteGrid {
   const { openingW, openingH } = doorSpec;
-  const rows = blank(openingW, openingH, "e");
+  const rows = blank(openingW, openingH, ".");
   const cx = (openingW - 1) / 2;
   const cy = (openingH - 1) / 2;
   for (let y = 0; y < openingH; y += 1) {
     for (let x = 0; x < openingW; x += 1) {
-      const dx = (x - cx) / cx;
-      const dy = (y - cy) / cy;
+      const dx = (x - cx) / (cx * 0.98);
+      const dy = (y - cy) / (cy * 0.98);
       const r = Math.sqrt(dx * dx + dy * dy);
-      const thresh = BAYER[y % 4][x % 4];
-      if (r < 0.35) rows[y][x] = thresh < 8 ? "f" : "e";
-      else if (r < 0.7) rows[y][x] = thresh < 6 ? "f" : "e";
-      else rows[y][x] = thresh < 5 ? "e" : "w";
+      if (r > 1) continue;
+      if (r < 0.34) rows[y][x] = "f";
+      else if (r < 0.66) rows[y][x] = "e";
+      else rows[y][x] = "w";
     }
   }
   return join(rows);
 }
 
+/** Concentric flame, ember, and wood. `shift` pulls the second frame in a step. */
 function paintPool(shift: number): SpriteGrid {
   const width = 48;
   const height = 22;
   const rows = blank(width, height);
   const cx = (width - 1) / 2;
   const cy = height - 1;
+  const tighten = shift > 0 ? 0.08 : 0;
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const dx = (x - cx) / (width * 0.5);
       const dy = (y - cy) / (height * 1.05);
-      const r = Math.sqrt(dx * dx + dy * dy);
-      const thresh = BAYER[(y + shift) % 4][(x + shift) % 4];
+      const r = Math.sqrt(dx * dx + dy * dy) + tighten;
       if (r > 1) continue;
-      if (r < 0.28) rows[y][x] = thresh < 11 ? "f" : "e";
-      else if (r < 0.55) rows[y][x] = thresh < 7 ? "e" : thresh < 12 ? "w" : ".";
-      else if (r < 0.82) rows[y][x] = thresh < 4 ? "w" : ".";
-      else rows[y][x] = thresh < 2 ? "w" : ".";
+      if (r < 0.3) rows[y][x] = "f";
+      else if (r < 0.58) rows[y][x] = "e";
+      else if (r < 0.84) rows[y][x] = "w";
     }
   }
   return join(rows);

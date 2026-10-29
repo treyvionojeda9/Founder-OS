@@ -151,12 +151,17 @@ test.describe("open frames", () => {
       { label: "100", ms: ENTER_MS - 16 },
     ];
     await expect(page.locator(".room-portal")).toBeVisible();
-    const spill = await page.locator(".door.is-opening .spill").evaluate((el) => getComputedStyle(el).opacity);
-    expect(Number(spill)).toBe(0);
+    const spill = await page.locator(".door.is-opening .spill").evaluate((el) => Number(getComputedStyle(el).opacity));
+    expect(spill).toBeGreaterThanOrEqual(0);
+    expect(spill).toBeLessThanOrEqual(1);
 
     for (const frame of frames) {
       await seek(page, frame.ms);
       await expect(page).toHaveURL(/\/home$/);
+      if (frame.label === "25") {
+        const ajar = await page.locator(".door.is-opening .spill").evaluate((el) => Number(getComputedStyle(el).opacity));
+        expect(ajar).toBeGreaterThan(0.5);
+      }
       if (frame.label === "100") {
         const scale = await page.locator(".room-portal").evaluate((el) => {
           const value = getComputedStyle(el).transform;

@@ -15,7 +15,7 @@ type Cover = "idle" | "on" | "out";
 type Reveal = {
   path: string;
   frame: DoorFrame;
-  mode: "open" | "shut";
+  mode: "open" | "shut" | "settle";
   doorId: string;
   kind: PortalKind;
 };
@@ -62,13 +62,19 @@ export function DoorTransition({ children }: { children: ReactNode }) {
       clearTimers();
       if (armed) {
         navigate(path);
+        const current = revealRef.current;
+        if (current?.mode === "open") {
+          const settling: Reveal = { ...current, mode: "settle" };
+          revealRef.current = settling;
+          setReveal(settling);
+        }
         timers.current.push(
           window.setTimeout(() => {
-            if (revealRef.current?.mode === "open") {
+            if (revealRef.current?.mode === "settle") {
               revealRef.current = null;
               setReveal(null);
             }
-          }, 48),
+          }, REVEAL_MS),
         );
         return;
       }
