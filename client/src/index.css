@@ -19,6 +19,11 @@ body,
   min-height: 100%;
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
 body {
   background: var(--night);
   color: var(--paper);
@@ -94,8 +99,25 @@ a.text-link {
   display: block;
 }
 
-.app {
+.route-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--night);
+}
+
+.route-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.app {
+  flex: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--night);
@@ -159,6 +181,7 @@ a.text-link {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   padding: 16px 16px 12px;
 }
 
@@ -166,12 +189,23 @@ a.text-link {
   display: none;
 }
 
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--night);
+  color: var(--paper);
+}
+
 .stage-head {
+  position: relative;
+  z-index: 4;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .compact-brand {
@@ -186,38 +220,208 @@ a.text-link {
 
 .door-wrap {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  position: relative;
+  z-index: 2;
+  perspective: 860px;
+  perspective-origin: 50% 42%;
 }
 
 .door-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 28px 8px 12px;
+  transform-style: preserve-3d;
+}
+
+.door-grid[data-count="1"] {
+  gap: 0;
+}
+
+.door-slot {
+  transform-style: preserve-3d;
 }
 
 .door {
-  width: 100%;
+  position: relative;
+  width: max-content;
   background: transparent;
-  color: inherit;
-  border: 3px solid var(--wood);
+  color: var(--paper);
+  border: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 12px 8px 16px;
+  padding: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.door:focus-visible {
+  outline: 3px solid var(--paper);
+  outline-offset: 6px;
+}
+
+.pose {
+  position: relative;
+  display: block;
+  width: 100%;
+  transform-style: preserve-3d;
+  transform: translate3d(0, var(--drop, 0px), var(--z, 0px)) rotateY(var(--yaw, 0deg));
+}
+
+.light-pool {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: var(--pool-w, 0px);
+  margin-left: calc(var(--pool-w, 0px) / -2);
+  margin-bottom: -14px;
+  pointer-events: none;
+}
+
+.pool-a,
+.pool-b {
+  display: block;
+}
+
+.pool-b {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}
+
+.dolly-target,
+.door-rig {
+  display: block;
+}
+
+.dolly-target {
+  transform-origin: center center;
+  transform: scale(1);
+}
+
+.door-rig {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.door-rig .face,
+.leaf,
+.leaf-front,
+.leaf-back,
+.leaf-edge,
+.spill,
+.wash,
+.interior-dark {
+  position: absolute;
+}
+
+.wash {
+  inset: 0;
+  opacity: 0;
+  transform: translateZ(-1px);
+}
+
+.frame,
+.frame-back {
+  inset: 0;
+}
+
+.frame {
+  transform: translateZ(0);
+}
+
+.spill {
+  inset: 0;
+  opacity: 0;
+}
+
+.leaf {
+  transform-style: preserve-3d;
+  transform-origin: 0% 50%;
+  transform: translateZ(2px) rotateY(0deg);
+}
+
+.leaf-front,
+.leaf-back {
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.leaf-back {
+  transform: rotateY(180deg);
+}
+
+.leaf-edge {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--edge, 16px);
+  transform-origin: 100% 50%;
+  transform: rotateY(90deg);
+}
+
+.contact-shadow {
+  display: flex;
+  justify-content: center;
+  margin-top: -4px;
+  pointer-events: none;
 }
 
 .door-name {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  text-align: center;
   font-family: system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.3;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.vignette,
+.route-cover {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.vignette {
+  z-index: 1;
+}
+
+.route-cover {
+  z-index: 80;
+  background: var(--ember);
+}
+
+.route-shell[data-cover="on"] .route-content {
+  opacity: 0;
+}
+
+.app:has(.door.is-opening) .door-wrap {
+  z-index: 40;
+}
+
+html:has(.door.is-opening),
+html:has(.door.is-opening) body {
+  overflow: hidden;
 }
 
 .toggle-dock {
   position: sticky;
   bottom: 0;
+  z-index: 4;
   display: flex;
   justify-content: center;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
@@ -249,9 +453,18 @@ a.text-link {
   color: var(--night);
 }
 
+.app[data-layout="landscape"] .door-wrap,
+.app[data-layout="desktop"] .door-wrap {
+  perspective: 1400px;
+}
+
 .app[data-layout="landscape"] .door-grid,
 .app[data-layout="desktop"] .door-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 72px;
+}
+
+.app[data-layout="portrait"] .door-grid[data-count="3"] {
+  gap: 14px;
 }
 
 .app[data-layout="landscape"] .hall {
@@ -264,13 +477,14 @@ a.text-link {
   margin-left: 300px;
   padding: 0;
   min-height: calc(100vh - 72px);
-  background: var(--paper);
-  color: var(--night);
+  background: var(--night);
+  color: var(--paper);
 }
 
 .app[data-layout="desktop"] .rail {
   display: flex;
   position: fixed;
+  z-index: 5;
   top: 0;
   left: 0;
   bottom: 0;
@@ -291,8 +505,11 @@ a.text-link {
 
 .app[data-layout="desktop"] .stage {
   flex: 1;
-  background: var(--paper);
-  color: var(--night);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--night);
+  color: var(--paper);
   padding: 36px 40px 28px;
 }
 
@@ -315,7 +532,7 @@ a.text-link {
 }
 
 .app[data-layout="desktop"] .door {
-  background: var(--paper);
+  background: transparent;
 }
 
 .app[data-layout="desktop"] .offline {
@@ -324,8 +541,8 @@ a.text-link {
 
 .app[data-layout="desktop"] .toggle-dock {
   margin-left: 300px;
-  background: var(--paper);
-  border-top: 4px solid var(--wood);
+  background: var(--night);
+  border-top: 4px solid var(--darkwood);
 }
 
 .app[data-layout="desktop"] .toggle {
@@ -333,8 +550,8 @@ a.text-link {
 }
 
 .app[data-layout="desktop"] .toggle [role="tab"] {
-  background: var(--paper);
-  color: var(--night);
+  background: var(--slate);
+  color: var(--paper);
 }
 
 .app[data-layout="desktop"] .toggle [aria-selected="true"] {
@@ -449,4 +666,203 @@ a.text-link {
 
 .app[data-layout="portrait"] .wordmark {
   font-size: 14px;
+}
+
+.door-grid:has(.door.is-opening) .door:not(.is-opening) {
+  animation: sink-dark var(--swing-ms, 300ms) steps(4, end) forwards;
+}
+
+.door.is-opening {
+  z-index: 6;
+}
+
+.door-slot:has(.door.is-opening) .pose {
+  animation: straighten 200ms linear forwards;
+}
+
+.door.is-opening .leaf {
+  animation: leaf-swing var(--swing-ms, 300ms) linear forwards;
+}
+
+.door.is-opening .spill,
+.door.is-opening .wash {
+  animation: wash-in var(--swing-ms, 300ms) steps(4, end) forwards;
+}
+
+.door.is-opening .dolly-target {
+  animation: doorway-dolly var(--dolly-ms, 420ms) linear var(--swing-ms, 300ms) forwards;
+}
+
+.door.is-opening .frame,
+.door.is-opening .frame-back,
+.door.is-opening .jamb,
+.door.is-opening .side,
+.door.is-opening .interior-dark {
+  animation: frame-fade var(--dolly-ms, 420ms) linear var(--swing-ms, 300ms) forwards;
+}
+
+.door.is-opening .light-pool,
+.door.is-opening .contact-shadow,
+.door.is-opening .door-name {
+  animation: frame-fade calc(var(--dolly-ms, 420ms) * 0.5) linear var(--swing-ms, 300ms) forwards;
+}
+
+.door.is-opening .leaf {
+  animation:
+    leaf-swing var(--swing-ms, 300ms) linear forwards,
+    frame-fade var(--dolly-ms, 420ms) linear var(--swing-ms, 300ms) forwards;
+}
+
+@keyframes straighten {
+  from {
+    transform: translate3d(0, var(--drop, 0px), var(--z, 0px)) rotateY(var(--yaw, 0deg));
+  }
+  to {
+    transform: translate3d(0, 0, 28px) rotateY(0deg);
+  }
+}
+
+@keyframes leaf-swing {
+  0%,
+  19% {
+    transform: translateZ(2px) rotateY(0deg);
+  }
+  20%,
+  39% {
+    transform: translateZ(2px) rotateY(-25deg);
+  }
+  40%,
+  59% {
+    transform: translateZ(2px) rotateY(-50deg);
+  }
+  60%,
+  79% {
+    transform: translateZ(2px) rotateY(-75deg);
+  }
+  80%,
+  100% {
+    transform: translateZ(2px) rotateY(-100deg);
+  }
+}
+
+@keyframes wash-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes doorway-dolly {
+  0%,
+  14% {
+    transform: scale(1);
+  }
+  15%,
+  29% {
+    transform: scale(2);
+  }
+  30%,
+  44% {
+    transform: scale(3);
+  }
+  45%,
+  59% {
+    transform: scale(5);
+  }
+  60%,
+  74% {
+    transform: scale(7);
+  }
+  75%,
+  89% {
+    transform: scale(9);
+  }
+  90%,
+  100% {
+    transform: scale(12);
+  }
+}
+
+@keyframes frame-fade {
+  0%,
+  58% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes sink-dark {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pool-breathe {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes pool-frame {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes route-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cover-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.route-shell[data-cover="out"] .route-content {
+  animation: route-rise var(--reveal-ms, 180ms) steps(3, end) both;
+}
+
+.route-cover[data-phase="out"] {
+  animation: cover-out var(--reveal-ms, 180ms) steps(3, end) forwards;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .light-pool {
+    animation: pool-breathe 4.6s steps(1, end) infinite alternate;
+  }
+
+  .light-pool .pool-b {
+    animation: pool-frame 4.6s steps(1, end) infinite alternate;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light-pool,
+  .light-pool .pool-b,
+  .door.is-opening .leaf,
+  .door.is-opening .dolly-target,
+  .door.is-opening .spill,
+  .door-slot:has(.door.is-opening) .pose,
+  .route-shell[data-cover="out"] .route-content,
+  .route-cover[data-phase="out"] {
+    animation: none;
+  }
 }
