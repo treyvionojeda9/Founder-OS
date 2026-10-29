@@ -1,27 +1,38 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { WarmCover } from "../components/HallLight";
-import { useReducedMotion } from "../hooks/useReducedMotion";
-import { REVEAL_MS } from "./doorMotion";
+import { useStillFrame } from "../hooks/useStillFrame";
+import { TeamRoom } from "../routes/TeamRoom";
+import { DoorApiContext, type HallLocationState } from "./doorApi";
+import { DoorGhost } from "./DoorGhost";
+import { fallbackFrame, type DoorFrame } from "./doorFrame";
+import { ENTER_MS, REVEAL_MS, SHUT_MS } from "./doorMotion";
 
 type Cover = "idle" | "on" | "out";
 
-const DoorOpenContext = createContext<((path: string) => void) | null>(null);
+type Reveal = {
+  path: string;
+  frame: DoorFrame;
+  mode: "open" | "shut";
+  doorId: string;
+};
 
-export function useDoorOpen(): (path: string) => void {
-  const fromHall = useContext(DoorOpenContext);
-  const navigate = useNavigate();
-  return (path: string) => {
-    if (fromHall) fromHall(path);
-    else navigate(path);
-  };
+function teamIdFromPath(path: string): string {
+  const match = path.match(/\/team\/([^/?#]+)/);
+  return match?.[1] ?? "";
 }
+
+export type { HallLocationState } from "./doorApi";
+export { useDoorArm, useDoorOpen, useDoorShut } from "./doorApi";
 
 export function DoorTransition({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const reduce = useReducedMotion();
+  const still = useStillFrame();
   const [cover, setCover] = useState<Cover>("idle");
+  const [reveal, setReveal] = useState<Reveal | null>(null);
   const timers = useRef<number[]>([]);
+  const revealRef = useRef<Reveal | null>(null);
+  const frameRef = useRef<DoorFrame | null>(null);
 
   useEffect(() => {
     return () => {
@@ -29,14 +40,39 @@ export function DoorTransition({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const clearTimers = useCallback(() => {
+    for (const id of timers.current) window.clearTimeout(id);
+    timers.current = [];
+  }, []);
+
+  const arm = useCallback((path: string, frame: DoorFrame) => {
+    if (!path.startsWith("/team/")) return;
+    const next: Reveal = { path, frame, mode: "open", doorId: teamIdFromPath(path) };
+    frameRef.current = frame;
+    revealRef.current = next;
+    setReveal(next);
+  }, []);
+
   const open = useCallback(
     (path: string) => {
-      if (reduce) {
+      const armed = revealRef.current?.mode === "open" && revealRef.current.path === path;
+      clearTimers();
+      if (armed) {
+        navigate(path);
+        timers.current.push(
+          window.setTimeout(() => {
+            if (revealRef.current?.mode === "open") {
+              revealRef.current = null;
+              setReveal(null);
+            }
+          }, 48),
+        );
+        return;
+      }
+      if (still) {
         navigate(path);
         return;
       }
-      for (const id of timers.current) window.clearTimeout(id);
-      timers.current = [];
       setCover("on");
       navigate(path);
       timers.current.push(
@@ -44,19 +80,59 @@ export function DoorTransition({ children }: { children: ReactNode }) {
         window.setTimeout(() => setCover("idle"), 32 + REVEAL_MS),
       );
     },
-    [navigate, reduce],
+    [clearTimers, navigate, still],
+  );
+
+  const shut = useCallback(
+    (doorId: string) => {
+      clearTimers();
+      const state: HallLocationState = { focusDoorId: doorId };
+      if (still) {
+        revealRef.current = null;
+        setReveal(null);
+        navigate("/home", { state });
+        return;
+      }
+      const frame = frameRef.current ?? fallbackFrame();
+      const next: Reveal = { path: `/team/${doorId}`, frame, mode: "shut", doorId };
+      revealRef.current = next;
+      setReveal(next);
+      navigate("/home", { state });
+      timers.current.push(
+        window.setTimeout(() => {
+          revealRef.current = null;
+          setReveal(null);
+        }, SHUT_MS),
+      );
+    },
+    [clearTimers, navigate, still],
   );
 
   return (
-    <DoorOpenContext.Provider value={open}>
-      <div
-        className="route-shell"
-        data-cover={cover}
-        style={{ "--reveal-ms": `${REVEAL_MS}ms` } as CSSProperties}
-      >
+    <DoorApiContext.Provider value={{ open, arm, shut }}>
+      <div className="route-shell" data-cover={cover} style={{ "--reveal-ms": `${REVEAL_MS}ms` } as CSSProperties}>
         {children}
         {cover !== "idle" ? <WarmCover className="route-cover" phase={cover} /> : null}
+        {reveal ? <RoomPortal reveal={reveal} /> : null}
       </div>
-    </DoorOpenContext.Provider>
+    </DoorApiContext.Provider>
+  );
+}
+
+function RoomPortal({ reveal }: { reveal: Reveal }) {
+  const style = {
+    "--ox": `${reveal.frame.ox}px`,
+    "--oy": `${reveal.frame.oy}px`,
+    "--door-scale": String(reveal.frame.scale),
+    "--enter-ms": `${ENTER_MS}ms`,
+    "--shut-ms": `${SHUT_MS}ms`,
+  } as CSSProperties;
+  return (
+    <div className={reveal.mode === "shut" ? "room-portal-layer is-shut" : "room-portal-layer"} aria-hidden="true">
+      <div className={reveal.mode === "shut" ? "room-portal is-shut" : "room-portal"} style={style} data-mode={reveal.mode}>
+        <TeamRoom teamId={reveal.doorId} preview />
+      </div>
+      {reveal.mode === "shut" ? <DoorGhost frame={reveal.frame} /> : null}
+    </div>
   );
 }

@@ -1,0 +1,110 @@
+{
+  "teams": [
+    {
+      "id": "hale-design-lab",
+      "name": "Hale Design Lab",
+      "agents": [
+        { "id": "ceo", "name": "CEO", "status": "working" },
+        { "id": "atelier", "name": "Atelier", "status": "idle" },
+        { "id": "courier", "name": "Courier", "status": "failed" }
+      ],
+      "transcript": [
+        {
+          "id": "hale-m1",
+          "author": "machine",
+          "agentId": "ceo",
+          "record": "machine",
+          "body": "The hall door opens onto this desk. I left a forge note on the paper for you to read here.",
+          "source": "CEO agent · Hale Design Lab",
+          "timestamp": "2026-10-29T08:10:00Z"
+        },
+        {
+          "id": "hale-f1",
+          "author": "founder",
+          "record": "chat",
+          "body": "Keep it on this sheet. Chat stays chat — do not file it in my notes."
+        },
+        {
+          "id": "hale-m2",
+          "author": "machine",
+          "agentId": "ceo",
+          "record": "machine",
+          "body": "I can publish the forge note to the studio channel.",
+          "source": "CEO agent · Hale Design Lab",
+          "timestamp": "2026-10-29T08:14:00Z",
+          "action": {
+            "id": "publish-forge-note",
+            "kind": "publish",
+            "label": "Publish the forge note"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cloud-agent-team",
+      "name": "Cloud Agent Team",
+      "agents": [
+        { "id": "ceo", "name": "CEO", "status": "working" },
+        { "id": "relay", "name": "Relay", "status": "idle" }
+      ],
+      "transcript": [
+        {
+          "id": "cloud-m1",
+          "author": "machine",
+          "agentId": "ceo",
+          "record": "machine",
+          "body": "Cloud desk is lit. I drafted a status line for the team channel.",
+          "source": "CEO agent · Cloud Agent Team",
+          "timestamp": "2026-10-29T09:00:00Z"
+        },
+        {
+          "id": "cloud-m2",
+          "author": "machine",
+          "agentId": "ceo",
+          "record": "machine",
+          "body": "I can contact the channel with that status line.",
+          "source": "CEO agent · Cloud Agent Team",
+          "timestamp": "2026-10-29T09:05:00Z",
+          "action": {
+            "id": "contact-channel",
+            "kind": "contact",
+            "label": "Contact the channel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-agent-team",
+      "name": "Local Agent Team",
+      "agents": [
+        { "id": "ceo", "name": "CEO", "status": "idle" },
+        { "id": "bench", "name": "Bench", "status": "working" }
+      ],
+      "transcript": [
+        {
+          "id": "local-m1",
+          "author": "machine",
+          "agentId": "ceo",
+          "record": "machine",
+          "body": "Local desk is quiet. The bench agent is the one still working.",
+          "source": "CEO agent · Local Agent Team",
+          "timestamp": "2026-10-29T07:40:00Z"
+        },
+        {
+          "id": "local-m2",
+          "author": "machine",
+          "agentId": "ceo",
+          "record": "machine",
+          "body": "I can write a bench handoff into the machine log.",
+          "source": "CEO agent · Local Agent Team",
+          "timestamp": "2026-10-29T07:44:00Z",
+          "action": {
+            "id": "write-handoff",
+            "kind": "write",
+            "label": "Write the bench handoff"
+          }
+        }
+      ]
+    }
+  ]
+}

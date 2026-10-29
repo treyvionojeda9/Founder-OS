@@ -7,7 +7,7 @@ import { Home } from "./routes/Home";
 import { LearnStub } from "./routes/LearnStub";
 import { SettingsPage } from "./routes/SettingsPage";
 import { Splash } from "./routes/Splash";
-import { TeamStub } from "./routes/TeamStub";
+import { TeamRoom } from "./routes/TeamRoom";
 import { SessionProvider } from "./storage/session";
 
 function Frame() {
@@ -32,7 +32,7 @@ export function App() {
           <Route element={<Frame />}>
             <Route path="/" element={<Splash />} />
             <Route path="/home" element={<Home />} />
-            <Route path="/team/:id" element={<TeamStub />} />
+            <Route path="/team/:id" element={<TeamRoom />} />
             <Route path="/learn/:id" element={<LearnStub />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/design" element={<DesignSystem />} />

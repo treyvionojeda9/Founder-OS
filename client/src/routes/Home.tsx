@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { DoorButton } from "../components/DoorButton";
 import { Vignette } from "../components/HallLight";
 import { SectionToggle } from "../components/SectionToggle";
 import { Sprite } from "../design/Sprite";
 import { flame } from "../design/sprites";
 import { doors as fixtureDoors, type Door, type DoorSection } from "../fixtures/doors";
-import { useDoorOpen } from "../hall/DoorTransition";
+import { useDoorArm, useDoorOpen, type HallLocationState } from "../hall/doorApi";
 import { doorPath } from "../hall/doorMotion";
 import { doorPixelScale, doorPose, doorsForSearch } from "../hall/layout";
 import { useFormFactor } from "../hooks/useFormFactor";
@@ -18,6 +18,10 @@ type HomeProps = {
 
 export function Home({ doors = fixtureDoors }: HomeProps) {
   const openDoor = useDoorOpen();
+  const armDoor = useDoorArm();
+  const location = useLocation();
+  const focusDoorId = (location.state as HallLocationState | null)?.focusDoorId;
+  const focusedDoor = useRef<string | null>(null);
   const layout = useFormFactor();
   const [params] = useSearchParams();
   const hallDoors = doorsForSearch(doors, params.toString());
@@ -45,6 +49,19 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
     setSection(next);
     if (showToggle) void settingsRepo.setSection(next).catch(() => undefined);
   }
+
+  useEffect(() => {
+    if (!focusDoorId || focusedDoor.current === focusDoorId) return;
+    const target = doors.find((door) => door.id === focusDoorId);
+    if (target && showToggle && target.section !== section) {
+      setSection(target.section);
+      return;
+    }
+    const node = document.querySelector<HTMLButtonElement>(`[data-door-id="${CSS.escape(focusDoorId)}"]`);
+    if (!node) return;
+    node.focus({ preventScroll: true });
+    focusedDoor.current = focusDoorId;
+  }, [doors, focusDoorId, section, showToggle]);
 
   const visible = showToggle ? hallDoors.filter((door) => door.section === section) : hallDoors;
   const headingId = section === "work" ? "tab-work" : "tab-school";
@@ -94,6 +111,9 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
                       door={door}
                       scale={scale}
                       pose={pose}
+                      onArm={(chosen, frame) => {
+                        if (chosen.section === "work") armDoor(doorPath(chosen), frame);
+                      }}
                       onOpen={(chosen) => {
                         openDoor(doorPath(chosen));
                       }}
