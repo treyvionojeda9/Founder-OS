@@ -80,7 +80,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
           </Link>
         </aside>
         <main className="stage" data-hall="void">
-          <header className="stage-head">
+          <header className="pixel-bar stage-head">
             <div className="compact-brand">
               <Sprite rows={flame} scale={4} title="Spark of Freedom flame" />
               <h1 className="wordmark">Spark of Freedom</h1>

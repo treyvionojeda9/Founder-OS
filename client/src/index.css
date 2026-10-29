@@ -6,6 +6,28 @@
   font-display: swap;
 }
 
+/* Keep in step with client/src/design/type.ts. applyType() writes the same variables. */
+:root {
+  --font-pixel: "Press Start 2P", monospace;
+  --type-meta: 8px;
+  --type-body: 16px;
+  --type-title: 24px;
+  --type-display: 32px;
+  --leading-meta: 16px;
+  --leading-body: 24px;
+  --leading-title: 40px;
+  --leading-display: 56px;
+  --chip-working-bg: #d28c40;
+  --chip-working-fg: #1b1a24;
+  --chip-working-border: #4f352e;
+  --chip-idle-bg: #3d3d4a;
+  --chip-idle-fg: #e9dfc7;
+  --chip-idle-border: #4f352e;
+  --chip-failed-bg: #854550;
+  --chip-failed-fg: #e9dfc7;
+  --chip-failed-border: #4f352e;
+}
+
 *,
 *::before,
 *::after {
@@ -27,35 +49,44 @@ body,
 body {
   background: var(--night);
   color: var(--paper);
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 18px;
-  line-height: 1.45;
+  font-family: var(--font-pixel);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  font-synthesis: none;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
 input,
 textarea {
-  font: inherit;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 h1,
 h2,
+h3,
 .wordmark,
 .continue,
 .toggle [role="tab"] {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-pixel);
   font-weight: 400;
   letter-spacing: 0;
-  line-height: 1.7;
 }
 
-h1 {
-  font-size: 16px;
+h1,
+.wordmark {
+  font-size: var(--type-title);
+  line-height: var(--leading-title);
   margin: 0;
 }
 
-h2 {
-  font-size: 14px;
+h2,
+h3 {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
   margin: 0 0 12px;
 }
 
@@ -63,30 +94,27 @@ p {
   margin: 0;
 }
 
-button {
-  background: var(--slate);
+button,
+a.text-link {
+  appearance: none;
+  background: var(--darkwood);
   color: var(--paper);
-  border: 3px solid var(--darkwood);
+  border: 3px solid var(--wood);
+  border-radius: 0;
   min-height: 48px;
   min-width: 48px;
-  padding: 8px 12px;
+  padding: 12px 10px;
   cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  text-decoration: none;
 }
 
 a.text-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  min-width: 48px;
-  padding: 8px 14px;
-  background: var(--slate);
-  color: var(--paper);
-  text-decoration: none;
-  border: 3px solid var(--darkwood);
-  font-family: "Press Start 2P", monospace;
-  font-size: 10px;
-  line-height: 1.6;
 }
 
 :focus-visible {
@@ -130,9 +158,11 @@ a.text-link {
   gap: 12px;
   min-height: 48px;
   padding: 8px 16px;
-  background: var(--slate);
+  background: var(--darkwood);
   color: var(--paper);
   border-bottom: 4px solid var(--flame);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .splash {
@@ -152,6 +182,11 @@ a.text-link {
   max-width: 760px;
 }
 
+.splash .wordmark {
+  font-size: var(--type-display);
+  line-height: var(--leading-display);
+}
+
 .continue {
   min-width: 220px;
   min-height: 64px;
@@ -159,11 +194,13 @@ a.text-link {
   background: var(--ember);
   color: var(--night);
   border: 3px solid var(--darkwood);
-  font-size: 12px;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .hint {
-  font-size: 16px;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .app[data-layout="desktop"] .splash-card {
@@ -182,7 +219,7 @@ a.text-link {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 16px 16px 12px;
+  padding: 0;
 }
 
 .rail {
@@ -205,7 +242,7 @@ a.text-link {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .compact-brand {
@@ -226,6 +263,7 @@ a.text-link {
   min-height: 0;
   position: relative;
   z-index: 2;
+  padding: 8px 16px 12px;
   perspective: 860px;
   perspective-origin: 50% 42%;
 }
@@ -381,9 +419,10 @@ a.text-link {
   width: 100%;
   margin-top: 8px;
   text-align: center;
-  font-family: system-ui, sans-serif;
-  font-size: 15px;
-  line-height: 1.25;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  color: var(--paper);
 }
 
 .vignette,
@@ -425,8 +464,9 @@ html:has(.door.is-opening) body {
   display: flex;
   justify-content: center;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  background: var(--night);
-  border-top: 4px solid var(--darkwood);
+  background: var(--darkwood);
+  border-top: 4px solid var(--wood);
+  box-shadow: inset 0 4px 0 var(--plum);
 }
 
 .toggle {
@@ -439,9 +479,11 @@ html:has(.door.is-opening) body {
 .toggle [role="tab"] {
   height: 48px;
   min-height: 48px;
-  font-size: 12px;
-  background: var(--slate);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  background: var(--darkwood);
   color: var(--paper);
+  border-color: var(--wood);
 }
 
 .toggle [role="tab"] + [role="tab"] {
@@ -468,7 +510,7 @@ html:has(.door.is-opening) body {
 }
 
 .app[data-layout="landscape"] .hall {
-  padding: 12px 20px 8px;
+  padding: 0;
 }
 
 .app[data-layout="desktop"] .hall {
@@ -510,11 +552,16 @@ html:has(.door.is-opening) body {
   min-height: 0;
   background: var(--night);
   color: var(--paper);
-  padding: 36px 40px 28px;
+  padding: 0 0 28px;
 }
 
 .app[data-layout="desktop"] .rail .wordmark {
-  font-size: 12px;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.app[data-layout="desktop"] .door-wrap {
+  padding: 28px 40px 12px;
 }
 
 .app[data-layout="desktop"] .compact-brand,
@@ -528,7 +575,7 @@ html:has(.door.is-opening) body {
 }
 
 .app[data-layout="desktop"] .stage-head {
-  margin-bottom: 28px;
+  margin-bottom: 0;
 }
 
 .app[data-layout="desktop"] .door {
@@ -541,8 +588,8 @@ html:has(.door.is-opening) body {
 
 .app[data-layout="desktop"] .toggle-dock {
   margin-left: 300px;
-  background: var(--night);
-  border-top: 4px solid var(--darkwood);
+  background: var(--darkwood);
+  border-top: 4px solid var(--wood);
 }
 
 .app[data-layout="desktop"] .toggle {
@@ -550,7 +597,7 @@ html:has(.door.is-opening) body {
 }
 
 .app[data-layout="desktop"] .toggle [role="tab"] {
-  background: var(--slate);
+  background: var(--darkwood);
   color: var(--paper);
 }
 
@@ -591,12 +638,14 @@ html:has(.door.is-opening) body {
 }
 
 .sheet-copy h1 {
-  font-size: 12px;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .sheet-copy p {
   margin-top: 16px;
-  font-size: 16px;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .settings {
@@ -661,11 +710,13 @@ html:has(.door.is-opening) body {
 }
 
 .sprite-card figcaption {
-  font-size: 14px;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
-.app[data-layout="portrait"] .wordmark {
-  font-size: 14px;
+.app[data-layout="portrait"] .compact-brand .wordmark {
+  font-size: var(--type-title);
+  line-height: var(--leading-title);
 }
 
 .door-grid:has(.door.is-opening) .door:not(.is-opening) {
@@ -955,8 +1006,8 @@ html:has(.room-portal-layer) body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px 16px;
+  gap: 0;
+  padding: 0;
   background: var(--night);
   color: var(--paper);
   overflow: hidden;
@@ -980,9 +1031,10 @@ html:has(.room-portal-layer) body {
 .study-team {
   flex: 1;
   min-width: 12ch;
-  font-family: "Press Start 2P", monospace;
-  font-size: 12px;
-  line-height: 1.7;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  color: var(--paper);
 }
 
 .study-tabs {
@@ -1000,11 +1052,12 @@ html:has(.room-portal-layer) body {
 }
 
 .study-tabs [role="tab"] {
-  font-family: "Press Start 2P", monospace;
-  font-size: 10px;
-  line-height: 1.6;
-  background: var(--slate);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  background: var(--darkwood);
   color: var(--paper);
+  border-color: var(--wood);
 }
 
 .study-tabs [role="tab"][aria-selected="true"] {
@@ -1023,6 +1076,7 @@ html:has(.room-portal-layer) body {
   display: flex;
   flex-direction: column;
   position: relative;
+  padding: 12px 16px 16px;
 }
 
 .desk-grid {
@@ -1042,8 +1096,8 @@ html:has(.room-portal-layer) body {
 
 .overview-legend {
   max-width: 62ch;
-  font-size: 16px;
-  line-height: 1.45;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .desk-grid-list {
@@ -1161,15 +1215,16 @@ html:has(.room-portal-layer) body {
 }
 
 .agent-desk-name {
-  font-family: "Press Start 2P", monospace;
-  font-size: 12px;
-  line-height: 1.6;
+  font-family: var(--font-pixel);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
   color: var(--paper);
 }
 
 .agent-desk-state {
-  font-size: 18px;
-  line-height: 1.3;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
   color: var(--paper);
 }
 
@@ -1290,12 +1345,9 @@ html:has(.room-portal-layer) body {
 }
 
 .figure figcaption {
-  font-family: "Press Start 2P", monospace;
-  font-size: 10px;
-  line-height: 1.6;
-  color: var(--paper);
-  background: var(--slate);
-  padding: 2px 4px;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .lamp-spot {
@@ -1390,7 +1442,8 @@ html:has(.room-portal-layer) body {
   border: 4px solid var(--darkwood);
   padding: 10px 14px;
   text-align: center;
-  font-size: 11px;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .paper {
@@ -1467,20 +1520,31 @@ html:has(.room-portal-layer) body {
   border-bottom: 3px solid var(--ember);
 }
 
+.paper h1 {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
 .machine-line p,
 .founder-line p,
 .placeholder-copy,
 .approval p,
 .ran-nothing {
-  font-size: 18px;
-  line-height: 1.45;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
   color: var(--night);
 }
 
+.approval p,
+.ran-nothing {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
 .who {
-  font-family: "Press Start 2P", monospace;
-  font-size: 10px;
-  line-height: 1.6;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
   margin-bottom: 6px;
 }
 
@@ -1489,8 +1553,9 @@ html:has(.room-portal-layer) body {
   flex-wrap: wrap;
   gap: 6px 14px;
   margin-top: 8px;
-  font-size: 14px;
-  line-height: 1.4;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
   color: var(--darkwood);
 }
 
@@ -1499,7 +1564,8 @@ html:has(.room-portal-layer) body {
   background: var(--flame);
   color: var(--night);
   border: 3px solid var(--darkwood);
-  font-size: 16px;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .paper-form {
@@ -1514,7 +1580,9 @@ html:has(.room-portal-layer) body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 14px;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
   color: var(--darkwood);
 }
 
@@ -1558,8 +1626,8 @@ html:has(.room-portal-layer) body {
 }
 
 .app[data-layout="landscape"] .study {
-  padding: 8px 16px 8px;
-  gap: 6px;
+  padding: 0;
+  gap: 0;
 }
 
 .app[data-layout="landscape"] .study-stage,
@@ -1602,7 +1670,16 @@ html:has(.room-portal-layer) body {
 }
 
 .app[data-layout="desktop"] .study {
-  padding: 20px 28px 24px;
+  padding: 0;
+}
+
+.app[data-layout="landscape"] .study-scene,
+.app[data-layout="desktop"] .study-scene {
+  padding: 12px 20px 16px;
+}
+
+.app[data-layout="desktop"] .study-scene {
+  padding: 16px 28px 24px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1763,7 +1840,9 @@ html:has(.room-portal-layer) body {
   flex-direction: column;
   gap: 8px;
   color: var(--ink);
-  font-size: 16px;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .ponder-label textarea {
@@ -1786,8 +1865,8 @@ html:has(.room-portal-layer) body {
 .ponder-preview,
 .ponder-status {
   color: var(--ink);
-  font-size: 16px;
-  line-height: 1.45;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .path-panel {
@@ -1809,9 +1888,9 @@ html:has(.room-portal-layer) body {
 
 .path-panel h3 {
   margin: 16px 0 8px;
-  font-family: "Press Start 2P", monospace;
-  font-size: 11px;
-  line-height: 1.6;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
   color: var(--navy);
 }
 
@@ -1827,9 +1906,9 @@ html:has(.room-portal-layer) body {
 }
 
 .path-task {
-  font-family: "Press Start 2P", monospace;
-  font-size: 11px;
-  line-height: 1.6;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .library-room {
@@ -1851,7 +1930,8 @@ html:has(.room-portal-layer) body {
 
 .library-head p {
   color: var(--paper);
-  font-size: 16px;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .bookcase {
@@ -1918,8 +1998,8 @@ html:has(.room-portal-layer) body {
 .shelf-empty {
   margin: 0;
   color: var(--paper);
-  font-size: 18px;
-  line-height: 1.4;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
   text-align: center;
 }
 
@@ -2004,8 +2084,9 @@ html:has(.room-portal-layer) body {
   writing-mode: vertical-rl;
   max-height: 132px;
   overflow: hidden;
-  font-size: 13px;
-  line-height: 1.15;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
   color: var(--paper);
 }
 
@@ -2076,7 +2157,9 @@ html:has(.room-portal-layer) body {
   flex-direction: column;
   gap: 8px;
   color: var(--night);
-  font-size: 16px;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .shelf-label textarea {
@@ -2099,7 +2182,8 @@ html:has(.room-portal-layer) body {
 .shelf-status {
   margin-top: 10px;
   color: var(--night);
-  font-size: 16px;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .app[data-layout="landscape"] .library-room .library-paper[data-pose="lifted"],
@@ -2190,13 +2274,14 @@ html:has(.room-portal-layer) body {
 
 .board-team {
   margin-top: 4px;
-  font-size: 16px;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .board-legend {
   max-width: 46ch;
-  font-size: 16px;
-  line-height: 1.45;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .plaque-list {
@@ -2269,16 +2354,17 @@ html:has(.room-portal-layer) body {
 }
 
 .plaque-name {
-  font-family: "Press Start 2P", monospace;
-  font-size: 12px;
-  line-height: 1.6;
+  font-family: var(--font-pixel);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
   color: var(--night);
 }
 
 .plaque-title,
 .plaque-state {
-  font-size: 16px;
-  line-height: 1.3;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .plaque-title {
@@ -2287,28 +2373,7 @@ html:has(.room-portal-layer) body {
 
 .plaque-state {
   justify-self: end;
-  min-width: 7ch;
-  padding: 8px 10px;
-  background: var(--slate);
-  color: var(--paper);
-  border: 3px solid var(--night);
   text-align: center;
-}
-
-.plaque[data-status="working"] .plaque-state {
-  background: var(--ember);
-  color: var(--night);
-}
-
-.plaque[data-status="idle"] .plaque-state {
-  background: var(--slate);
-  color: var(--paper);
-}
-
-.plaque[data-status="failed"] .plaque-state {
-  background: var(--night);
-  color: var(--paper);
-  border-color: var(--paper);
 }
 
 .board-foot {
@@ -2340,9 +2405,9 @@ html:has(.room-portal-layer) body {
 }
 
 .stapler-label {
-  font-family: "Press Start 2P", monospace;
-  font-size: 10px;
-  line-height: 1.5;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .tool-slip {
@@ -2369,8 +2434,8 @@ html:has(.room-portal-layer) body {
 .tool-blank,
 .tool-note {
   color: var(--night);
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .tool-note {
@@ -2390,4 +2455,240 @@ html:has(.room-portal-layer) body {
 .app[data-layout="desktop"] .board-void {
   padding-top: 12px;
   padding-bottom: 20px;
+}
+
+/* Darkwood pixel chrome. Active is ember. Hover and press stay in Founder Ember. */
+.pixel-bar {
+  background: var(--darkwood);
+  color: var(--paper);
+  border-bottom: 4px solid var(--night);
+  box-shadow:
+    inset 0 4px 0 var(--wood),
+    inset 0 -4px 0 var(--plum);
+  padding: 8px 10px 10px;
+}
+
+.study .pixel-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: none;
+}
+
+.stub .pixel-bar,
+.design .pixel-bar {
+  align-self: stretch;
+  width: 100%;
+}
+
+.pixel-bar button,
+.pixel-bar a.text-link,
+.toggle [role="tab"] {
+  flex: none;
+  background: var(--darkwood);
+  color: var(--paper);
+  border: 3px solid var(--wood);
+  box-shadow: inset -3px -3px 0 var(--night);
+}
+
+.pixel-bar .study-bar,
+.pixel-bar .study-tabs,
+.pixel-bar .study-side {
+  background: transparent;
+}
+
+.pixel-bar button:hover,
+.pixel-bar a.text-link:hover,
+.toggle [role="tab"]:hover,
+a.text-link:hover,
+.set-down:hover,
+.paper-form button:hover,
+.approval-actions button:hover,
+.sheet-close:hover,
+.keep-note:hover {
+  color: var(--flame);
+  border-color: var(--flame);
+}
+
+.pixel-bar button[aria-selected="true"],
+.pixel-bar button[aria-pressed="true"],
+.study-tabs [role="tab"][aria-selected="true"],
+.study-side button[aria-pressed="true"],
+.toggle [aria-selected="true"],
+.app[data-layout="desktop"] .toggle [aria-selected="true"] {
+  background: var(--ember);
+  color: var(--night);
+  border-color: var(--darkwood);
+  box-shadow: inset 3px 3px 0 var(--wood);
+}
+
+.pixel-bar button[aria-selected="true"]:hover,
+.pixel-bar button[aria-pressed="true"]:hover,
+.study-tabs [role="tab"][aria-selected="true"]:hover,
+.study-side button[aria-pressed="true"]:hover,
+.toggle [aria-selected="true"]:hover,
+.continue:hover,
+.approval-actions .approve:hover,
+.save-note:hover {
+  background: var(--ember);
+  color: var(--night);
+  border-color: var(--flame);
+}
+
+.app[data-layout="desktop"] .toggle [role="tab"]:hover {
+  background: var(--darkwood);
+  color: var(--flame);
+  border-color: var(--flame);
+}
+
+.app[data-layout="desktop"] .toggle [aria-selected="true"]:hover {
+  background: var(--ember);
+  color: var(--night);
+  border-color: var(--flame);
+}
+
+.pixel-bar button:active,
+.pixel-bar button[aria-selected="true"]:active,
+.pixel-bar button[aria-pressed="true"]:active,
+.pixel-bar a.text-link:active,
+.toggle [role="tab"]:active,
+.toggle [aria-selected="true"]:active,
+.app[data-layout="desktop"] .toggle [role="tab"]:active,
+.app[data-layout="desktop"] .toggle [aria-selected="true"]:active,
+a.text-link:active,
+.continue:active,
+.set-down:active,
+.paper-form button:active,
+.approval-actions button:active,
+.sheet-close:active,
+.keep-note:active,
+.save-note:active,
+.place-sheet:active,
+.action-chip:active {
+  background: var(--plum);
+  color: var(--paper);
+  border-color: var(--darkwood);
+}
+
+.place-sheet:hover,
+.stapler:hover,
+.tool-slip [role="menuitem"]:hover {
+  background: var(--flame);
+  color: var(--night);
+  border-color: var(--darkwood);
+}
+
+button:disabled {
+  background: var(--slate);
+  color: var(--paper);
+  border-color: var(--darkwood);
+  cursor: default;
+}
+
+.figure figcaption:not(.status-chip) {
+  color: var(--paper);
+  background: var(--darkwood);
+  border: 3px solid var(--wood);
+  padding: 4px 6px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  padding: 6px 8px;
+  border: 3px solid var(--chip-idle-border);
+  background: var(--chip-idle-bg);
+  color: var(--chip-idle-fg);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 var(--night);
+}
+
+.status-chip[data-status="working"] {
+  background: var(--chip-working-bg);
+  color: var(--chip-working-fg);
+  border-color: var(--chip-working-border);
+}
+
+.status-chip[data-status="idle"] {
+  background: var(--chip-idle-bg);
+  color: var(--chip-idle-fg);
+  border-color: var(--chip-idle-border);
+}
+
+.status-chip[data-status="failed"] {
+  background: var(--chip-failed-bg);
+  color: var(--chip-failed-fg);
+  border-color: var(--chip-failed-border);
+}
+
+.type-display {
+  font-size: var(--type-display);
+  line-height: var(--leading-display);
+}
+
+.type-title {
+  font-size: var(--type-title);
+  line-height: var(--leading-title);
+}
+
+.type-body {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.type-meta {
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.rail-copy,
+.overview-legend,
+.board-legend,
+.board-team,
+.library-head p,
+.hint {
+  font-family: var(--font-pixel);
+}
+
+.settings {
+  padding: 0 0 40px;
+  align-items: stretch;
+}
+
+.settings h1,
+.settings p,
+.settings .continue {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.app[data-layout="desktop"] .stub.settings {
+  padding: 0 0 32px;
+}
+
+.app[data-layout="desktop"] .settings h1,
+.app[data-layout="desktop"] .settings p,
+.app[data-layout="desktop"] .settings .continue {
+  margin-left: 32px;
+  margin-right: 32px;
+}
+
+.design {
+  padding: 0 0 48px;
+}
+
+.design-grid {
+  padding: 0 20px;
+}
+
+textarea,
+input {
+  border-radius: 0;
 }

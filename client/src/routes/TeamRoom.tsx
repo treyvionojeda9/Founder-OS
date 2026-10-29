@@ -100,11 +100,13 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   if (!team) {
     return (
       <main className="study">
-        <header className="study-bar">
-          <button type="button" className="text-link" onClick={() => shut(teamId)}>
-            Back
-          </button>
-        </header>
+        <div className="pixel-bar">
+          <header className="study-bar">
+            <button type="button" className="text-link" onClick={() => shut(teamId)}>
+              Back
+            </button>
+          </header>
+        </div>
         <h1>This team is not on the desk.</h1>
       </main>
     );
@@ -268,6 +270,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       data-paper={pose}
       data-preview={preview ? "true" : "false"}
     >
+      <div className="pixel-bar">
       <header className="study-bar">
         <button type="button" className="text-link" onClick={leave}>
           Back
@@ -333,6 +336,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
             </button>
           );
         })}
+      </div>
       </div>
       <div className="study-scene">
         {drawer === "library" ? (

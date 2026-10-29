@@ -107,7 +107,9 @@ function Lamp({ status, scale }: { status: AgentStatus; scale: number }) {
   return (
     <figure className="figure lamp-spot">
       <Sprite rows={lamp.rows} scale={scale} title={lamp.title} />
-      <figcaption>{lamp.caption}</figcaption>
+      <figcaption className="status-chip" data-status={status}>
+        {lamp.caption}
+      </figcaption>
     </figure>
   );
 }

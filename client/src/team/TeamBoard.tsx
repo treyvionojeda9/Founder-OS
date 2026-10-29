@@ -70,7 +70,9 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
                         <span className="plaque-name">{agent.name}</span>
                         {agent.title ? <span className="plaque-title">{agent.title}</span> : null}
                       </span>
-                      <span className="plaque-state">{lamp.caption}</span>
+                      <span className="plaque-state status-chip" data-status={agent.status}>
+                        {lamp.caption}
+                      </span>
                     </button>
                   </li>
                 );

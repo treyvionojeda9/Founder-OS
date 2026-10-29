@@ -51,7 +51,9 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
                 </span>
                 <span className="agent-desk-plate">
                   <span className="agent-desk-name">{agent.name}</span>
-                  <span className="agent-desk-state">{lamp.caption}</span>
+                  <span className="agent-desk-state status-chip" data-status={agent.status}>
+                    {lamp.caption}
+                  </span>
                 </span>
               </button>
             </li>
