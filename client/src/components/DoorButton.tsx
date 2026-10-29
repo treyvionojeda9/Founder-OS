@@ -1,28 +1,42 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Sprite } from "../design/Sprite";
 import {
-  archDoorClosed,
-  archDoorOpen,
-  closedLogoSlot,
-  groundContact,
-  openLogoSlot,
-} from "../design/sprites";
+  contactShadow,
+  doorFrame,
+  doorInterior,
+  doorJamb,
+  doorLeaf,
+  doorLeafBack,
+  doorLeafEdge,
+  doorSide,
+  doorSpec,
+  doorSpill,
+  doorWash,
+  jambHeight,
+  leafLogoSlot,
+  lightPoolA,
+  lightPoolB,
+  sideHeight,
+} from "../design/sprites/doorFaces";
 import type { Door } from "../fixtures/doors";
-import { doorOpenSchedule, type DoorPhase } from "../hall/doorMotion";
+import { DOLLY_MS, ENTER_MS, doorOpenSchedule, type DoorPhase } from "../hall/doorMotion";
+import type { DoorPose } from "../hall/layout";
 import { useReducedMotion } from "../hooks/useReducedMotion";
-
-type Phase = DoorPhase;
 
 type DoorButtonProps = {
   door: Door;
+  scale: number;
+  pose: DoorPose;
   onOpen: (door: Door) => void;
 };
 
-export function DoorButton({ door, onOpen }: DoorButtonProps) {
+export function DoorButton({ door, scale, pose, onOpen }: DoorButtonProps) {
   const reduce = useReducedMotion();
-  const [phase, setPhase] = useState<Phase>("closed");
+  const [phase, setPhase] = useState<DoorPhase>("closed");
   const timers = useRef<number[]>([]);
   const busy = useRef(false);
+  const px = (cells: number) => `${cells * scale}px`;
+  const depth = doorSpec.depth * scale;
 
   useEffect(() => {
     return () => {
@@ -43,35 +57,143 @@ export function DoorButton({ door, onOpen }: DoorButtonProps) {
     }
   }
 
-  const open = phase !== "closed";
-  const slot = open ? openLogoSlot : closedLogoSlot;
   const layers = useMemo(
-    () => [{ rows: door.logo, x: slot.x, y: slot.y }],
-    [door.logo, slot.x, slot.y],
+    () => [{ rows: door.logo, x: leafLogoSlot.x, y: leafLogoSlot.y }],
+    [door.logo],
   );
+  const opening = phase === "swing" || phase === "dolly";
+  const poseStyle = {
+    "--yaw": `${pose.yaw}deg`,
+    "--z": `${pose.z}px`,
+    "--drop": `${pose.drop}px`,
+    "--swing-ms": `${DOLLY_MS}ms`,
+    "--dolly-ms": `${ENTER_MS - DOLLY_MS}ms`,
+    "--pool-w": `${lightPoolA[0].length * scale}px`,
+    "--edge": `${depth}px`,
+  } as CSSProperties;
 
   return (
     <button
       type="button"
-      className="door"
+      className={opening ? "door is-opening" : "door"}
       data-phase={phase}
+      style={{ ...poseStyle, width: px(doorSpec.frameW) }}
       onClick={activate}
       aria-label={`Open ${door.name}`}
     >
-      <span className="door-stage">
-        <span className="door-figure">
-          <Sprite
-            rows={open ? archDoorOpen : archDoorClosed}
-            scale={4}
-            title=""
-            layers={layers}
-          />
+      <span className="pose">
+        <span className="light-pool" aria-hidden="true">
+          <span className="pool-a">
+            <Sprite rows={lightPoolA} scale={scale} title="" />
+          </span>
+          <span className="pool-b">
+            <Sprite rows={lightPoolB} scale={scale} title="" />
+          </span>
         </span>
-        <span className="ground-contact">
-          <Sprite rows={groundContact} scale={4} title="" />
+        <span className="dolly-target">
+          <span className="door-rig" style={{ width: px(doorSpec.frameW), height: px(doorSpec.frameH) }}>
+            <span className="wash">
+              <Sprite rows={doorWash} scale={scale} title="" />
+            </span>
+            <span
+              className="face interior"
+              style={{
+                left: px(doorSpec.openingX),
+                top: px(doorSpec.openingY),
+                transform: `translateZ(${-depth + scale}px)`,
+              }}
+            >
+              <span className="interior-dark">
+                <Sprite rows={doorInterior} scale={scale} title="" />
+              </span>
+              <span className="spill">
+                <Sprite rows={doorSpill} scale={scale} title="" />
+              </span>
+            </span>
+            <span className="face frame-back" style={{ transform: `translateZ(${-depth}px)` }}>
+              <Sprite rows={doorFrame} scale={scale} title="" />
+            </span>
+            <span
+              className="face jamb jamb-left"
+              style={{
+                left: px(doorSpec.openingX),
+                top: px(doorSpec.spring),
+                width: px(doorSpec.depth),
+                height: px(jambHeight),
+                transformOrigin: "left center",
+                transform: "rotateY(-90deg)",
+              }}
+            >
+              <Sprite rows={doorJamb} scale={scale} title="" />
+            </span>
+            <span
+              className="face jamb jamb-right"
+              style={{
+                left: px(doorSpec.openingX + doorSpec.openingW - doorSpec.depth),
+                top: px(doorSpec.spring),
+                width: px(doorSpec.depth),
+                height: px(jambHeight),
+                transformOrigin: "right center",
+                transform: "rotateY(90deg)",
+              }}
+            >
+              <Sprite rows={doorJamb} scale={scale} title="" />
+            </span>
+            <span
+              className="face side side-left"
+              style={{
+                left: 0,
+                top: px(doorSpec.spring),
+                width: px(doorSpec.depth),
+                height: px(sideHeight),
+                transformOrigin: "left center",
+                transform: "rotateY(-90deg)",
+              }}
+            >
+              <Sprite rows={doorSide} scale={scale} title="" />
+            </span>
+            <span
+              className="face side side-right"
+              style={{
+                left: px(doorSpec.frameW - doorSpec.depth),
+                top: px(doorSpec.spring),
+                width: px(doorSpec.depth),
+                height: px(sideHeight),
+                transformOrigin: "right center",
+                transform: "rotateY(90deg)",
+              }}
+            >
+              <Sprite rows={doorSide} scale={scale} title="" />
+            </span>
+            <span className="face frame">
+              <Sprite rows={doorFrame} scale={scale} title="" />
+            </span>
+            <span
+              className="leaf"
+              style={{
+                left: px(doorSpec.leafX),
+                top: px(doorSpec.leafY),
+                width: px(doorSpec.leafW),
+                height: px(doorSpec.leafH),
+              }}
+            >
+              <span className="leaf-front">
+                <Sprite rows={doorLeaf} scale={scale} title="" layers={layers} />
+              </span>
+              <span className="leaf-back">
+                <Sprite rows={doorLeafBack} scale={scale} title="" />
+              </span>
+              <span className="leaf-edge">
+                <Sprite rows={doorLeafEdge} scale={scale} title="" />
+              </span>
+            </span>
+          </span>
         </span>
-        <span className="door-name">{door.name}</span>
       </span>
+      <span className="contact-shadow">
+        <Sprite rows={contactShadow} scale={scale} title="" />
+      </span>
+      <span className="door-name">{door.name}</span>
     </button>
   );
 }

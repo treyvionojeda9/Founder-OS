@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { founderEmber, paletteByChar } from "./palette";
 import { grayscaleGrid } from "./spriteGrid";
-import { deskLampFailed, deskLampOff, deskLampOn, groundContact, spriteCatalog } from "./sprites";
+import { doorSpec } from "./sprites/doorFaces";
+import { contactShadow, deskLampFailed, deskLampOff, deskLampOn, doorFrame, doorLeaf, lightPoolA, spriteCatalog } from "./sprites";
 
 describe("sprite grids", () => {
   it("maps every character to the palette and keeps rows the same width", () => {
@@ -27,13 +28,28 @@ describe("sprite grids", () => {
     expect(off).not.toEqual(failed);
   });
 
-  it("keeps the ground contact lighter than night so the mark survives grayscale", () => {
+  it("keeps the contact shadow and the light pool readable in grayscale", () => {
     const night = grayscaleGrid(["n"])[0][0];
-    const contact = grayscaleGrid(groundContact)
+    const contact = grayscaleGrid(contactShadow)
       .flat()
       .filter((luma) => luma >= 0);
     expect(founderEmber.night).toBe("#1B1A24");
     expect(contact.length).toBeGreaterThan(0);
     for (const luma of contact) expect(luma).toBeGreaterThan(night);
+    const pool = grayscaleGrid(lightPoolA)
+      .flat()
+      .filter((luma) => luma >= 0);
+    expect(pool.length).toBeGreaterThan(0);
+    expect(Math.max(...pool)).toBeGreaterThan(night + 40);
+  });
+
+  it("cuts a hole in the frame and keeps the leaf inside that opening", () => {
+    const across = doorFrame[doorSpec.spring + 4] ?? "";
+    expect(across[doorSpec.openingX + 4]).toBe(".");
+    expect(doorLeaf).toHaveLength(doorSpec.leafH);
+    expect(doorLeaf[0]).toHaveLength(doorSpec.leafW);
+    expect(doorSpec.leafX).toBeGreaterThanOrEqual(doorSpec.openingX);
+    expect(doorSpec.leafX + doorSpec.leafW).toBeLessThanOrEqual(doorSpec.openingX + doorSpec.openingW);
+    expect(doorSpec.leafY).toBeGreaterThanOrEqual(doorSpec.spring);
   });
 });
