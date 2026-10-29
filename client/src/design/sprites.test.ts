@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { paletteByChar } from "./palette";
+import { founderEmber, paletteByChar } from "./palette";
 import { grayscaleGrid } from "./spriteGrid";
-import { deskLampFailed, deskLampOff, deskLampOn, spriteCatalog } from "./sprites";
+import { deskLampFailed, deskLampOff, deskLampOn, groundContact, spriteCatalog } from "./sprites";
 
 describe("sprite grids", () => {
   it("maps every character to the palette and keeps rows the same width", () => {
@@ -25,5 +25,15 @@ describe("sprite grids", () => {
     expect(on).not.toEqual(off);
     expect(on).not.toEqual(failed);
     expect(off).not.toEqual(failed);
+  });
+
+  it("keeps the ground contact lighter than night so the mark survives grayscale", () => {
+    const night = grayscaleGrid(["n"])[0][0];
+    const contact = grayscaleGrid(groundContact)
+      .flat()
+      .filter((luma) => luma >= 0);
+    expect(founderEmber.night).toBe("#1B1A24");
+    expect(contact.length).toBeGreaterThan(0);
+    for (const luma of contact) expect(luma).toBeGreaterThan(night);
   });
 });

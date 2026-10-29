@@ -8,17 +8,15 @@ import {
   openLogoSlot,
 } from "../design/sprites";
 import type { Door } from "../fixtures/doors";
+import { doorOpenSchedule, type DoorPhase } from "../hall/doorMotion";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 
-type Phase = "closed" | "ajar" | "through";
+type Phase = DoorPhase;
 
 type DoorButtonProps = {
   door: Door;
   onOpen: (door: Door) => void;
 };
-
-const AJAR_MS = 560;
-const ENTER_MS = 1560;
 
 export function DoorButton({ door, onOpen }: DoorButtonProps) {
   const reduce = useReducedMotion();
@@ -35,13 +33,14 @@ export function DoorButton({ door, onOpen }: DoorButtonProps) {
   function activate() {
     if (busy.current) return;
     busy.current = true;
-    if (reduce) {
-      onOpen(door);
-      return;
+    for (const step of doorOpenSchedule(reduce)) {
+      const run = () => {
+        if (step.phase === "enter") onOpen(door);
+        else setPhase(step.phase);
+      };
+      if (step.at === 0) run();
+      else timers.current.push(window.setTimeout(run, step.at));
     }
-    setPhase("ajar");
-    timers.current.push(window.setTimeout(() => setPhase("through"), AJAR_MS));
-    timers.current.push(window.setTimeout(() => onOpen(door), ENTER_MS));
   }
 
   const open = phase !== "closed";

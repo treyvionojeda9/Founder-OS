@@ -5,6 +5,7 @@ import { flame } from "../design/sprites";
 import { DoorButton } from "../components/DoorButton";
 import { SectionToggle } from "../components/SectionToggle";
 import { doors as fixtureDoors, type Door, type DoorSection } from "../fixtures/doors";
+import { doorPath } from "../hall/doorMotion";
 import { settingsRepo } from "../storage/services";
 
 type HomeProps = {
@@ -75,8 +76,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
                   <DoorButton
                     door={door}
                     onOpen={(chosen) => {
-                      const path = chosen.section === "work" ? `/team/${chosen.id}` : `/learn/${chosen.id}`;
-                      navigate(path);
+                      navigate(doorPath(chosen));
                     }}
                   />
                 </li>
