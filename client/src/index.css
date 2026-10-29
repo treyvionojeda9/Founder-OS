@@ -736,9 +736,13 @@ html:has(.door.is-opening) body {
   animation: leaf-swing var(--swing-ms, 300ms) linear forwards;
 }
 
-.door.is-opening .spill,
 .door.is-opening .wash {
-  animation: wash-in var(--swing-ms, 300ms) steps(4, end) forwards;
+  opacity: 0;
+  animation: none;
+}
+
+.door.is-opening .spill {
+  animation: spill-gap var(--enter-ms, 720ms) steps(5, end) both;
 }
 
 .door.is-opening .dolly-target {
@@ -800,6 +804,20 @@ html:has(.door.is-opening) body {
 @keyframes wash-in {
   to {
     opacity: 1;
+  }
+}
+
+@keyframes spill-gap {
+  0% {
+    opacity: 0;
+  }
+  14%,
+  46% {
+    opacity: 1;
+  }
+  72%,
+  100% {
+    opacity: 0;
   }
 }
 
@@ -907,11 +925,17 @@ html:has(.door.is-opening) body {
   }
 }
 
-.door.is-opening .spill,
-.door.is-opening .wash,
-.door.is-opening .interior-dark {
-  opacity: 0;
-  animation: none;
+.room-portal[data-mode="settle"] {
+  animation: portal-settle var(--reveal-ms, 180ms) steps(3, end) forwards;
+}
+
+@keyframes portal-settle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 .room-portal-layer {
@@ -1449,11 +1473,17 @@ html:has(.room-portal-layer) body {
 .paper-slot[data-pose="lifted"] {
   left: 4%;
   width: 92%;
-  top: 3%;
+  top: 4%;
+  bottom: 6%;
   height: auto;
-  aspect-ratio: 3 / 2;
-  max-height: 86%;
+  aspect-ratio: auto;
+  max-height: none;
   transform: none;
+  transform-style: flat;
+}
+
+.paper-slot[data-pose="lifted"] .paper {
+  box-shadow: 8px 10px 0 var(--night);
 }
 
 .stage-caption {
@@ -1484,7 +1514,10 @@ html:has(.room-portal-layer) body {
   margin: 0;
   display: flex;
   flex-direction: column;
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' fill='%23E9DFC7'/%3E%3Crect x='2' y='4' width='1' height='1' fill='%23D28C40'/%3E%3Crect x='11' y='1' width='1' height='1' fill='%238F563B'/%3E%3Crect x='7' y='12' width='1' height='1' fill='%23D28C40'/%3E%3Crect x='14' y='9' width='1' height='1' fill='%23F2C14E'/%3E%3C/svg%3E");
+  background-size: 16px 16px;
+  image-rendering: pixelated;
   color: var(--night);
   border: 4px solid var(--darkwood);
   overflow: hidden;
@@ -1507,10 +1540,14 @@ html:has(.room-portal-layer) body {
 
 .paper-wash {
   position: absolute;
-  left: 10px;
-  top: 72px;
-  z-index: 2;
+  right: 16px;
+  top: 14px;
+  z-index: 1;
   pointer-events: none;
+}
+
+.paper-slot[data-pose="lifted"] .paper-wash {
+  display: none;
 }
 
 .set-down {
@@ -1522,6 +1559,8 @@ html:has(.room-portal-layer) body {
 }
 
 .paper-log {
+  position: relative;
+  z-index: 2;
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -1600,10 +1639,13 @@ html:has(.room-portal-layer) body {
 }
 
 .paper-form {
+  position: relative;
+  z-index: 3;
   flex-shrink: 0;
   align-items: flex-end;
   padding: 8px;
   border-top: 3px solid var(--ember);
+  background: var(--paper);
 }
 
 .composer-label {
@@ -1624,7 +1666,11 @@ html:has(.room-portal-layer) body {
   background: var(--paper);
   color: var(--night);
   border: 3px solid var(--darkwood);
+  border-radius: 0;
   padding: 8px;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .sheet-close {
@@ -1686,13 +1732,16 @@ html:has(.room-portal-layer) body {
 
 .app[data-layout="landscape"] .paper-slot[data-pose="lifted"],
 .app[data-layout="desktop"] .paper-slot[data-pose="lifted"] {
-  left: 50%;
-  width: min(920px, 70%);
-  top: 6%;
+  left: 0;
+  right: 0;
+  width: min(920px, 72%);
+  margin-inline: auto;
+  top: 5%;
+  bottom: 6%;
   height: auto;
-  aspect-ratio: 5 / 3;
-  max-height: 82%;
-  transform: translateX(-50%);
+  aspect-ratio: auto;
+  max-height: none;
+  transform: none;
 }
 
 .app[data-layout="landscape"] .paper-log,
@@ -1824,6 +1873,7 @@ html:has(.room-portal-layer) body {
 
 .learn-room .paper-wash {
   top: auto;
+  right: auto;
   bottom: 14px;
   left: 14px;
   z-index: 1;
@@ -1841,14 +1891,18 @@ html:has(.room-portal-layer) body {
 
 .learn-room .paper-slot[data-pose="lifted"] {
   left: 3%;
+  right: auto;
   width: 76%;
+  margin-inline: 0;
   transform: none;
 }
 
 .app[data-layout="landscape"] .learn-room .paper-slot[data-pose="lifted"],
 .app[data-layout="desktop"] .learn-room .paper-slot[data-pose="lifted"] {
   left: 3%;
+  right: auto;
   width: min(820px, 72%);
+  margin-inline: 0;
   top: 6%;
   transform: none;
 }
@@ -1878,7 +1932,11 @@ html:has(.room-portal-layer) body {
   background: var(--paper);
   color: var(--ink);
   border: 3px solid var(--navy);
+  border-radius: 0;
   padding: 8px;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
 }
 
 .keep-note {
@@ -2148,7 +2206,9 @@ html:has(.room-portal-layer) body {
 
 .library-room .library-paper[data-pose="lifted"] {
   left: 3%;
+  right: auto;
   width: 94%;
+  margin-inline: 0;
   top: 8px;
   bottom: 12px;
   height: auto;
@@ -2208,11 +2268,13 @@ html:has(.room-portal-layer) body {
 
 .app[data-layout="landscape"] .library-room .library-paper[data-pose="lifted"],
 .app[data-layout="desktop"] .library-room .library-paper[data-pose="lifted"] {
-  left: 50%;
+  left: 0;
+  right: 0;
   width: min(760px, 70%);
+  margin-inline: auto;
   top: 12px;
   bottom: 16px;
-  transform: translateX(-50%);
+  transform: none;
 }
 
 .app[data-layout="landscape"] .bookcase,
