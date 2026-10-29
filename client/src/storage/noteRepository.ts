@@ -1,5 +1,6 @@
 // Founder OS - local Human Vault / Machine Vault / append-only revisions.
 import Dexie, { type Table } from "dexie";
+import type { RawInkStroke } from "./strokes";
 
 export type Note = {
   id: string;
@@ -8,6 +9,8 @@ export type Note = {
   content: string;
   revision: number;
   updatedAt: string;
+  /** Human ink JSON. Omitted on typed notes so older rows stay text. */
+  ink?: RawInkStroke[];
 };
 
 export type PrincipalRole = "human" | "machine";
@@ -19,6 +22,7 @@ export type HumanRevision = {
   projectId: string;
   vault: "human";
   updatedAt: string;
+  ink?: RawInkStroke[];
 };
 
 export type SettingRow = {
@@ -124,17 +128,21 @@ export class IndexedDBNoteRepository implements NoteRepository {
       throw new Error("REVISION_CONFLICT");
     }
 
+    const stored: Note = { ...note, vault: "human" };
+    if (!stored.ink?.length) delete stored.ink;
+
     const revision: HumanRevision = {
-      noteId: note.id,
-      revision: note.revision,
-      content: note.content,
-      projectId: note.projectId,
+      noteId: stored.id,
+      revision: stored.revision,
+      content: stored.content,
+      projectId: stored.projectId,
       vault: "human",
-      updatedAt: note.updatedAt,
+      updatedAt: stored.updatedAt,
     };
+    if (stored.ink) revision.ink = stored.ink;
     await this.db.transaction("rw", this.db.humanNotes, this.db.humanRevisions, async () => {
       await this.db.humanRevisions.add(revision);
-      await this.db.humanNotes.put(note);
+      await this.db.humanNotes.put(stored);
     });
   }
 

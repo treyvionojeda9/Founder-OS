@@ -99,4 +99,28 @@ describe("IndexedDBNoteRepository", () => {
     expect((await repo.getRevision(first.id, 1))?.content).toBe("first");
     expect((await repo.get(first.id))?.content).toBe("second");
   });
+
+  it("stores human ink on the note and the revision, and a machine cannot overwrite it", async () => {
+    const { db, session, repo } = await freshRepo("human");
+    const ink = [
+      {
+        points: [{ x: 0.2, y: 0.4, t_ms: 0, p: 0.5 }],
+        color: "#4F352E",
+        width: 2.4,
+      },
+    ];
+    await repo.saveHumanEdit(note({ content: "A margin.", ink }));
+    expect((await repo.get("HN-01JEXAMPLE42"))?.ink).toEqual(ink);
+    expect((await repo.getRevision("HN-01JEXAMPLE42", 1))?.ink).toEqual(ink);
+
+    session.principal = "machine";
+    await expect(repo.saveHumanEdit(note({ content: "machine overwrite", revision: 2 }))).rejects.toThrow(
+      /SECURITY_BOUNDARY_VIOLATION/,
+    );
+
+    expect((await repo.get("HN-01JEXAMPLE42"))?.ink).toEqual(ink);
+    expect((await repo.get("HN-01JEXAMPLE42"))?.content).toBe("A margin.");
+    expect(await db.machineNotes.count()).toBe(0);
+    db.close();
+  });
 });

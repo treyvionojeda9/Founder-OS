@@ -1,5 +1,7 @@
 import type { Note, NoteRepository, PrincipalRole } from "../storage/noteRepository";
+import type { RawInkPoint } from "../storage/strokes";
 import { createHumanNoteId } from "../storage/ulid";
+import { sealPonderInk } from "./ponderInk";
 
 export type KeepRefusal = "empty" | "machine";
 
@@ -19,21 +21,25 @@ export async function loadPonderNote(doorId: string, repo: NoteRepository): Prom
 }
 
 /**
- * Human-authored ponder text. Machine principals return before any vault call.
- * The only write is saveHumanEdit, and only after the person asks to keep the note.
+ * Human-authored ponder text and ink. A machine principal returns before any
+ * vault call. The only write is saveHumanEdit, and only after the person asks
+ * to keep the note. Typed notes stay plain `content`; ink is a separate field.
  */
 export async function keepPonderNote(input: {
   doorId: string;
   content: string;
+  ink?: readonly { points: readonly RawInkPoint[] }[] | null;
   principal: PrincipalRole;
   existing: Note | null;
   repo: NoteRepository;
   now?: Date;
   createId?: () => string;
 }): Promise<KeepResult> {
-  const content = input.content.trim();
-  if (!content) return { ok: false, reason: "empty" };
   if (input.principal !== "human") return { ok: false, reason: "machine" };
+
+  const content = input.content.trim();
+  const ink = sealPonderInk(input.ink);
+  if (!content && ink.length === 0) return { ok: false, reason: "empty" };
 
   const note: Note = {
     id: input.existing?.id ?? (input.createId ?? createHumanNoteId)(),
@@ -43,6 +49,7 @@ export async function keepPonderNote(input: {
     revision: input.existing ? input.existing.revision + 1 : 1,
     updatedAt: (input.now ?? new Date()).toISOString(),
   };
+  if (ink.length > 0) note.ink = ink;
   await input.repo.saveHumanEdit(note, input.principal);
   return { ok: true, note };
 }

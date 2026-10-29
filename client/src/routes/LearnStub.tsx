@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { assignmentKey, closedBook } from "../design/sprites";
@@ -7,9 +7,12 @@ import { doors } from "../fixtures/doors";
 import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
+import { PonderInk } from "../study/PonderInk";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
+import { cloneInk, sealPonderInk } from "../study/ponderInk";
 import { keepPonderNote, loadPonderNote } from "../study/ponderNote";
 import type { Note } from "../storage/noteRepository";
+import type { RawInkStroke } from "../storage/strokes";
 import { noteRepo } from "../storage/services";
 import { useSession } from "../storage/session";
 
@@ -32,6 +35,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
   const keyScale = layout === "portrait" ? 8 : 7;
   const [pose, setPose] = useState<PaperPose>("desk");
   const [draft, setDraft] = useState("");
+  const [strokes, setStrokes] = useState<RawInkStroke[]>([]);
   const [saved, setSaved] = useState<Note | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -40,6 +44,8 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
   const dialogRef = useRef<HTMLDialogElement>(null);
   const bookRef = useRef<HTMLButtonElement>(null);
   const touched = useRef(false);
+  const keptInk = useRef<RawInkStroke[]>([]);
+  const hintId = useId();
 
   useEffect(() => {
     let live = true;
@@ -48,10 +54,14 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
       .then((note) => {
         if (!live) return;
         if (note && !touched.current) {
+          const ink = sealPonderInk(note.ink);
           setDraft(note.content);
+          setStrokes(ink);
+          keptInk.current = ink;
           setSaved(note);
         } else if (note) {
           setSaved(note);
+          keptInk.current = sealPonderInk(note.ink);
         }
         setReady(true);
       })
@@ -86,6 +96,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
         bookRef.current?.focus();
         return;
       }
+      setStrokes(cloneInk(keptInk.current));
       setPose("desk");
     };
     window.addEventListener("keydown", onKey);
@@ -94,10 +105,15 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
 
   const lift = () => setPose("lifted");
 
+  const lowerSheet = useCallback(() => {
+    setStrokes(cloneInk(keptInk.current));
+    setPose("desk");
+  }, []);
+
   const onPaperClick = (event: MouseEvent) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (target.closest("button, a, textarea, input, select, label")) return;
+    if (target.closest("button, a, textarea, input, select, label, canvas")) return;
     lift();
   };
 
@@ -119,6 +135,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
       const result = await keepPonderNote({
         doorId: id,
         content: draft,
+        ink: strokes,
         principal: session.principal,
         existing: saved,
         repo: noteRepo,
@@ -127,14 +144,23 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
         setNotice(result.reason === "empty" ? "Write a line before you keep it." : "Only you can keep this note.");
         return;
       }
+      const ink = sealPonderInk(result.note.ink);
       setSaved(result.note);
       setDraft(result.note.content);
+      setStrokes(ink);
+      keptInk.current = ink;
       setNotice("Kept with your notes.");
     } catch {
       setNotice("That note could not be kept.");
     } finally {
       setKeeping(false);
     }
+  };
+
+  const addStroke = (stroke: RawInkStroke) => {
+    touched.current = true;
+    setStrokes((current) => [...current, stroke]);
+    setNotice(null);
   };
 
   const closeBook = () => {
@@ -193,7 +219,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
                   className="set-down"
                   onClick={(event) => {
                     event.stopPropagation();
-                    setPose("desk");
+                    lowerSheet();
                   }}
                 >
                   Set it down
@@ -203,11 +229,15 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
                 <h1>Ponder</h1>
                 {pose === "lifted" ? (
                   <form className="ponder-form" onSubmit={keep} onClick={(event) => event.stopPropagation()}>
+                    <p className="ponder-hint" id={hintId}>
+                      Draw with a stylus, finger, or mouse.
+                    </p>
+                    <PonderInk live strokes={strokes} describedBy={hintId} onStroke={addStroke} />
                     <label className="ponder-label" htmlFor={preview ? undefined : "ponder-note"}>
                       Your note
                       <textarea
                         id={preview ? undefined : "ponder-note"}
-                        rows={layout === "portrait" ? 6 : 5}
+                        rows={2}
                         value={draft}
                         onChange={(event) => {
                           touched.current = true;
@@ -221,7 +251,12 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
                     </button>
                   </form>
                 ) : (
-                  <p className="ponder-preview">{draft.trim() ? draft : "A blank sheet. Lift it to write."}</p>
+                  <>
+                    {strokes.length > 0 ? <PonderInk live={false} strokes={strokes} /> : null}
+                    <p className="ponder-preview">
+                      {draft.trim() ? draft : strokes.length > 0 ? "Ink on the sheet." : "A blank sheet. Lift it to write."}
+                    </p>
+                  </>
                 )}
                 {notice ? (
                   <p className="ponder-status" role="status">
