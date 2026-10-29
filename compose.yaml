@@ -1,0 +1,17 @@
+# compose.yaml - local development skeleton (Chapter 5)
+services:
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://founder:${DB_PASSWORD}@db:5432/founder
+      BLOB_ROOT: /data/blobs
+    depends_on: [db]
+    volumes: ["./data/blobs:/data/blobs"]
+    ports: ["127.0.0.1:8000:8000"]
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: founder
+      POSTGRES_USER: founder
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: ["./data/postgres:/var/lib/postgresql/data"]
