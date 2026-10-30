@@ -78,13 +78,22 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     };
   }, [pathOpen, preview]);
 
+  const closeBook = () => {
+    const node = dialogRef.current;
+    // Close while the dialog is still mounted. Focusing the book first does
+    // nothing: a modal dialog makes the desk inert, then unmounting the dialog
+    // drops focus on the document.
+    if (node?.open && typeof node.close === "function") node.close();
+    setPathOpen(false);
+    bookRef.current?.focus();
+  };
+
   useEffect(() => {
     if (pose !== "lifted" && !pathOpen) return;
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (pathOpen) {
-        setPathOpen(false);
-        bookRef.current?.focus();
+        closeBook();
         return;
       }
       setPose("desk");
@@ -136,11 +145,6 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     } finally {
       setKeeping(false);
     }
-  };
-
-  const closeBook = () => {
-    setPathOpen(false);
-    bookRef.current?.focus();
   };
 
   return (
