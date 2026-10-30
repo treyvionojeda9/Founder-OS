@@ -32,22 +32,28 @@ export const bookStack: SpriteGrid = [
   "......................",
 ];
 
-/** Closed path book. Navy cover, darkwood spine, one sky ribbon, paper edge. */
+/**
+ * Closed path book beside the writing sheet.
+ * Navy cover and sky ribbon are school accents. Spine, board, and page edges stay in Founder Ember.
+ * No blue outside that set.
+ */
 export const closedBook: SpriteGrid = [
-  "....................",
-  "..dddddddddddddddd..",
-  "..ddvvvvvvvvvvvvpd..",
-  "..ddvvvvvvvvvvvvpd..",
-  "..ddvvbbbbvvvvvvpd..",
-  "..ddvvvvvvvvvvvvpd..",
-  "..ddvvvvvvvvvvvvpd..",
-  "..ddvvbbbbvvvvvvpd..",
-  "..ddvvvvvvvvvvvvpd..",
-  "..ddvvvvvvvvvvvvpd..",
-  "..ddvvvvvvvvvvvvpd..",
-  "..dddddddddddddddd..",
-  "....................",
-  "....................",
+  "......................",
+  "..dddddddddddddddddd..",
+  "..dddvvvvvvvvvvvvvpd..",
+  "..dddvvvvvvvvvvvvvpd..",
+  "..dddvvbbbbvvvvvvvpd..",
+  "..dddvvvvvvvvvvvvvpd..",
+  "..dddvvvvvvvvvvvvvpd..",
+  "..dddvvbbbbvvvvvvvpd..",
+  "..dddvvvvvvvvvvvvvpd..",
+  "..dddvvvvvvvvvvvvvpd..",
+  "..dddvvvvvvvvvvvvvpd..",
+  "..dddddddddddddddddd..",
+  "..pppppppppppppppppp..",
+  "..dddddddddddddddddd..",
+  "......................",
+  "......................",
 ];
 
 /** Key left on the desk when a fixture assignment is waiting. */
