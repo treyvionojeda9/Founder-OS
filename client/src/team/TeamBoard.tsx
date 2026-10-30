@@ -35,6 +35,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
       className="team-board"
       data-still={still ? "true" : "false"}
       data-count={team.agents.length}
+      data-mount="wall"
       aria-label="Team board"
       data-material="plaster"
     >
@@ -43,6 +44,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
       <div className="board-floor" data-material="floor" aria-hidden="true" />
       <div className="board-void">
         <div className="board-hanger">
+          <div className="board-cleat" aria-hidden="true" />
           <div className="board-face">
             <span className="board-nail nail-a" aria-hidden="true" />
             <span className="board-nail nail-b" aria-hidden="true" />
@@ -63,6 +65,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
                       className="plaque"
                       data-agent={agent.id}
                       data-status={agent.status}
+                      data-plaque="engraved"
                       data-expanding={expandingId === agent.id ? "true" : "false"}
                       onClick={() => onOpen(agent.id)}
                     >
@@ -85,6 +88,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
               <button
                 type="button"
                 className="stapler"
+                data-reach="local"
                 aria-expanded={slip}
                 aria-haspopup="menu"
                 aria-controls={slip && team.tools.length > 0 ? "fixture-tools" : undefined}

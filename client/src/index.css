@@ -2130,19 +2130,30 @@ html:has(.room-portal-layer) body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   overflow: hidden;
+  padding: 16px 16px 0;
   background: var(--night);
 }
 
 .library-head {
   position: relative;
   z-index: 2;
-  padding: 0 4px 2px;
+  flex: none;
+  margin: 0 4px 10px;
+  padding: 10px 84px 12px 14px;
+  background: var(--darkwood);
+  border: 4px solid var(--wood);
+  box-shadow: inset 0 0 0 4px var(--night);
+}
+
+.library-head h1,
+.library-head p {
+  color: var(--paper);
 }
 
 .library-head p {
-  color: var(--paper);
+  margin-top: 4px;
   font-size: var(--type-body);
   line-height: var(--leading-body);
 }
@@ -2159,7 +2170,7 @@ html:has(.room-portal-layer) body {
   background: var(--darkwood);
   border: 8px solid var(--darkwood);
   box-shadow: inset 0 0 0 4px var(--wood);
-  padding: 10px 16px 12px;
+  padding: 12px 16px 12px;
 }
 
 .case-crown {
@@ -2172,8 +2183,8 @@ html:has(.room-portal-layer) body {
 .library-lamp {
   position: absolute;
   z-index: 4;
-  top: 20px;
-  right: 16px;
+  top: 22px;
+  right: 28px;
   margin: 0;
   line-height: 0;
   pointer-events: none;
@@ -2205,11 +2216,33 @@ html:has(.room-portal-layer) body {
 }
 
 .shelf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 28ch;
   margin: 0;
+  padding: 14px 16px;
+  background: var(--darkwood);
   color: var(--paper);
+  border: 4px solid var(--wood);
+  box-shadow: inset 0 0 0 4px var(--night);
+  text-align: center;
+}
+
+.shelf-empty p {
   font-size: var(--type-body);
   line-height: var(--leading-body);
-  text-align: center;
+}
+
+.shelf-empty .shelf-next {
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  padding: 0;
+  background: transparent;
+  color: var(--flame);
+  border: 0;
 }
 
 .spine {
@@ -2218,10 +2251,10 @@ html:has(.room-portal-layer) body {
   align-items: center;
   justify-content: center;
   align-self: flex-end;
-  width: 58px;
-  height: min(168px, 100%);
-  min-height: 120px;
-  padding: 8px 4px;
+  width: 120px;
+  height: min(188px, 100%);
+  min-height: 156px;
+  padding: 12px 8px 12px 18px;
   background: transparent;
   border-color: transparent;
   color: var(--paper);
@@ -2256,30 +2289,34 @@ html:has(.room-portal-layer) body {
 .spine-band {
   position: absolute;
   left: 0;
-  right: 8px;
-  height: 8px;
+  top: 12px;
+  width: 10px;
+  height: 10px;
   background: var(--flame);
 }
 
 .spine[data-band="high"] .spine-band {
-  top: 14px;
+  top: 12px;
+  height: 10px;
   background: var(--paper);
 }
 
 .spine[data-band="mid"] .spine-band {
-  top: 46px;
-  height: 12px;
+  top: 36px;
+  height: 16px;
   background: var(--night);
 }
 
 .spine[data-band="low"] .spine-band {
-  top: 78px;
+  top: auto;
+  bottom: 18px;
+  height: 10px;
   background: var(--ember);
 }
 
 .spine[data-band="broad"] .spine-band {
-  top: 34px;
-  height: 24px;
+  top: 28px;
+  height: 40px;
   background: var(--darkwood);
 }
 
@@ -2290,18 +2327,40 @@ html:has(.room-portal-layer) body {
 .spine-title {
   position: relative;
   z-index: 1;
-  writing-mode: vertical-rl;
-  max-height: 132px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  max-height: 148px;
   overflow: hidden;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  padding: 6px 4px;
+  background-color: var(--darkwood);
+  background-image: none;
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
+  text-align: center;
   color: var(--paper);
 }
 
+.spine-line {
+  display: block;
+  white-space: nowrap;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
 .spine[data-tone="ember"] .spine-title,
-.spine[data-tone="paper"] .spine-title {
-  color: var(--night);
+.spine[data-tone="paper"] .spine-title,
+.spine[data-tone="wood"] .spine-title,
+.spine[data-tone="plum"] .spine-title {
+  background-color: var(--darkwood);
+  color: var(--paper);
 }
 
 .case-base {
@@ -2408,7 +2467,8 @@ html:has(.room-portal-layer) body {
 
 .app[data-layout="landscape"] .bookcase,
 .app[data-layout="desktop"] .bookcase {
-  margin-top: 8px;
+  margin-top: 0;
+  width: min(980px, 100%);
 }
 
 .team-board {
@@ -2417,15 +2477,16 @@ html:has(.room-portal-layer) body {
   min-height: 0;
   overflow: auto;
   display: flex;
-  justify-content: center;
+  align-items: safe center;
+  justify-content: safe center;
 }
 
 .board-void {
   position: relative;
   z-index: 1;
-  width: min(920px, 100%);
-  margin: 20px auto 22%;
-  padding: 8px 8px 16px;
+  width: min(760px, calc(100% - 28px));
+  margin: 20px auto;
+  padding: 16px 8px 12px;
   perspective: 1100px;
   perspective-origin: 50% 18%;
 }
@@ -2466,8 +2527,21 @@ html:has(.room-portal-layer) body {
   transform-style: preserve-3d;
 }
 
+.board-cleat {
+  position: absolute;
+  z-index: 0;
+  left: 22%;
+  right: 22%;
+  top: -14px;
+  height: 18px;
+  background: var(--wood);
+  border: 4px solid var(--darkwood);
+  box-shadow: 0 4px 0 var(--night);
+}
+
 .board-face {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2476,7 +2550,7 @@ html:has(.room-portal-layer) body {
   border: 8px solid var(--wood);
   box-shadow:
     inset 0 0 0 4px var(--ember),
-    8px 8px 0 var(--darkwood);
+    0 8px 0 var(--night);
   transform-style: preserve-3d;
 }
 
@@ -2569,23 +2643,34 @@ html:has(.room-portal-layer) body {
   line-height: 0;
 }
 
+.plaque:hover,
+.plaque:active {
+  background: var(--wood);
+  color: var(--paper);
+  border-color: var(--darkwood);
+}
+
 .plaque-plate {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
   min-width: 0;
-  padding: 8px 10px;
-  background: var(--paper);
-  color: var(--night);
-  border: 3px solid var(--darkwood);
+  min-height: 64px;
+  padding: 6px 8px 8px;
+  background-color: var(--darkwood);
+  background-image: none;
+  color: var(--paper);
+  border: 0;
+  box-shadow: inset 0 -4px 0 var(--night);
 }
 
 .plaque-name {
   font-family: var(--font-pixel);
   font-size: var(--type-body);
   line-height: var(--leading-body);
-  color: var(--night);
+  color: var(--paper);
 }
 
 .plaque-title,
@@ -2596,7 +2681,7 @@ html:has(.room-portal-layer) body {
 }
 
 .plaque-title {
-  color: var(--darkwood);
+  color: var(--paper);
 }
 
 .plaque-state {
@@ -2624,7 +2709,8 @@ html:has(.room-portal-layer) body {
   padding: 6px;
   background: var(--paper);
   color: var(--night);
-  border: 4px solid var(--night);
+  border: 4px solid var(--darkwood);
+  box-shadow: 3px 3px 0 var(--night);
 }
 
 .stapler[aria-expanded="true"] {
@@ -2681,8 +2767,9 @@ html:has(.room-portal-layer) body {
 
 .app[data-layout="landscape"] .board-void,
 .app[data-layout="desktop"] .board-void {
-  padding-top: 12px;
-  padding-bottom: 20px;
+  width: min(840px, calc(100% - 48px));
+  padding-top: 18px;
+  padding-bottom: 12px;
 }
 
 /* Darkwood pixel chrome. Active is ember. Hover and press stay in Founder Ember. */
@@ -2701,6 +2788,13 @@ html:has(.room-portal-layer) body {
   flex-direction: column;
   gap: 8px;
   flex: none;
+}
+
+.study[data-room="library"] .pixel-bar,
+.study[data-room="board"] .pixel-bar {
+  box-shadow:
+    inset 0 4px 0 var(--wood),
+    inset 0 -4px 0 var(--darkwood);
 }
 
 .stub .pixel-bar,
@@ -2910,6 +3004,8 @@ button:disabled {
 .board-legend,
 .board-team,
 .library-head p,
+.shelf-empty p,
+.shelf-next,
 .hint {
   font-family: var(--font-pixel);
 }

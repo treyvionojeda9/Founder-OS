@@ -53,6 +53,35 @@ export function bookLabel(note: Note, siblings: readonly Note[]): string {
   return `${title}, revision ${note.revision}`;
 }
 
+/** Upright pixel rows. Seven glyphs a line, broken on words, so a spine never rotates type. */
+export function spineLines(label: string, cols = 7): string[] {
+  const words = label.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (words.length === 0) return ["Sheet"];
+  const width = Math.max(1, cols);
+  const lines: string[] = [];
+  let current = "";
+  const take = (word: string) => {
+    if (word.length > width) {
+      if (current) {
+        lines.push(current);
+        current = "";
+      }
+      for (let i = 0; i < word.length; i += width) lines.push(word.slice(i, i + width));
+      return;
+    }
+    const next = current ? `${current} ${word}` : word;
+    if (next.length <= width) {
+      current = next;
+      return;
+    }
+    if (current) lines.push(current);
+    current = word;
+  };
+  for (const word of words) take(word);
+  if (current) lines.push(current);
+  return lines;
+}
+
 /** Human Vault notes for this team, newest first. Machine notes are never listed. */
 export async function listShelfNotes(teamId: string, repo: NoteRepository): Promise<Note[]> {
   const notes = await repo.listByProject(workProjectId(teamId));
