@@ -19,24 +19,3 @@ export function paintWarmLight(ctx: CanvasRenderingContext2D, width: number, hei
     }
   }
 }
-
-/**
- * Stepped hall vignette. Solid rings of slate then black — no Bayer checker.
- * Night is the page colour, so the open middle stays unpainted.
- */
-export function paintVignette(ctx: CanvasRenderingContext2D, width: number, height: number, cell: number) {
-  ctx.clearRect(0, 0, width, height);
-  for (let y = 0; y < height; y += cell) {
-    for (let x = 0; x < width; x += cell) {
-      const nx = ((x + cell * 0.5) / width - 0.5) * 2;
-      const ny = ((y + cell * 0.5) / height - 0.5) * 2;
-      const r = Math.hypot(nx * 0.92, ny);
-      let color: string | null = null;
-      if (r > 0.92) color = "#000000";
-      else if (r > 0.74) color = founderEmber.slate;
-      if (!color) continue;
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y, cell, cell);
-    }
-  }
-}

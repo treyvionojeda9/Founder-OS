@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { founderEmber, paletteByChar } from "./palette";
 import { grayscaleGrid } from "./spriteGrid";
-import { doorSpec } from "./sprites/doorFaces";
+import { doorGlowPad, doorSpec } from "./sprites/doorFaces";
 import {
   assignmentKey,
   closedBook,
@@ -69,6 +69,21 @@ describe("sprite grids", () => {
     expect(book.filter((luma) => luma === navy).length).toBeGreaterThan(book.filter((luma) => luma === sky).length);
     expect(key.length).toBeGreaterThan(0);
     for (const luma of key) expect(Math.abs(luma - wood)).toBeGreaterThanOrEqual(30);
+  });
+
+  it("hugs the door with solid flame and ember steps", () => {
+    const painted = lightPoolA.join("");
+    expect(new Set(painted)).toEqual(new Set([".", "e", "f"]));
+    expect(painted).toMatch(/fff|eee/);
+    const cx = doorGlowPad.x + doorSpec.openingX + Math.floor(doorSpec.openingW / 2);
+    const cy = doorGlowPad.top + doorSpec.openingY + Math.floor(doorSpec.openingH / 2);
+    expect(lightPoolA[cy]?.[cx]).toBe(".");
+    expect(lightPoolA[0].length).toBe(doorSpec.frameW + doorGlowPad.x * 2);
+    expect(lightPoolA.length).toBe(doorSpec.frameH + doorGlowPad.top);
+    const contact = contactShadow.join("");
+    expect(new Set(contact)).toEqual(new Set([".", "d", "s"]));
+    expect(contact).toMatch(/ddd/);
+    expect(contact).not.toMatch(/dsds|sdsd/);
   });
 
   it("paints the door spill as solid ember steps, not a checker", () => {
