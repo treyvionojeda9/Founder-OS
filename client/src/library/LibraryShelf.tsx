@@ -12,6 +12,7 @@ import {
   listShelfNotes,
   saveShelfNote,
   shelfBays,
+  spineLines,
   spineMark,
 } from "./shelfNote";
 
@@ -128,13 +129,13 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
       data-material="plaster"
       aria-label="Human shelf"
     >
-      {open ? null : (
-        <header className="library-head">
-          <h1>Library</h1>
-          <p>Human notes for this team.</p>
-        </header>
-      )}
       <div className="bookcase">
+        {open ? null : (
+          <header className="library-head">
+            <h1>Library</h1>
+            <p>Human notes for this team.</p>
+          </header>
+        )}
         <figure className="library-lamp">
           <Sprite rows={deskLampOn} scale={2} title="Desk lamp, lit" />
         </figure>
@@ -145,6 +146,8 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
               {bay.map((note) => {
                 const index = notes.indexOf(note);
                 const mark = spineMark(index);
+                const label = bookLabel(note, notes);
+                const lines = spineLines(label);
                 return (
                   <button
                     key={note.id}
@@ -152,19 +155,27 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
                     className="spine"
                     data-tone={mark.tone}
                     data-band={mark.band}
+                    aria-label={label}
                     onClick={() => openNote(note)}
                   >
                     <span className="spine-body" aria-hidden="true">
                       <span className="spine-band" />
                     </span>
-                    <span className="spine-title">{bookLabel(note, notes)}</span>
+                    <span className="spine-title" data-label="pixel" aria-hidden="true">
+                      {lines.map((line, lineIndex) => (
+                        <span key={`${lineIndex}-${line}`} className="spine-line">
+                          {line}
+                        </span>
+                      ))}
+                    </span>
                   </button>
                 );
               })}
               {ready && notes.length === 0 && !open && bayIndex === 1 ? (
-                <p className="shelf-empty" role="status">
-                  The shelf is bare.
-                </p>
+                <div className="shelf-empty" role="status">
+                  <p>The shelf is bare.</p>
+                  <p className="shelf-next">Place a sheet.</p>
+                </div>
               ) : null}
             </div>
           ))}
