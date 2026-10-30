@@ -1,5 +1,6 @@
 import type { SpriteGrid } from "./types";
 import { flame } from "./flame";
+import { splashFlameCore, splashFlameLift, splashFlameSettle } from "./splashFlame";
 import { archDoorClosed, archDoorOpen } from "./archDoor";
 import { deskLampFailed, deskLampOff, deskLampOn } from "./deskLamp";
 import { agent } from "./agent";
@@ -12,6 +13,7 @@ import { contactShadow, doorFrame, doorInterior, doorLeaf, doorSpill, lightPoolA
 
 export type { SpriteGrid } from "./types";
 export { flame } from "./flame";
+export { splashFlameCore, splashFlameLift, splashFlameSettle } from "./splashFlame";
 export { archDoorClosed, archDoorOpen, closedLogoSlot, openLogoSlot } from "./archDoor";
 export { deskLampOff, deskLampOn, deskLampFailed } from "./deskLamp";
 export { agent } from "./agent";
@@ -35,6 +37,9 @@ export {
 
 export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "flame", rows: flame },
+  { name: "splash flame core", rows: splashFlameCore },
+  { name: "splash flame lift", rows: splashFlameLift },
+  { name: "splash flame settle", rows: splashFlameSettle },
   { name: "arch door closed", rows: archDoorClosed },
   { name: "arch door open", rows: archDoorOpen },
   { name: "desk lamp off", rows: deskLampOff },
