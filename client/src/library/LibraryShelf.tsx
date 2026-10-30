@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Sprite } from "../design/Sprite";
 import { deskLampOn, forgeNote } from "../design/sprites";
 import { useFormFactor } from "../hooks/useFormFactor";
+import { usePaperSettle } from "../study/paperSettle";
 import { useStillFrame } from "../hooks/useStillFrame";
 import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
@@ -114,6 +115,7 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
     }
   };
 
+  const settle = usePaperSettle(open ? "lifted" : "desk", still);
   const perRow = booksPerShelf(layout);
   const bays = shelfBays(notes, perRow);
   const sheetScale = layout === "portrait" ? 3 : 2;
@@ -189,7 +191,12 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
       </div>
       <div className="library-floor" data-material="floor" aria-hidden="true" />
       {open ? (
-        <div className="library-paper paper-slot" data-pose="lifted" data-still={still ? "true" : "false"}>
+        <div
+          className="library-paper paper-slot"
+          data-pose="lifted"
+          data-still={still ? "true" : "false"}
+          data-settle={open && settle ? settle : undefined}
+        >
           <div className="paper is-lit">
             <button type="button" className="set-down" onClick={closeSheet}>
               Set it down

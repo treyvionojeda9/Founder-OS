@@ -1,8 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Sprite } from "../design/Sprite";
 import type { AgentStatus } from "../team/chatStore";
 import { lampArt } from "./lampArt";
 import { lampPoolPalette, paintDeskPool, paintPaperWash } from "./lightPool";
+import { usePaperSettle } from "./paperSettle";
+import { WorkingLamp } from "./WorkingLamp";
 
 export type PaperPose = "desk" | "lifted";
 export type StudyVariant = "work" | "school";
@@ -35,6 +36,7 @@ export function StudyStage({
   overlay,
 }: StudyStageProps) {
   const poolPalette = lampPoolPalette(variant);
+  const settle = usePaperSettle(pose, still);
   return (
     <div className="study-stage" data-variant={variant}>
       <div className="study-world">
@@ -59,12 +61,17 @@ export function StudyStage({
             <span className="desk-leg leg-left" />
             <span className="desk-leg leg-right" />
           </div>
-          <Lamp status={lampStatus} scale={lampScale} />
+          <Lamp status={lampStatus} scale={lampScale} still={still} />
           {beside}
         </div>
       </div>
       {paper ? (
-        <div className="paper-slot" data-pose={pose} data-still={still ? "true" : "false"}>
+        <div
+          className="paper-slot"
+          data-pose={pose}
+          data-still={still ? "true" : "false"}
+          data-settle={settle ?? undefined}
+        >
           {paper}
         </div>
       ) : null}
@@ -103,11 +110,11 @@ function DeskPool({ status, palette }: { status: AgentStatus; palette: "ember" |
   );
 }
 
-function Lamp({ status, scale }: { status: AgentStatus; scale: number }) {
+function Lamp({ status, scale, still }: { status: AgentStatus; scale: number; still: boolean }) {
   const lamp = lampArt(status);
   return (
     <figure className="figure lamp-spot">
-      <Sprite rows={lamp.rows} scale={scale} title={lamp.title} />
+      <WorkingLamp status={status} scale={scale} still={still} />
       <figcaption className="status-chip" data-status={status}>
         {lamp.caption}
       </figcaption>

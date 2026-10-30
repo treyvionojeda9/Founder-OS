@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Sprite } from "../design/Sprite";
 import { stapler } from "../design/sprites";
 import { lampArt } from "../study/lampArt";
+import { WorkingLamp } from "../study/WorkingLamp";
 import type { TeamRecord } from "./chatStore";
 
 type TeamBoardProps = {
@@ -70,7 +71,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
                       onClick={() => onOpen(agent.id)}
                     >
                       <span className="plaque-lamp">
-                        <Sprite rows={lamp.rows} scale={lampScale} title={lamp.title} />
+                        <WorkingLamp status={agent.status} scale={lampScale} still={still} />
                       </span>
                       <span className="plaque-plate">
                         <span className="plaque-name">{agent.name}</span>
