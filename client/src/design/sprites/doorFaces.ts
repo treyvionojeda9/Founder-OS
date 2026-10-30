@@ -193,44 +193,76 @@ function paintSpill(): SpriteGrid {
   return join(rows);
 }
 
-/** Concentric flame, ember, and wood. `shift` pulls the second frame in a step. */
+/** Cells of pad around the frame. The sprite's door sits at this origin. */
+export const doorGlowPad = { x: 3, top: 6 } as const;
+
+/**
+ * Solid flame, then ember, hugging the arch. Wider above the crown,
+ * a short step at the sides. No wood, no Bayer, no filled semicircle.
+ * `shift` pulls the second frame in by one step.
+ */
 function paintPool(shift: number): SpriteGrid {
-  const width = 48;
-  const height = 22;
+  const mask = paintFrame().map((row) => [...row].map((ch) => ch !== "."));
+  const frameH = mask.length;
+  const frameW = mask[0]?.length ?? 0;
+  const { x: padX, top: padTop } = doorGlowPad;
+  const width = frameW + padX * 2;
+  const height = frameH + padTop;
   const rows = blank(width, height);
-  const cx = (width - 1) / 2;
-  const cy = height - 1;
-  const tighten = shift > 0 ? 0.08 : 0;
+  const edge: { x: number; y: number }[] = [];
+  for (let y = 0; y < frameH; y += 1) {
+    for (let x = 0; x < frameW; x += 1) {
+      if (!mask[y][x]) continue;
+      const rim = !mask[y - 1]?.[x] || !mask[y + 1]?.[x] || !mask[y]?.[x - 1] || !mask[y]?.[x + 1];
+      if (rim) edge.push({ x: x + padX, y: y + padTop });
+    }
+  }
+  const outerX0 = doorSpec.openingX - 3;
+  const outerX1 = doorSpec.openingX + doorSpec.openingW - 1 + 3;
+  const outerBottom = doorSpec.openingY + doorSpec.openingH + 1;
+  const tighten = shift > 0 ? 0.7 : 0;
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const dx = (x - cx) / (width * 0.5);
-      const dy = (y - cy) / (height * 1.05);
-      const r = Math.sqrt(dx * dx + dy * dy) + tighten;
-      if (r > 1) continue;
-      if (r < 0.3) rows[y][x] = "f";
-      else if (r < 0.58) rows[y][x] = "e";
-      else if (r < 0.84) rows[y][x] = "w";
+      const fx = x - padX;
+      const fy = y - padTop;
+      if (fy > outerBottom) continue;
+      if (fy >= 0 && fy < frameH && fx >= 0 && fx < frameW && mask[fy][fx]) continue;
+      if (fy >= 0 && inArch(fx, fy, outerX0, outerX1, doorSpec.spring, 1)) continue;
+      let best = 99;
+      for (const cell of edge) {
+        const dx = x - cell.x;
+        const dy = y - cell.y;
+        if (dx > 6 || dx < -6 || dy > 6 || dy < -6) continue;
+        const d = Math.hypot(dx, dy);
+        if (d < best) best = d;
+      }
+      const d = best + tighten;
+      const spring = doorSpec.spring;
+      if (fy < spring) {
+        if (d <= 1.4) rows[y][x] = "f";
+        else if (d <= 3.5) rows[y][x] = "e";
+      } else if (fy < spring + 12 && d <= 2.1) {
+        rows[y][x] = d <= 1.15 ? "f" : "e";
+      } else if (fy < outerBottom - 8 && d <= 1.45) {
+        rows[y][x] = "e";
+      }
     }
   }
   return join(rows);
 }
 
+/** Solid darkwood threshold with a slate lip. No dithered oval. */
 function paintContact(): SpriteGrid {
-  const width = 28;
-  const height = 6;
+  const width = 26;
+  const height = 3;
   const rows = blank(width, height);
   const cx = (width - 1) / 2;
-  const cy = (height - 1) / 2;
   for (let y = 0; y < height; y += 1) {
+    const reach = 1 - y * 0.14;
     for (let x = 0; x < width; x += 1) {
-      const dx = (x - cx) / (width * 0.5);
-      const dy = (y - cy) / (height * 0.5);
-      const r = Math.sqrt(dx * dx + dy * dy);
-      const thresh = BAYER[y % 4][x % 4];
-      if (r > 1) continue;
-      if (r < 0.45) rows[y][x] = thresh < 10 ? "s" : "d";
-      else if (r < 0.75) rows[y][x] = thresh < 6 ? "s" : ".";
-      else rows[y][x] = thresh < 3 ? "s" : ".";
+      const dx = Math.abs(x - cx) / (width * 0.5);
+      if (dx > reach) continue;
+      rows[y][x] = y === height - 1 ? "s" : "d";
     }
   }
   return join(rows);

@@ -317,11 +317,13 @@ a.text-link {
 
 .light-pool {
   position: absolute;
+  z-index: 0;
   left: 50%;
-  bottom: 100%;
+  top: 0;
   width: var(--pool-w, 0px);
   margin-left: calc(var(--pool-w, 0px) / -2);
-  margin-bottom: -14px;
+  margin-top: var(--pool-shift, 0px);
+  transform: translateZ(-1px);
   pointer-events: none;
 }
 
@@ -343,6 +345,8 @@ a.text-link {
 }
 
 .dolly-target {
+  position: relative;
+  z-index: 1;
   transform-origin: center center;
   transform: scale(1);
 }
@@ -423,6 +427,9 @@ a.text-link {
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
+  font-weight: 400;
+  letter-spacing: 0;
+  font-synthesis: none;
   color: var(--paper);
 }
 
@@ -871,10 +878,10 @@ html:has(.door.is-opening) body {
 
 @keyframes pool-breathe {
   from {
-    transform: translateY(0);
+    transform: translate3d(0, 0, -1px);
   }
   to {
-    transform: translateY(-1px);
+    transform: translate3d(0, -1px, -1px);
   }
 }
 
@@ -2644,6 +2651,35 @@ a.text-link:hover,
   background: var(--ember);
   color: var(--night);
   border-color: var(--flame);
+}
+
+.pixel-bar a.hall-fixture,
+.rail a.hall-fixture {
+  border: 0;
+  background: var(--darkwood);
+  color: var(--paper);
+  box-shadow:
+    inset 4px 0 0 var(--night),
+    inset -4px 0 0 var(--night),
+    inset 0 4px 0 var(--wood),
+    inset 0 -4px 0 var(--plum);
+}
+
+.pixel-bar a.hall-fixture:hover,
+.rail a.hall-fixture:hover {
+  background: var(--darkwood);
+  color: var(--flame);
+  border-color: transparent;
+}
+
+.pixel-bar a.hall-fixture:active,
+.rail a.hall-fixture:active {
+  background: var(--plum);
+  color: var(--paper);
+  border-color: transparent;
+  box-shadow:
+    inset 0 4px 0 var(--night),
+    inset 0 -4px 0 var(--wood);
 }
 
 .pixel-bar button:active,
