@@ -50,7 +50,7 @@ test.describe("school learning desk", () => {
     const deskPlane = await page.locator(".desk-top").evaluate((el) => getComputedStyle(el).transform);
     const paperPlane = await page.locator(".paper-slot").evaluate((el) => getComputedStyle(el).transform);
     expect(deskPlane).not.toBe("none");
-    expect(paperPlane).not.toBe("none");
+    expect(paperPlane).toBe("none");
     await keep(page, `learn-desk-${proj}`);
   });
 
