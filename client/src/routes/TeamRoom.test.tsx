@@ -9,6 +9,7 @@ import { listTeams, resetChatForTests } from "../team/chatStore";
 import { TeamBoard } from "../team/TeamBoard";
 import boardSource from "../team/TeamBoard.tsx?raw";
 import { TeamRoom } from "./TeamRoom";
+import roomSource from "./TeamRoom.tsx?raw";
 
 const originalMatchMedia = window.matchMedia.bind(window);
 
@@ -103,10 +104,66 @@ describe("CEO paper chat", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Approved. Nothing ran.");
+    expect(screen.getByRole("status")).toHaveAttribute("data-stamp", "approve");
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(saveHuman).not.toHaveBeenCalled();
     await localDb.open();
     expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.machineNotes.count()).toBe(0);
+  });
+
+  it("lays the approval stamp over the live room and does not run a decline", async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    renderRoom();
+
+    await user.click(screen.getByRole("button", { name: "Publish the forge note" }));
+    const dialog = screen.getByRole("dialog", { name: "Approve this action?" });
+    expect(dialog).toHaveAttribute("data-approval", "overlay");
+    expect(document.querySelector("dialog")).toBeNull();
+    expect(dialog.querySelector(".approval-seal")).not.toBeNull();
+    expect(document.querySelector(".study-world")).not.toBeNull();
+    expect(document.querySelector(".lamp-spot")).not.toBeNull();
+    expect(screen.getByRole("img", { name: "Desk lamp, lit" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "CEO" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Decline" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveAttribute("data-stamp", "decline");
+    expect(screen.getByRole("status")).toHaveTextContent("Declined. Nothing ran.");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    await localDb.open();
+    expect(await localDb.humanNotes.count()).toBe(0);
+  });
+
+  it("declines from Escape and does not treat a chat line as approval", async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    await localDb.open();
+    renderRoom();
+
+    await user.type(screen.getByRole("textbox", { name: "Message the CEO" }), "Approve the forge note");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    expect(screen.getByText("Approve the forge note")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Publish the forge note" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Declined. Nothing ran.");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.machineNotes.count()).toBe(0);
+  });
+
+  it("keeps approval off the human vault in the room source", () => {
+    expect(roomSource).not.toMatch(/saveHumanEdit|humanNotes|humanRevisions|fetch\(|showModal/);
   });
 
   it("opens the team board instead of a stub", async () => {
@@ -148,6 +205,48 @@ describe("CEO paper chat", () => {
 
     await user.click(screen.getByRole("textbox", { name: "Message the CEO" }));
     expect(slot()).toHaveAttribute("data-pose", "lifted");
+  });
+
+  it("settles the sheet on lift and set, and cuts that motion when frames are still", async () => {
+    const user = userEvent.setup();
+    renderRoom();
+    const slot = () => document.querySelector(".paper-slot");
+    await user.click(screen.getByRole("heading", { name: "CEO chat" }));
+    expect(slot()).toHaveAttribute("data-pose", "lifted");
+    expect(slot()).toHaveAttribute("data-settle", "lift");
+    await waitFor(() => expect(slot()).not.toHaveAttribute("data-settle"));
+    await user.click(screen.getByRole("button", { name: "Set it down" }));
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+    expect(slot()).toHaveAttribute("data-settle", "set");
+
+    cleanup();
+    preferStillFrames();
+    renderRoom();
+    await user.click(screen.getByRole("heading", { name: "CEO chat" }));
+    expect(document.querySelector(".paper-slot")).toHaveAttribute("data-still", "true");
+    expect(document.querySelector(".paper-slot")).toHaveAttribute("data-pose", "lifted");
+    expect(document.querySelector(".paper-slot")).not.toHaveAttribute("data-settle");
+    const flame = document.querySelector(".lamp-spot .lamp-flame");
+    expect(flame).toHaveAttribute("data-flicker", "still");
+    expect(flame).toHaveAttribute("data-frame", "0");
+    expect(flame?.querySelectorAll(".lamp-frame")).toHaveLength(1);
+  });
+
+  it("flickers the working lamp on three frames and leaves the idle lamp alone", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    renderRoom();
+    expect(document.querySelector(".lamp-spot .lamp-flame")).toHaveAttribute("data-flicker", "still");
+    cleanup();
+    window.matchMedia = originalMatchMedia;
+    renderRoom();
+    const working = document.querySelector(".lamp-spot .lamp-flame");
+    expect(working).toHaveAttribute("data-flicker", "on");
+    expect(working?.querySelectorAll(".lamp-frame")).toHaveLength(3);
+    expect(working?.querySelectorAll("[aria-label='Desk lamp, lit']")).toHaveLength(1);
+    await user.click(screen.getByRole("tab", { name: "Atelier" }));
+    expect(document.querySelector(".lamp-spot .lamp-flame")).toHaveAttribute("data-flicker", "off");
+    expect(document.querySelector(".lamp-frame")).toBeNull();
   });
 });
 

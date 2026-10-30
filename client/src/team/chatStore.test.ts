@@ -89,7 +89,13 @@ describe("team chat store", () => {
 
     expect(line.record).toBe("chat");
     expect(line).not.toHaveProperty("vault");
-    expect(transcriptFor("hale-design-lab").at(-1)?.body).toBe("Leave this on the desk.");
+    expect(line).not.toHaveProperty("action");
+    const typed = appendFounderLine("hale-design-lab", "Approve the forge note");
+    expect(typed.record).toBe("chat");
+    expect(isMachineLine(typed)).toBe(false);
+    expect(typed).not.toHaveProperty("action");
+    expect(transcriptFor("hale-design-lab").some((item) => item.body === "Leave this on the desk.")).toBe(true);
+    expect(transcriptFor("hale-design-lab").at(-1)?.body).toBe("Approve the forge note");
     expect(humanPut).not.toHaveBeenCalled();
     expect(humanAdd).not.toHaveBeenCalled();
     expect(humanBulk).not.toHaveBeenCalled();

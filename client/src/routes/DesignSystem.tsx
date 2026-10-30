@@ -6,8 +6,11 @@ import {
   archDoorOpen,
   closedLogoSlot,
   deskLampFailed,
+  deskLampFlickerDip,
+  deskLampFlickerLift,
   deskLampOff,
   deskLampOn,
+  founderSeal,
   flame,
   logoHale,
   offlineCloud,
@@ -76,7 +79,10 @@ export function DesignSystem() {
           />
           <Pair title="Desk lamp, off" rows={deskLampOff} />
           <Pair title="Desk lamp, on" rows={deskLampOn} />
+          <Pair title="Desk lamp, flicker lift" rows={deskLampFlickerLift} />
+          <Pair title="Desk lamp, flicker dip" rows={deskLampFlickerDip} />
           <Pair title="Desk lamp, failed" rows={deskLampFailed} />
+          <Pair title="Founder seal" rows={founderSeal} />
           <Pair title="Agent" rows={agent} />
           <Pair title="Paper" rows={paperSheet} />
           <Pair title="Offline cloud" rows={offlineCloud} />
