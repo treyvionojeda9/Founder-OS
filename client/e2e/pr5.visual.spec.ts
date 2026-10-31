@@ -41,7 +41,7 @@ async function clipHash(page: Page, locator: Locator) {
 }
 
 function lamp(page: Page, status: "working" | "idle" | "failed") {
-  return page.locator(`.agent-desk[data-status="${status}"] canvas`);
+  return page.locator(`.agent-desk[data-status="${status}"] .agent-desk-lamp canvas`);
 }
 
 test.describe("overview desks", () => {

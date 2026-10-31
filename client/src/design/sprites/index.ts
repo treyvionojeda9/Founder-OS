@@ -11,6 +11,16 @@ import { paperSheet } from "./paper";
 import { stapler } from "./stapler";
 import { assignmentKey, bookStack, closedBook, forgeNote, openNotebook } from "./studyProps";
 import { contactShadow, doorFrame, doorInterior, doorLeaf, doorLeafCrack, doorSpill, footGlow, lightPoolA } from "./doorFaces";
+import {
+  deskLightPool,
+  faceWashCollar,
+  faceWashHair,
+  faceWashHood,
+  paperLightPool,
+  seatedCollar,
+  seatedHair,
+  seatedHood,
+} from "./seatedAgent";
 
 export type { SpriteGrid } from "./types";
 export { flame } from "./flame";
@@ -40,6 +50,16 @@ export {
   lightPoolA,
   lightPoolB,
 } from "./doorFaces";
+export {
+  deskLightPool,
+  faceWashCollar,
+  faceWashHair,
+  faceWashHood,
+  paperLightPool,
+  seatedCollar,
+  seatedHair,
+  seatedHood,
+} from "./seatedAgent";
 
 export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "flame", rows: flame },
@@ -76,4 +96,12 @@ export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "door interior", rows: doorInterior },
   { name: "door spill", rows: doorSpill },
   { name: "light pool", rows: lightPoolA },
+  { name: "seated hair", rows: seatedHair },
+  { name: "seated hood", rows: seatedHood },
+  { name: "seated collar", rows: seatedCollar },
+  { name: "face wash hair", rows: faceWashHair },
+  { name: "face wash hood", rows: faceWashHood },
+  { name: "face wash collar", rows: faceWashCollar },
+  { name: "desk light pool", rows: deskLightPool },
+  { name: "paper light pool", rows: paperLightPool },
 ];
