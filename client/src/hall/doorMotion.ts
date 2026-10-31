@@ -1,16 +1,19 @@
 import type { Door } from "../fixtures/doors";
 
 /**
- * Leaf swing, then the doorway dollies forward, then the route changes.
- * The crossfade finishes REVEAL_MS after the route changes.
+ * Three discrete leaf frames, then the room steps forward from the opening.
+ * CSS keyframes treat 40% of ENTER_MS as the end of the swing (SWING_MS / ENTER_MS).
+ * The route changes at ENTER_MS. A short settle follows. Whole open stays under 450ms.
  * Reduced motion skips every beat and navigates at once.
  */
-export const DOLLY_MS = 300;
-export const ENTER_MS = 720;
-export const REVEAL_MS = 180;
+export const SWING_MS = 160;
+/** Phase change while the room is stepping forward. The hall is still the route. */
+export const DOLLY_MS = 280;
+export const ENTER_MS = 400;
+export const REVEAL_MS = 40;
 export const SEQUENCE_MS = ENTER_MS + REVEAL_MS;
-/** Reverse: the room recedes into the doorway, then the leaf shuts. */
-export const SHUT_MS = 560;
+/** Reverse: the room steps back, then the leaf shuts. Same budget as the open. */
+export const SHUT_MS = 400;
 
 /**
  * Reduced motion and slow updates (e-ink) skip the dolly.
