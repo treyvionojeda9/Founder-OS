@@ -21,6 +21,15 @@ export function DoorGhost({ frame }: { frame: DoorFrame }) {
   return (
     <div className="door-ghost is-shut" style={style}>
       <div className="door-rig" style={{ width: style.width, height: style.height }}>
+        <span
+          className="ghost-lintel"
+          style={{
+            left: px(doorSpec.openingX),
+            top: px(doorSpec.openingY),
+            width: px(doorSpec.openingW),
+            height: px(doorSpec.leafY - doorSpec.openingY),
+          }}
+        />
         <span className="face frame">
           <Sprite rows={doorFrame} scale={scale} title="" />
         </span>

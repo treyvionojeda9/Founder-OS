@@ -56,7 +56,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
       setSection(target.section);
       return;
     }
-    const node = document.querySelector<HTMLButtonElement>(`[data-door-id="${CSS.escape(focusDoorId)}"]`);
+    const node = document.querySelector<HTMLElement>(`[data-door-id="${CSS.escape(focusDoorId)}"]`);
     if (!node) return;
     node.focus({ preventScroll: true });
     focusedDoor.current = focusDoorId;
