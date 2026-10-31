@@ -364,6 +364,12 @@ function projectLeaf(frontColumns: number, edgeColumns: number): SpriteGrid {
   return join(rows);
 }
 
+/**
+ * Hover and focus. Two empty columns on the latch side — a crack, not the ajar frame.
+ * The swap is one step. Nothing eases.
+ */
+export const doorLeafCrack = projectLeaf(16, 2);
+
 export const doorFrame = paintFrame();
 export const doorLeaf = paintLeaf();
 export const doorLeafAjar = projectLeaf(14, 3);
