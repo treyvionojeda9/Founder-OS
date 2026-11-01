@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useLocation, useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { assignmentKey, readingBook, readingQuill } from "../design/sprites";
 import { learningPathFor } from "../fixtures/learning";
@@ -8,6 +8,7 @@ import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
+import { focusNode, pickSchoolDoor, readDeepRequest } from "../nav/deepLink";
 import { publishRoom } from "../nav/room";
 import { PathMap } from "../study/PathMap";
 import { keepPonderNote, loadPonderNote } from "../study/ponderNote";
@@ -22,7 +23,13 @@ type LearnStubProps = {
 
 export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProps) {
   const params = useParams();
-  const id = doorIdProp ?? params.id ?? "";
+  const location = useLocation();
+  const request = useMemo(() => {
+    if (preview || doorIdProp) return null;
+    return readDeepRequest(location.pathname, location.search, location.hash);
+  }, [preview, doorIdProp, location.pathname, location.search, location.hash]);
+  const routedDoor = request?.surface === "path" ? pickSchoolDoor(request.rawId, request.boundId) : "";
+  const id = doorIdProp ?? params.id ?? routedDoor;
   const door = doors.find((item) => item.id === id);
   const path = learningPathFor(id);
   const shut = useDoorShut();
@@ -38,8 +45,10 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
   const [saved, setSaved] = useState<Note | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [pathOpen, setPathOpen] = useState(false);
-  const [sheetId, setSheetId] = useState<string | null>(null);
+  const [pathOpen, setPathOpen] = useState(request?.surface === "path");
+  const [sheetId, setSheetId] = useState<string | null>(
+    request?.surface === "path" ? focusNode(request.rawId, id) : null,
+  );
   const [keeping, setKeeping] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const bookRef = useRef<HTMLButtonElement>(null);
@@ -97,6 +106,19 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     setSheetId(null);
     if (nodeId) document.getElementById(`path-node-${nodeId}`)?.focus();
   };
+
+  const linkKey = `${location.pathname}${location.search}${location.hash}`;
+  const appliedLink = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (preview || doorIdProp) return;
+    if (appliedLink.current === linkKey) return;
+    appliedLink.current = linkKey;
+    if (request?.surface !== "path") return;
+    const door = params.id ?? pickSchoolDoor(request.rawId, request.boundId);
+    setPathOpen(true);
+    setSheetId(focusNode(request.rawId, door));
+  }, [preview, doorIdProp, linkKey, request, params.id]);
 
   useLayoutEffect(() => {
     if (preview) return;
@@ -177,6 +199,9 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
       data-ready={ready ? "true" : "false"}
       data-assignment={path?.assignment ? "true" : "false"}
       data-preview={preview ? "true" : "false"}
+      data-deep={request?.surface ?? "room"}
+      data-deep-focus={sheetId ?? "none"}
+      data-path={pathOpen ? "open" : "shut"}
     >
       <div className="pixel-bar">
         <header className="study-bar">

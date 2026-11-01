@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { LearningPath } from "../fixtures/learning";
+import { CopyLink } from "../nav/CopyLink";
 import {
   highlightFrames,
   mapBounds,
@@ -107,6 +108,7 @@ export function PathMap({ path, still, openId, onOpen, onCloseSheet }: PathMapPr
           tabIndex={-1}
           data-station={open.id}
         >
+          <CopyLink kind="node" id={open.id} />
           <p className="path-sheet-kicker">{markLabel(open.mark)}</p>
           <h3 id="path-sheet-title">{open.title}</h3>
           <p>{open.body}</p>

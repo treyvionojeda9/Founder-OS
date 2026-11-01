@@ -39,6 +39,9 @@ export function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/team/:id" element={<TeamRoom />} />
             <Route path="/learn/:id" element={<LearnStub />} />
+            <Route path="/work/overview" element={<TeamRoom />} />
+            <Route path="/work/library" element={<TeamRoom />} />
+            <Route path="/school/path" element={<LearnStub />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/design" element={<DesignSystem />} />
             <Route path="/status-frame" element={<StatusFrameDemo />} />
