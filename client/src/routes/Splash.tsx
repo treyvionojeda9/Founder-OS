@@ -4,6 +4,7 @@ import { Sprite } from "../design/Sprite";
 import { SPLASH_FLAME_FRAME_MS, splashFlameFrames, splashFlameIndex } from "../design/splashFlicker";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useFlameLongPress } from "../nav/FlamePress";
 
 export function Splash() {
   const navigate = useNavigate();
@@ -42,11 +43,12 @@ export function Splash() {
 
   const scale = layout === "landscape" ? 4 : 6;
   const index = splashFlameIndex(tick, reduce);
+  const flamePress = useFlameLongPress(layout !== "desktop");
 
   return (
     <main className="splash">
       <div className="splash-card">
-        <div className="splash-flame" data-motion={reduce ? "still" : "flicker"} data-frame={index}>
+        <div className={layout === "desktop" ? "splash-flame" : "splash-flame spark-flame"} data-motion={reduce ? "still" : "flicker"} data-frame={index} {...flamePress}>
           <Sprite
             rows={splashFlameFrames[index] ?? splashFlameFrames[0]}
             scale={scale}

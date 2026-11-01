@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { DoorButton } from "../components/DoorButton";
 import { SectionToggle } from "../components/SectionToggle";
-import { Sprite } from "../design/Sprite";
-import { flame } from "../design/sprites";
 import { doors as fixtureDoors, type Door, type DoorSection } from "../fixtures/doors";
 import { useDoorArm, useDoorOpen, type HallLocationState } from "../hall/doorApi";
 import { doorPath } from "../hall/doorMotion";
 import { doorPixelScale, doorPose, doorsForSearch } from "../hall/layout";
 import { useFormFactor } from "../hooks/useFormFactor";
+import { SparkFlame } from "../nav/FlamePress";
+import { publishRoom, readHallGoto } from "../nav/room";
 import { settingsRepo } from "../storage/services";
 
 type HomeProps = {
@@ -24,8 +24,10 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
   const layout = useFormFactor();
   const [params] = useSearchParams();
   const hallDoors = doorsForSearch(doors, params.toString());
-  const [section, setSection] = useState<DoorSection>("work");
-  const hydrated = useRef(false);
+  const hallGoto = readHallGoto(location.state);
+  const [section, setSection] = useState<DoorSection>(hallGoto?.section ?? "work");
+  const hydrated = useRef(hallGoto !== null);
+  const appliedGoto = useRef(hallGoto?.seq ?? 0);
   const showToggle = hallDoors.length >= 2;
 
   useEffect(() => {
@@ -50,6 +52,17 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
   }
 
   useEffect(() => {
+    const next = readHallGoto(location.state);
+    if (!next || next.seq === appliedGoto.current) return;
+    appliedGoto.current = next.seq;
+    onSection(next.section);
+  }, [location.state, showToggle]);
+
+  useLayoutEffect(() => {
+    publishRoom({ room: section === "school" ? "school" : "work", teamId: null, learnId: null });
+  }, [section]);
+
+  useEffect(() => {
     if (!focusDoorId || focusedDoor.current === focusDoorId) return;
     const target = doors.find((door) => door.id === focusDoorId);
     if (target && showToggle && target.section !== section) {
@@ -68,9 +81,9 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
 
   return (
     <>
-      <div className="hall">
+      <div className="hall" data-place={section === "school" ? "school" : "work"}>
         <aside className="rail">
-          <Sprite rows={flame} scale={4} title="Spark of Freedom flame" />
+          <SparkFlame scale={4} enabled={layout !== "desktop"} />
           <h1 className="wordmark">Spark of Freedom</h1>
           <p className="rail-copy">A quiet hall for the work you author and the study you keep.</p>
           <Link className="text-link hall-fixture type-meta" to="/settings">
@@ -80,7 +93,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
         <main className="stage" data-hall="void">
           <header className="pixel-bar stage-head">
             <div className="compact-brand">
-              <Sprite rows={flame} scale={4} title="Spark of Freedom flame" />
+              <SparkFlame scale={4} enabled={layout !== "desktop"} />
               <h1 className="wordmark">Spark of Freedom</h1>
             </div>
             {showToggle ? <h2 className="stage-title">{section === "work" ? "Work" : "School"}</h2> : null}
