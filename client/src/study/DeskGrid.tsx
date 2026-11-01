@@ -155,6 +155,7 @@ export function DeskGrid({
         ref={roomRef}
         aria-hidden={covered ? true : undefined}
       >
+        <div className="desk-hall">
         <span className="agent-desk-wall" data-material="plaster" aria-hidden="true">
           <SpaceWash space="work" part="wall" />
         </span>
@@ -328,16 +329,17 @@ export function DeskGrid({
         </div>
         </div>
         <MailTray teamId={teamId} agents={agents} still={still} onOpen={onOpenMail ?? (() => {})} />
+        </div>
+        {showPipeline ? (
+          <PipelineRooms
+            ref={pipelineRef}
+            agents={agents}
+            still={still}
+            filter={pipeline}
+            onFilter={setPipeline}
+          />
+        ) : null}
       </div>
-      {showPipeline ? (
-        <PipelineRooms
-          ref={pipelineRef}
-          agents={agents}
-          still={still}
-          filter={pipeline}
-          onFilter={setPipeline}
-        />
-      ) : null}
       {canFocus && agents.length > 1 ? (
         <fieldset ref={tilesRef} className="tile-count" data-reach="local" aria-label="Desk tiles">
           {TILE_COUNTS.map((count) => (

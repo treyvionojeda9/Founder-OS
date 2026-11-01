@@ -1306,9 +1306,19 @@ html:has(.room-portal-layer) body {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border: 4px solid var(--darkwood);
   background: var(--night);
   image-rendering: pixelated;
+}
+
+/* The painted hall keeps its own box. The pipeline band sits inside the room, on the near edge. */
+.desk-hall {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .desk-floor-row {
@@ -6198,7 +6208,10 @@ html[data-recede="dim"] .mail-caption {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  margin: 0 4px 8px;
+  margin: 0;
+  padding: 8px;
+  background: var(--night);
+  border-top: 4px solid var(--darkwood);
   image-rendering: pixelated;
 }
 
