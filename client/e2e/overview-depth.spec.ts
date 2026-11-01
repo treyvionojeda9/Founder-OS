@@ -71,7 +71,8 @@ test.describe("overview room depth", () => {
 
     await page.getByRole("button", { name: /Atelier/ }).click();
     await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
-    await expect(page.locator(".agent-desk")).toHaveCount(0);
+    await expect(page.locator(".overview-sheet")).toBeVisible();
+    await expect(page.locator(".desk-grid")).toHaveAttribute("data-sheet", "open");
     if (proj === "desktop") await keep(page, "desk-chat");
 
     await page.getByRole("button", { name: "Back" }).click();

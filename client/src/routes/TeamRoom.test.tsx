@@ -285,7 +285,10 @@ describe("team overview desks", () => {
     expect(screen.getByText(/swatch sheet is waiting/)).toBeInTheDocument();
     expect(screen.getByText("generated · not verified")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Desk lamp, dark" })).toBeInTheDocument();
-    expect(document.querySelector(".desk-grid")).not.toBeInTheDocument();
+    expect(document.querySelector(".overview-sheet")).toBeInTheDocument();
+    expect(document.querySelector(".desk-grid")).toHaveAttribute("data-sheet", "open");
+    expect(document.querySelector(".desk-grid")).toHaveAttribute("data-count", "3");
+    expect(screen.queryByRole("heading", { name: "Overview" })).not.toBeInTheDocument();
 
     await user.type(screen.getByRole("textbox", { name: "Message Atelier" }), "Pin the swatch.");
     await user.click(screen.getByRole("button", { name: "Send" }));
@@ -317,9 +320,11 @@ describe("team overview desks", () => {
     expect(document.querySelector(".desk-grid")).toHaveAttribute("data-still", "true");
     await user.click(screen.getByRole("button", { name: /Courier/ }));
     expect(screen.getByRole("heading", { name: "Courier chat" })).toBeInTheDocument();
-    expect(screen.getByText(/lamp is out/)).toBeInTheDocument();
+    expect(document.querySelector(".overview-sheet .paper-log")).toHaveTextContent(/lamp is out/);
     expect(screen.getByRole("img", { name: "Desk lamp, failed" })).toBeInTheDocument();
-    expect(document.querySelector(".agent-desk")).not.toBeInTheDocument();
+    expect(document.querySelector(".overview-sheet")).toHaveAttribute("data-still", "true");
+    expect(document.querySelector(".desk-grid")).toHaveAttribute("data-count", "3");
+    expect(document.querySelector(".overview-sheet .paper-slot")).toHaveAttribute("data-pose", "expanded");
   });
 });
 
