@@ -3930,15 +3930,264 @@ html:has(.room-portal-layer) body {
   border: 3px solid var(--ember);
 }
 
+.plaque-seat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.plaque-seat .plaque {
+  min-width: 0;
+}
+
+.plaque-seat[data-pinned="true"] .plaque {
+  box-shadow:
+    inset 0 6px 0 var(--ember),
+    4px 4px 0 var(--night);
+}
+
+.plaque-seat[data-pinned="true"] .plaque[data-status="working"] {
+  box-shadow:
+    inset 8px 0 0 var(--ember),
+    inset 0 6px 0 var(--flame),
+    4px 4px 0 var(--night);
+}
+
+.plaque-slots {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.plaque-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 6px 6px;
+  background: var(--night);
+  color: var(--paper);
+  box-shadow:
+    inset 2px 2px 0 var(--darkwood),
+    inset -2px -2px 0 var(--wood);
+}
+
+.plaque-slot-kind,
+.plaque-slot-value {
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  white-space: nowrap;
+}
+
+.plaque-slot-kind {
+  color: var(--flame);
+}
+
+.plaque-slot-value {
+  color: var(--paper);
+}
+
+.seat-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.scene-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 6px 8px;
+  background: var(--paper);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
+  box-shadow: 3px 3px 0 var(--night);
+  white-space: nowrap;
+}
+
+.scene-caption {
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.pin-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16px;
+  height: 22px;
+}
+
+.pin-head {
+  display: block;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--ember);
+  background: transparent;
+}
+
+.pin-stem {
+  display: block;
+  width: 4px;
+  height: 8px;
+  background: transparent;
+}
+
+.brass-pin[data-pin="in"] .pin-head {
+  background: var(--flame);
+  border-color: var(--night);
+}
+
+.brass-pin[data-pin="in"] .pin-stem {
+  background: var(--darkwood);
+}
+
+.tools-dock {
+  align-items: stretch;
+}
+
+.dock-labels {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  border-top-color: var(--ember);
+  box-shadow: inset 0 4px 0 var(--wood);
+}
+
+.dock-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 6px;
+  background: var(--night);
+  color: var(--paper);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.tool-label {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+}
+
+.tool-label label,
+.board-slip label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--night);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.tool-label input,
+.board-slip input {
+  min-width: 160px;
+  min-height: 48px;
+  padding: 8px;
+  background: var(--paper);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
+}
+
+.board-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+}
+
+.board-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%231B1A24'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%231B1A24'/%3E%3C/svg%3E");
+  background-size: 4px 4px;
+  image-rendering: pixelated;
+}
+
+.board-slip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12%;
+  width: min(520px, calc(100% - 32px));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  box-shadow: 8px 8px 0 var(--night);
+}
+
+.board-slip h2,
+.board-slip p,
+.board-slip label {
+  color: var(--night);
+}
+
+.board-slip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.board-slip-actions button {
+  background: var(--paper);
+  color: var(--night);
+  border-color: var(--darkwood);
+}
+
+.app[data-layout="portrait"] .plaque-seat {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app[data-layout="portrait"] .seat-tools {
+  justify-content: flex-start;
+}
+
 .app[data-layout="landscape"] .board-hanger,
 .app[data-layout="desktop"] .board-hanger {
-  width: min(840px, 94%);
+  width: min(1080px, 100%);
   transform: rotateX(4deg);
 }
 
 .app[data-layout="landscape"] .board-void,
 .app[data-layout="desktop"] .board-void {
-  width: min(840px, calc(100% - 48px));
+  width: min(1120px, calc(100% - 48px));
   padding-top: 18px;
   padding-bottom: 12px;
 }
@@ -4095,7 +4344,10 @@ a.text-link:active,
 
 .place-sheet:hover,
 .stapler:hover,
-.tool-slip [role="menuitem"]:hover {
+.tool-slip [role="menuitem"]:hover,
+.scene-button:hover,
+.tool-label button:hover,
+.board-slip-actions button:hover {
   background: var(--flame);
   color: var(--night);
   border-color: var(--darkwood);
@@ -4104,7 +4356,10 @@ a.text-link:active,
 .place-sheet:active,
 .stapler:active,
 .stapler[aria-expanded="true"]:active,
-.tool-slip [role="menuitem"]:active {
+.tool-slip [role="menuitem"]:active,
+.scene-button:active,
+.tool-label button:active,
+.board-slip-actions button:active {
   background: var(--plum);
   color: var(--paper);
   border-color: var(--darkwood);

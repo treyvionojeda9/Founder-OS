@@ -4,9 +4,27 @@
       "id": "hale-design-lab",
       "name": "Hale Design Lab",
       "agents": [
-        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "working" },
-        { "id": "atelier", "name": "Atelier", "title": "Swatch keeper", "status": "idle" },
-        { "id": "courier", "name": "Courier", "title": "Errand runner", "status": "failed" }
+        {
+          "id": "ceo",
+          "name": "CEO",
+          "title": "Founder",
+          "status": "working",
+          "slots": { "model": "Forge", "tools": "Forge stamp", "room": "Study" }
+        },
+        {
+          "id": "atelier",
+          "name": "Atelier",
+          "title": "Swatch keeper",
+          "status": "idle",
+          "slots": { "model": "Swatch", "tools": "Swatch sheet", "room": "Overview" }
+        },
+        {
+          "id": "courier",
+          "name": "Courier",
+          "title": "Errand runner",
+          "status": "failed",
+          "slots": { "model": "Errand", "tools": "Errand slip", "room": "Overview" }
+        }
       ],
       "tools": ["Swatch sheet", "Forge stamp", "Errand slip"],
       "transcript": [
@@ -68,8 +86,20 @@
       "id": "cloud-agent-team",
       "name": "Cloud Agent Team",
       "agents": [
-        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "working" },
-        { "id": "relay", "name": "Relay", "title": "Packet clerk", "status": "waiting" }
+        {
+          "id": "ceo",
+          "name": "CEO",
+          "title": "Founder",
+          "status": "working",
+          "slots": { "model": "Forge", "tools": "Status line", "room": "Study" }
+        },
+        {
+          "id": "relay",
+          "name": "Relay",
+          "title": "Packet clerk",
+          "status": "waiting",
+          "slots": { "model": "Packet", "tools": "Channel slip", "room": "Overview" }
+        }
       ],
       "tools": ["Status line", "Channel slip"],
       "transcript": [
@@ -111,8 +141,20 @@
       "id": "local-agent-team",
       "name": "Local Agent Team",
       "agents": [
-        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "waiting" },
-        { "id": "bench", "name": "Bench", "title": "Bench hand", "status": "working" }
+        {
+          "id": "ceo",
+          "name": "CEO",
+          "title": "Founder",
+          "status": "waiting",
+          "slots": { "model": "Forge", "tools": "Handoff slip", "room": "Study" }
+        },
+        {
+          "id": "bench",
+          "name": "Bench",
+          "title": "Bench hand",
+          "status": "working",
+          "slots": { "model": "Bench", "tools": "Bench clamp", "room": "Overview" }
+        }
       ],
       "tools": ["Handoff slip", "Bench clamp"],
       "transcript": [

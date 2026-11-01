@@ -41,7 +41,20 @@ describe("team chat store", () => {
     const hale = teamById("hale-design-lab");
     expect(hale?.agents.map((agent) => agent.status)).toEqual(["working", "idle", "failed"]);
     expect(hale?.agents.map((agent) => agent.title)).toEqual(["Founder", "Swatch keeper", "Errand runner"]);
+    expect(hale?.agents.map((agent) => agent.slots)).toEqual([
+      { model: "Forge", tools: "Forge stamp", room: "Study" },
+      { model: "Swatch", tools: "Swatch sheet", room: "Overview" },
+      { model: "Errand", tools: "Errand slip", room: "Overview" },
+    ]);
     expect(hale?.tools).toEqual(["Swatch sheet", "Forge stamp", "Errand slip"]);
+    for (const team of listTeams()) {
+      for (const agent of team.agents) {
+        expect(agent.slots?.model).toBeTruthy();
+        expect(agent.slots?.tools).toBeTruthy();
+        expect(agent.slots?.room).toBeTruthy();
+        expect(`${agent.slots?.model} ${agent.slots?.tools} ${agent.slots?.room}`).not.toMatch(/https?:|\/api\//);
+      }
+    }
     for (const team of listTeams()) {
       expect(team.tools.length).toBeGreaterThan(0);
       for (const tool of team.tools) expect(tool).not.toMatch(/https?:|\/api\//);

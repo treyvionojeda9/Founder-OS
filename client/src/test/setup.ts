@@ -2,11 +2,13 @@ import "@testing-library/jest-dom/vitest";
 import "fake-indexeddb/auto";
 import { afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
+import { resetBoardPrefsForTests } from "../team/boardPrefs";
 import { resetWorkPauseForTests } from "../study/deskPause";
 
 afterEach(() => {
   cleanup();
   resetWorkPauseForTests();
+  resetBoardPrefsForTests();
 });
 
 HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;
