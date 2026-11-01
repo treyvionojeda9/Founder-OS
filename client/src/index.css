@@ -2618,7 +2618,7 @@ html:has(.room-portal-layer) body {
   right: 10%;
   top: 42%;
   height: 4px;
-  background: var(--navy);
+  background: var(--plum);
 }
 
 .stage-overlay {
@@ -2661,20 +2661,42 @@ html:has(.room-portal-layer) body {
 }
 
 .learn-room .paper-slot[data-pose="desk"] {
-  left: 22%;
-  width: 44%;
-  top: 33%;
-  height: 44%;
+  left: 24%;
+  width: 40%;
+  top: calc(100% - var(--desk-bottom) - var(--desk-height) + 1%);
+  height: calc(var(--surface) * var(--desk-height) / 100 - 2%);
+  min-height: 152px;
   transform: none;
 }
 
 .app[data-layout="landscape"] .learn-room .paper-slot[data-pose="desk"],
 .app[data-layout="desktop"] .learn-room .paper-slot[data-pose="desk"] {
   left: 26%;
-  width: 40%;
-  top: 32%;
-  height: 46%;
+  width: 38%;
+  top: calc(100% - var(--desk-bottom) - var(--desk-height) + 1%);
+  height: calc(var(--surface) * var(--desk-height) / 100 - 1%);
+  min-height: 152px;
   transform: none;
+}
+
+.learn-room .paper-slot[data-pose="desk"]::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 14px;
+  right: -12px;
+  top: 12px;
+  bottom: -10px;
+  background: var(--paper);
+  border: 4px solid var(--darkwood);
+  box-shadow: 8px 8px 0 var(--night);
+  pointer-events: none;
+}
+
+.learn-room .paper-slot[data-pose="desk"] .paper {
+  position: relative;
+  z-index: 1;
+  box-shadow: 4px 6px 0 var(--darkwood);
 }
 
 .learn-room .paper-wash {
@@ -2728,7 +2750,7 @@ html:has(.room-portal-layer) body {
   bottom: 12px;
   left: 28px;
   width: 4px;
-  background: var(--ink);
+  background: var(--darkwood);
   pointer-events: none;
 }
 
@@ -2742,11 +2764,206 @@ html:has(.room-portal-layer) body {
   pointer-events: none;
 }
 
+.learn-room {
+  --desk-bottom: 3%;
+  --desk-height: 44%;
+  --surface: 36;
+}
+
 .learn-room .floor-plane {
   bottom: 0;
-  height: 46%;
+  height: 56%;
+  z-index: 1;
+  overflow: hidden;
   filter: none;
   box-shadow: none;
+}
+
+.learn-room .floor-board[data-depth="0"] {
+  flex: none;
+  height: 28px;
+}
+
+.learn-room .floor-steps::after {
+  content: "";
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  background: var(--wood);
+  box-shadow: inset 0 8px 0 var(--darkwood);
+}
+
+.learn-room .back-wall {
+  height: 34%;
+  z-index: 0;
+}
+
+.learn-room .wainscot {
+  top: 22%;
+  height: 22%;
+  z-index: 2;
+  border-top: 0;
+}
+
+.learn-room .reading-rail {
+  top: 22%;
+  bottom: auto;
+  height: 8px;
+  z-index: 3;
+}
+
+.learn-room .reading-window {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  bottom: 30%;
+  width: min(440px, 46%);
+  transform: translateX(-50%);
+}
+
+.learn-room .reading-window .desk-room-window {
+  height: 100%;
+}
+
+.learn-room .window-glass {
+  box-shadow:
+    inset 4px 4px 0 var(--slate),
+    inset -4px -4px 0 var(--night);
+}
+
+.learn-room .shelf-tome {
+  position: absolute;
+  bottom: 4px;
+  width: 14px;
+  pointer-events: none;
+  background: var(--paper);
+  box-shadow:
+    inset 4px 0 0 var(--plum),
+    3px 3px 0 var(--night);
+}
+
+.learn-room .shelf-tome[data-tome="a"] {
+  left: 10px;
+  height: 72%;
+}
+
+.learn-room .shelf-tome[data-tome="b"] {
+  left: 30px;
+  height: 46%;
+  background: var(--wood);
+  box-shadow:
+    inset 4px 0 0 var(--darkwood),
+    3px 3px 0 var(--night);
+}
+
+.learn-room .shelf-tome[data-tome="c"] {
+  left: 16px;
+  height: 62%;
+  background: var(--ember);
+  box-shadow:
+    inset 4px 0 0 var(--darkwood),
+    3px 3px 0 var(--night);
+}
+
+.learn-room .desk-rig {
+  left: 6%;
+  right: 6%;
+  top: auto;
+  bottom: var(--desk-bottom);
+  height: var(--desk-height);
+  z-index: 3;
+}
+
+.learn-room .desk-top {
+  top: 0;
+  height: calc(var(--surface) * 1%);
+  transform: translateY(0);
+  transform-origin: 50% 100%;
+  box-shadow: inset 0 4px 0 var(--wood);
+  z-index: 2;
+}
+
+.learn-room .desk-front {
+  top: calc(var(--surface) * 1%);
+  bottom: 54px;
+  height: auto;
+  background-color: var(--darkwood);
+  background-image: none;
+  box-shadow:
+    inset 0 4px 0 var(--wood),
+    inset 0 -4px 0 var(--night);
+}
+
+.learn-room .desk-leg {
+  top: 100%;
+  width: 28px;
+  height: 40px;
+}
+
+.learn-room .reading-shadow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: auto;
+  bottom: 4px;
+  height: 8px;
+  background: var(--night);
+  box-shadow: 0 4px 0 var(--darkwood);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.learn-room .lamp-spot {
+  left: 2%;
+  top: auto;
+  bottom: calc(100% - var(--surface) * 1%);
+  z-index: 5;
+}
+
+.learn-room .lamp-spot .status-chip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  margin: 0;
+}
+
+.learn-room .desk-pool {
+  left: 4%;
+  top: auto;
+  bottom: 4px;
+}
+
+.learn-room .book-prop,
+.learn-room .key-prop {
+  top: auto;
+  bottom: calc(var(--desk-bottom) + (100 - var(--surface)) * var(--desk-height) / 100);
+}
+
+.learn-room .book-prop {
+  right: 8%;
+}
+
+.learn-room .key-prop {
+  right: 22%;
+}
+
+.learn-room .book-prop::after,
+.learn-room .key-prop::after,
+.learn-room .lamp-spot::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -6px;
+  height: 6px;
+  background: var(--night);
+  pointer-events: none;
+}
+
+.learn-room .lamp-spot::after {
+  left: 22%;
+  right: 22%;
+  bottom: -4px;
 }
 
 .learn-room .study-stage,
@@ -2767,7 +2984,7 @@ html:has(.room-portal-layer) body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: var(--ink);
+  color: var(--darkwood);
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
@@ -2778,8 +2995,8 @@ html:has(.room-portal-layer) body {
   min-height: 120px;
   resize: vertical;
   background: var(--paper);
-  color: var(--ink);
-  border: 3px solid var(--navy);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
   border-radius: 0;
   padding: 8px;
   font-family: var(--font-pixel);
@@ -2789,22 +3006,22 @@ html:has(.room-portal-layer) body {
 
 .keep-note {
   align-self: flex-start;
-  background: var(--navy);
-  color: var(--paper);
-  border-color: var(--ink);
+  background: var(--ember);
+  color: var(--night);
+  border-color: var(--darkwood);
 }
 
 .ponder-preview,
 .ponder-status {
-  color: var(--ink);
+  color: var(--night);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
 }
 
 .path-panel {
   background: var(--paper);
-  color: var(--ink);
-  border: 4px solid var(--navy);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
   padding: 20px;
   max-width: min(520px, calc(100vw - 32px));
 }
@@ -2815,7 +3032,7 @@ html:has(.room-portal-layer) body {
 
 .path-panel h2 {
   margin-bottom: 12px;
-  color: var(--ink);
+  color: var(--night);
 }
 
 .path-panel h3 {
@@ -2823,12 +3040,12 @@ html:has(.room-portal-layer) body {
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
-  color: var(--navy);
+  color: var(--darkwood);
 }
 
 .path-panel p,
 .path-task {
-  color: var(--ink);
+  color: var(--night);
 }
 
 .path-note,

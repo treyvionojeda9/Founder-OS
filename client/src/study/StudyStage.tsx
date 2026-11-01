@@ -5,6 +5,9 @@ import { lampPoolPalette, paintDeskPool, paintPaperWash } from "./lightPool";
 import { usePaperSettle } from "./paperSettle";
 import { WorkingLamp } from "./WorkingLamp";
 
+const FLOOR_DEPTHS = ["7", "6", "5", "4", "3", "2", "1", "0"] as const;
+const SHELF_BAYS = [0, 1, 2, 3] as const;
+
 export type PaperPose = "desk" | "lifted";
 export type StudyVariant = "work" | "school";
 
@@ -40,9 +43,16 @@ export function StudyStage({
   return (
     <div className="study-stage" data-variant={variant}>
       <div className="study-world">
-        <div className="back-wall" data-material="plaster" aria-hidden="true" />
-        <div className="wainscot" data-material="wainscot" aria-hidden="true" />
-        <div className="floor-plane" data-material="floor" aria-hidden="true" />
+        <div className="back-wall" data-material="plaster" aria-hidden="true">
+          {variant === "school" ? <ReadingWindow /> : null}
+        </div>
+        <div className="wainscot" data-material="wainscot" aria-hidden="true">
+          {variant === "school" ? <ReadingShelves /> : null}
+        </div>
+        {variant === "school" ? <span className="desk-room-rail reading-rail" aria-hidden="true" /> : null}
+        <div className="floor-plane" data-material="floor" aria-hidden="true">
+          {variant === "school" ? <ReadingFloor /> : null}
+        </div>
         {behind ? <div className="behind-cast">{behind}</div> : null}
         <div className="desk-rig">
           <div className="desk-top" data-material="desk">
@@ -61,6 +71,7 @@ export function StudyStage({
             <span className="desk-leg leg-left" />
             <span className="desk-leg leg-right" />
           </div>
+          {variant === "school" ? <span className="reading-shadow" aria-hidden="true" /> : null}
           <Lamp status={lampStatus} scale={lampScale} still={still} />
           {beside}
         </div>
@@ -89,6 +100,54 @@ export function PaperWash({ status }: { status: AgentStatus }) {
     paintPaperWash(canvas, status);
   }, [status]);
   return <canvas ref={ref} className="paper-wash sprite" aria-hidden="true" />;
+}
+
+function ReadingWindow() {
+  return (
+    <div className="reading-window">
+      <div className="desk-room-window">
+        <span className="window-reveal">
+          <span className="window-glass">
+            <span className="window-star" />
+            <span className="window-star" />
+            <span className="window-star" />
+            <span className="window-mullion window-mullion-v" />
+            <span className="window-mullion window-mullion-h" />
+          </span>
+        </span>
+        <span className="window-sill" />
+      </div>
+    </div>
+  );
+}
+
+function ReadingShelves() {
+  return (
+    <span className="wall-bays">
+      {SHELF_BAYS.map((bay) => (
+        <span key={bay} className="wall-bay">
+          <span className="wall-cubby">
+            <span className="shelf-tome" data-tome="a" />
+            <span className="shelf-tome" data-tome="b" />
+          </span>
+          <span className="wall-shelf" />
+          <span className="wall-cubby">
+            <span className="shelf-tome" data-tome="c" />
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function ReadingFloor() {
+  return (
+    <span className="floor-steps">
+      {FLOOR_DEPTHS.map((depth) => (
+        <span key={depth} className="floor-board" data-depth={depth} />
+      ))}
+    </span>
+  );
 }
 
 function DeskPool({ status, palette }: { status: AgentStatus; palette: "ember" | "school" }) {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
-import { assignmentKey, closedBook, logoQuill } from "../design/sprites";
+import { assignmentKey, readingBook, readingQuill } from "../design/sprites";
 import { learningPathFor } from "../fixtures/learning";
 import { doors } from "../fixtures/doors";
 import { useDoorShut } from "../hall/doorApi";
@@ -29,7 +29,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
   const session = useSession();
   const lampScale = layout === "portrait" ? 4 : 3;
   const bookScale = layout === "portrait" ? 5 : 4;
-  const keyScale = layout === "portrait" ? 8 : 7;
+  const keyScale = layout === "portrait" ? 5 : 6;
   const quillScale = layout === "portrait" ? 4 : 3;
   const [pose, setPose] = useState<PaperPose>("desk");
   const [draft, setDraft] = useState("");
@@ -183,7 +183,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
                 aria-label="Open the current path"
                 onClick={() => setPathOpen(true)}
               >
-                <Sprite rows={closedBook} scale={bookScale} title="" />
+                <Sprite rows={readingBook} scale={bookScale} title="" />
               </button>
               {path?.assignment ? (
                 <figure className="key-prop">
@@ -203,7 +203,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
               <PaperWash status="working" />
               {/* Visual ink rest only. Stylus stroke capture stays paused and is not stored. */}
               <figure className="ink-rest" aria-hidden="true">
-                <Sprite rows={logoQuill} scale={quillScale} title="" />
+                <Sprite rows={readingQuill} scale={quillScale} title="" />
               </figure>
               {pose === "lifted" ? (
                 <button

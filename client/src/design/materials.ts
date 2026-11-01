@@ -22,8 +22,8 @@ export const studyRoomFill = {
   desk: "desk",
 } as const;
 
-/** Curriculum colour is allowed on the path book and the school apron rail only. */
-export const schoolAccentSurfaces = ["book", "apron-rail"] as const;
+/** The reading desk stays in Founder Ember. School accent is not a room or desk fill. */
+export const schoolAccentSurfaces = [] as const;
 
 const plaster: SpriteGrid = [
   "nnnnnnssnnnnnnnn",

@@ -5,6 +5,8 @@ import { doorGlowPad, doorSpec } from "./sprites/doorFaces";
 import {
   assignmentKey,
   closedBook,
+  readingBook,
+  readingQuill,
   contactShadow,
   deskLampFailed,
   deskLampOff,
@@ -75,6 +77,12 @@ describe("sprite grids", () => {
     expect(closedBook.some((row) => row.includes("ppp"))).toBe(true);
     expect(key.length).toBeGreaterThan(0);
     for (const luma of key) expect(Math.abs(luma - wood)).toBeGreaterThanOrEqual(30);
+    const ember = new Set([".", "n", "s", "p", "w", "d", "e", "f", "m"]);
+    for (const row of [...readingBook, ...readingQuill, ...assignmentKey]) {
+      for (const ch of row) expect(ember.has(ch)).toBe(true);
+    }
+    expect(readingBook.some((row) => row.includes("ppp"))).toBe(true);
+    expect(grayscaleGrid(readingBook)).not.toEqual(grayscaleGrid(closedBook));
   });
 
   it("hugs the door with solid flame and ember steps", () => {

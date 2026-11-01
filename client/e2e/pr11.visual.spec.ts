@@ -126,27 +126,33 @@ test.describe("room materials", () => {
     expect(schoolWall.colors).not.toContain(navy);
     expect(schoolWall.colors).not.toContain(sky);
     expect(schoolFloor.colors).toContain(wood);
-    await expect(page.locator(".apron-rail")).toHaveCSS("background-color", "rgb(9, 56, 142)");
+    await expect(page.locator(".apron-rail")).toHaveCSS("background-color", "rgb(133, 69, 80)");
     const book = await page.locator(".book-prop canvas").evaluate((canvas: HTMLCanvasElement) => {
       const ctx = canvas.getContext("2d");
-      if (!ctx) return { navy: 0, sky: 0, otherBlue: 0 };
+      if (!ctx) return { plum: 0, paper: 0, navy: 0, sky: 0, otherBlue: 0 };
       const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let navyCount = 0;
-      let skyCount = 0;
+      let plum = 0;
+      let paper = 0;
+      let navy = 0;
+      let sky = 0;
       let otherBlue = 0;
       for (let i = 0; i < data.length; i += 4) {
         if (data[i + 3] === 0) continue;
         const r = data[i] ?? 0;
         const g = data[i + 1] ?? 0;
         const b = data[i + 2] ?? 0;
-        if (r === 9 && g === 56 && b === 142) navyCount += 1;
-        else if (r === 53 && g === 102 && b === 189) skyCount += 1;
+        if (r === 133 && g === 69 && b === 80) plum += 1;
+        else if (r === 233 && g === 223 && b === 199) paper += 1;
+        else if (r === 9 && g === 56 && b === 142) navy += 1;
+        else if (r === 53 && g === 102 && b === 189) sky += 1;
         else if (b > r + 30 && b > g + 10) otherBlue += 1;
       }
-      return { navy: navyCount, sky: skyCount, otherBlue };
+      return { plum, paper, navy, sky, otherBlue };
     });
-    expect(book.navy).toBeGreaterThan(book.sky);
-    expect(book.sky).toBeGreaterThan(0);
+    expect(book.plum).toBeGreaterThan(0);
+    expect(book.paper).toBeGreaterThan(0);
+    expect(book.navy).toBe(0);
+    expect(book.sky).toBe(0);
     expect(book.otherBlue).toBe(0);
     if (shot) await keep(page, `school-${proj}`);
   });

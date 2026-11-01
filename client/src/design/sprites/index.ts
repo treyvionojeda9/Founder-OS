@@ -9,7 +9,7 @@ import { logoBook, logoCloud, logoHale, logoLocal, logoQuill } from "./logos";
 import { offlineCloud } from "./offlineCloud";
 import { paperSheet } from "./paper";
 import { stapler } from "./stapler";
-import { assignmentKey, bookStack, closedBook, forgeNote, openNotebook } from "./studyProps";
+import { assignmentKey, bookStack, closedBook, forgeNote, openNotebook, readingBook, readingQuill } from "./studyProps";
 import { contactShadow, doorFrame, doorInterior, doorLeaf, doorLeafCrack, doorSpill, footGlow, lightPoolA } from "./doorFaces";
 import {
   deskLightPool,
@@ -33,7 +33,7 @@ export { logoHale, logoCloud, logoLocal, logoBook, logoQuill } from "./logos";
 export { offlineCloud } from "./offlineCloud";
 export { paperSheet } from "./paper";
 export { stapler } from "./stapler";
-export { assignmentKey, forgeNote, bookStack, closedBook, openNotebook } from "./studyProps";
+export { assignmentKey, forgeNote, bookStack, closedBook, openNotebook, readingBook, readingQuill } from "./studyProps";
 export {
   contactShadow,
   footGlow,
@@ -85,6 +85,8 @@ export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "forge note", rows: forgeNote },
   { name: "book stack", rows: bookStack },
   { name: "closed book", rows: closedBook },
+  { name: "reading book", rows: readingBook },
+  { name: "reading quill", rows: readingQuill },
   { name: "assignment key", rows: assignmentKey },
   { name: "stapler", rows: stapler },
   { name: "open notebook", rows: openNotebook },

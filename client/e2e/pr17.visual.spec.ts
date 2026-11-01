@@ -148,7 +148,7 @@ test.describe("school desk and ponder focus", () => {
 
     const deskPlane = await page.locator(".desk-top").evaluate((el) => getComputedStyle(el).transform);
     expect(deskPlane).not.toBe("none");
-    await expect(page.locator(".ink-margin")).toHaveCSS("background-color", "rgb(33, 34, 60)");
+    await expect(page.locator(".ink-margin")).toHaveCSS("background-color", "rgb(79, 53, 46)");
     await expect(page.locator(".ink-margin")).toHaveCSS("width", "4px");
     await expect(page.locator(".ink-rest")).toBeVisible();
     const idleInset = await textInset(page, ".ponder-preview");
@@ -165,8 +165,9 @@ test.describe("school desk and ponder focus", () => {
 
     const painted = await page.locator(".book-prop canvas").evaluate((canvas: HTMLCanvasElement) => {
       const ctx = canvas.getContext("2d");
-      if (!ctx) return { navy: 0, sky: 0, paper: 0, otherBlue: 0 };
+      if (!ctx) return { plum: 0, navy: 0, sky: 0, paper: 0, otherBlue: 0 };
       const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let plum = 0;
       let navy = 0;
       let sky = 0;
       let paper = 0;
@@ -176,16 +177,18 @@ test.describe("school desk and ponder focus", () => {
         const r = data[i] ?? 0;
         const g = data[i + 1] ?? 0;
         const b = data[i + 2] ?? 0;
-        if (r === 9 && g === 56 && b === 142) navy += 1;
+        if (r === 133 && g === 69 && b === 80) plum += 1;
+        else if (r === 9 && g === 56 && b === 142) navy += 1;
         else if (r === 53 && g === 102 && b === 189) sky += 1;
         else if (r === 233 && g === 223 && b === 199) paper += 1;
         else if (b > r + 30 && b > g + 10) otherBlue += 1;
       }
-      return { navy, sky, paper, otherBlue };
+      return { plum, navy, sky, paper, otherBlue };
     });
-    expect(painted.navy).toBeGreaterThan(painted.sky);
-    expect(painted.sky).toBeGreaterThan(0);
+    expect(painted.plum).toBeGreaterThan(0);
     expect(painted.paper).toBeGreaterThan(0);
+    expect(painted.navy).toBe(0);
+    expect(painted.sky).toBe(0);
     expect(painted.otherBlue).toBe(0);
 
     const filters = await page.locator(".learn-room, .learn-room *").evaluateAll((nodes) =>
