@@ -55,7 +55,7 @@ test.describe("mail slot tray", () => {
   test("desktop tray filters with J/K and Enter does not write a vault", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "desktop shots");
     await openHaleOverview(page);
-    const slot = page.getByRole("button", { name: "Mail slot, 2 need you" });
+    const slot = page.getByRole("button", { name: "2 Needs you, mail slot" });
     await slot.click();
     const tray = page.locator(".mail-tray");
     await expect(tray).toHaveAttribute("data-material", "desk");
@@ -111,7 +111,7 @@ test.describe("mail slot tray", () => {
   test("tablet tap opens the slot and the same slip", async ({ page }, info) => {
     test.skip(info.project.name !== "tablet-portrait", "tablet shot");
     await openHaleOverview(page);
-    await page.getByRole("button", { name: "Mail slot, 2 need you" }).click();
+    await page.getByRole("button", { name: "2 Needs you, mail slot" }).click();
     await expect(page.locator(".mail-slip")).toHaveCount(2);
     await expect(page.locator(".mail-slot")).toHaveAttribute("data-frames", "1");
     await keep(page, "tablet");

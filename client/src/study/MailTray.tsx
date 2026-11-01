@@ -127,8 +127,7 @@ export function MailTray({ teamId, agents, still, onOpen }: MailTrayProps) {
           <span className="mail-plaque-glyph" aria-hidden="true">
             <Sprite rows={items.some((item) => item.kind === "waiting") ? mailHand : mailSeal} scale={2} title="" />
           </span>
-          <span className="mail-count">{items.length}</span>
-          <span className="mail-caption">Needs you</span>
+          <span className="mail-count">{items.length}</span> <span className="mail-caption">Needs you</span>
         </span>
       </button>
       {open ? (

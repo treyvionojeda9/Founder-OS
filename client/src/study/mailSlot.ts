@@ -102,8 +102,7 @@ export function stepMailIndex(index: number, count: number, direction: 1 | -1): 
   return next;
 }
 
+/** Starts with the plaque text (`{count} Needs you`) so the accessible name matches what is on the wood. */
 export function mailSlotName(count: number): string {
-  if (count === 0) return "Mail slot, nothing needs you";
-  if (count === 1) return "Mail slot, 1 needs you";
-  return `Mail slot, ${count} need you`;
+  return `${count} Needs you, mail slot`;
 }
