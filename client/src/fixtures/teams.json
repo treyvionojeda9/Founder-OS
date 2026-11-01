@@ -69,7 +69,7 @@
       "name": "Cloud Agent Team",
       "agents": [
         { "id": "ceo", "name": "CEO", "title": "Founder", "status": "working" },
-        { "id": "relay", "name": "Relay", "title": "Packet clerk", "status": "idle" }
+        { "id": "relay", "name": "Relay", "title": "Packet clerk", "status": "waiting" }
       ],
       "tools": ["Status line", "Channel slip"],
       "transcript": [
@@ -101,7 +101,7 @@
           "author": "machine",
           "agentId": "relay",
           "record": "machine",
-          "body": "Relay is idle. No packet is sitting on this desk.",
+          "body": "A packet is on this desk. I am waiting for you to read it.",
           "source": "Relay agent · Cloud Agent Team",
           "timestamp": "2026-10-29T09:12:00Z"
         }
@@ -111,7 +111,7 @@
       "id": "local-agent-team",
       "name": "Local Agent Team",
       "agents": [
-        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "idle" },
+        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "waiting" },
         { "id": "bench", "name": "Bench", "title": "Bench hand", "status": "working" }
       ],
       "tools": ["Handoff slip", "Bench clamp"],

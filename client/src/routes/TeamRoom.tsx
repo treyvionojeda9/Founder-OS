@@ -8,6 +8,7 @@ import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
 import { LibraryShelf } from "../library/LibraryShelf";
 import { DeskGrid } from "../study/DeskGrid";
+import type { MailItem } from "../study/mailSlot";
 import { isWorkPaused, pauseSnapshot, subscribeWorkPause } from "../study/deskPause";
 import { OverviewSheet } from "../study/OverviewSheet";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
@@ -203,6 +204,15 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     setPose("desk");
     setPending(null);
     setDraft("");
+  };
+
+  const openMail = (item: MailItem) => {
+    if (item.kind === "approval" && item.action) {
+      setNotice(null);
+      setPending(item.action);
+      return;
+    }
+    openDesk(item.agentId);
   };
 
   const openDesk = (agentId: string) => {
@@ -420,6 +430,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
             panelId={preview ? undefined : "study-panel"}
             labelledBy={preview ? undefined : "team-tab-overview"}
             onOpen={openDesk}
+            onOpenMail={openMail}
             sheet={
               sheetRecord ? (
                 <OverviewSheet

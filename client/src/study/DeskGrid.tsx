@@ -7,6 +7,8 @@ import { useFormFactor } from "../hooks/useFormFactor";
 import { linesForAgent, type TeamAgent } from "../team/chatStore";
 import { pauseSnapshot, subscribeWorkPause, toggleWorkPause } from "./deskPause";
 import { deskStampFor } from "./deskStamp";
+import { MailTray } from "./MailTray";
+import type { MailItem } from "./mailSlot";
 import { WorkingLamp } from "./WorkingLamp";
 
 type DeskGridProps = {
@@ -20,6 +22,8 @@ type DeskGridProps = {
   panelId?: string;
   labelledBy?: string;
   onOpen: (agentId: string) => void;
+  /** Open a needs-you slip. The tray does not approve it. */
+  onOpenMail?: (item: MailItem) => void;
 };
 
 const FLOOR_DEPTHS = ["7", "6", "5", "4", "3", "2", "1", "0"] as const;
@@ -34,6 +38,7 @@ export function DeskGrid({
   panelId,
   labelledBy,
   onOpen,
+  onOpenMail,
 }: DeskGridProps) {
   const layout = useFormFactor();
   const lampScale = layout === "portrait" ? 3 : 4;
@@ -220,6 +225,7 @@ export function DeskGrid({
           })}
         </div>
         </div>
+        <MailTray teamId={teamId} agents={agents} still={still} onOpen={onOpenMail ?? (() => {})} />
       </div>
       {sheet}
     </div>
