@@ -102,8 +102,14 @@ export function stepMailIndex(index: number, count: number, direction: 1 | -1): 
   return next;
 }
 
+/** Words painted on the plaque, after the count. */
+export const MAIL_SLOT_CAPTION = "Needs you";
+
+/**
+ * Plaque text is `{count} Needs you`. The name starts with that, then the
+ * slot role. A space has to exist in the DOM between the count and the
+ * caption, or the visible string becomes `2Needs you` and axe rejects the label.
+ */
 export function mailSlotName(count: number): string {
-  if (count === 0) return "Mail slot, nothing needs you";
-  if (count === 1) return "Mail slot, 1 needs you";
-  return `Mail slot, ${count} need you`;
+  return `${count} ${MAIL_SLOT_CAPTION}, mail slot`;
 }

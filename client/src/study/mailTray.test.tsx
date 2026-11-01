@@ -51,7 +51,9 @@ describe("mail slot tray", () => {
     if (!hale) throw new Error("missing hale");
     render(<MailTray teamId="hale-design-lab" agents={hale.agents} still onOpen={() => {}} />);
 
-    await user.click(screen.getByRole("button", { name: "Mail slot, 2 need you" }));
+    const slot = screen.getByRole("button", { name: "2 Needs you, mail slot" });
+    expect(slot).toHaveTextContent("2 Needs you");
+    await user.click(slot);
     const list = screen.getByRole("listbox", { name: "Needs you" });
     expect(list).toHaveFocus();
     let options = within(list).getAllByRole("option");
@@ -81,7 +83,7 @@ describe("mail slot tray", () => {
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Mail slot, 2 need you" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "2 Needs you, mail slot" })).toHaveFocus();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -93,7 +95,7 @@ describe("mail slot tray", () => {
     const slot = document.querySelector(".mail-slot");
     expect(slot).toHaveAttribute("data-still", "true");
     expect(slot).toHaveAttribute("data-frames", "1");
-    await user.click(screen.getByRole("button", { name: /Mail slot/ }));
+    await user.click(screen.getByRole("button", { name: /\d+ Needs you, mail slot/ }));
     expect(document.querySelector(".mail-tray")).toHaveAttribute("data-frames", "1");
     expect(document.querySelector(".mail-slot")).toHaveAttribute("data-open", "true");
     expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
@@ -109,7 +111,7 @@ describe("mail slot tray", () => {
     await localDb.open();
     renderOverview();
     await user.click(screen.getByRole("tab", { name: "Overview" }));
-    await user.click(screen.getByRole("button", { name: "Mail slot, 2 need you" }));
+    await user.click(screen.getByRole("button", { name: "2 Needs you, mail slot" }));
     await user.keyboard("{Enter}");
 
     const dialog = screen.getByRole("dialog", { name: "Approve this action?" });
@@ -132,7 +134,7 @@ describe("mail slot tray", () => {
     await localDb.open();
     renderOverview("cloud-agent-team");
     await user.click(screen.getByRole("tab", { name: "Overview" }));
-    await user.click(screen.getByRole("button", { name: /Mail slot/ }));
+    await user.click(screen.getByRole("button", { name: /\d+ Needs you, mail slot/ }));
     const filters = screen.getByRole("toolbar", { name: "Filter by agent" });
     await user.click(within(filters).getByRole("button", { name: "Relay" }));
     expect(screen.getByRole("option")).toHaveAttribute("data-glyph", "hand");
