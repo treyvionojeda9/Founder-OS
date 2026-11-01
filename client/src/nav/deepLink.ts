@@ -88,6 +88,12 @@ export function shareUrl(path: string): string {
 }
 
 export async function copyText(text: string): Promise<boolean> {
+  // Headless Chromium leaves clipboard.writeText pending. The harness records through this hook.
+  const hook = (window as Window & { __copyText?: (value: string) => void }).__copyText;
+  if (hook) {
+    hook(text);
+    return true;
+  }
   const clip = navigator.clipboard;
   if (clip?.writeText) {
     try {

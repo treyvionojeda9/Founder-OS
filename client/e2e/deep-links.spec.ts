@@ -48,7 +48,13 @@ test.describe("deep links", () => {
   test("opens an agent, a note, and a path node from a url", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "desktop shots");
     test.setTimeout(90_000);
-    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.addInitScript(() => {
+      const bag: string[] = [];
+      (window as Window & { __copied?: string[]; __copyText?: (value: string) => void }).__copied = bag;
+      (window as Window & { __copyText?: (value: string) => void }).__copyText = (value: string) => {
+        bag.push(value);
+      };
+    });
     await page.emulateMedia({ reducedMotion: "reduce" });
     const writes: string[] = [];
     page.on("request", (req) => {
@@ -64,7 +70,7 @@ test.describe("deep links", () => {
     await expect(page.locator(".desk-room > .pipeline-rooms")).toHaveCount(1);
     await expect(page.locator(".desk-hall .pipeline-rooms")).toHaveCount(0);
     await expect(page.locator(".desk-drawer-pull")).toHaveCount(3);
-    await expect(page.getByRole("button", { name: /mail slot/i })).toBeAttached();
+    await expect(page.locator(".mail-mouth")).toHaveCount(1);
     await expect(page.getByRole("button", { name: "Library" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Team" })).toBeVisible();
     await expect(page.locator(".pixel-bar")).toBeVisible();
@@ -86,12 +92,16 @@ test.describe("deep links", () => {
     await keep(page, "agent");
 
     await pin.click();
-    await expect(pin).toHaveAttribute("data-copied", "true");
-    await expect(pin).toHaveAttribute("data-pattern", "tick");
-    expect(await pin.locator(".copy-pin").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+    const mark = page.locator(".copy-link");
+    await expect(mark).toHaveAttribute("data-copied", "true");
+    await expect(mark).toHaveAttribute("data-pattern", "tick");
+    await expect(page.getByRole("button", { name: "Link copied" })).toBeVisible();
+    expect(await mark.locator(".copy-pin").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
       rgb(founderEmber.night),
     );
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("/work/overview?agent=ceo");
+    expect(
+      (await page.evaluate(() => (window as Window & { __copied?: string[] }).__copied ?? [])).join("\n"),
+    ).toContain("/work/overview?agent=ceo");
     await expect(page.getByText("Copied")).toHaveCount(0);
 
     await page.evaluate(() => {
@@ -106,7 +116,8 @@ test.describe("deep links", () => {
     await expect(page.locator(".command-ledger")).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.locator(".command-ledger")).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+    await expect(page.locator(".study")).toHaveAttribute("data-deep", "overview");
+    await expect(page.locator(".desk-room > .pipeline-rooms")).toHaveCount(1);
 
     await page.goto("/work/overview?agent=not-a-desk");
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
@@ -114,6 +125,7 @@ test.describe("deep links", () => {
     await expect(page.locator(".overview-sheet")).toHaveCount(0);
     await expect(page.locator(".desk-room > .pipeline-rooms")).toBeVisible();
     await expect(page.locator(".desk-hall .pipeline-rooms")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /mail slot/i })).toBeVisible();
     await expect(page.getByRole("group", { name: "Desk tiles" })).toBeVisible();
 
     await page.goto("/work/library");
@@ -136,7 +148,10 @@ test.describe("deep links", () => {
     expect(await vaultCounts(page)).toEqual(afterSave);
 
     await page.getByRole("button", { name: "Copy link" }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(`/work/library?note=${noteId}`);
+    await expect(page.locator(".copy-link")).toHaveAttribute("data-copied", "true");
+    expect(
+      (await page.evaluate(() => (window as Window & { __copied?: string[] }).__copied ?? [])).join("\n"),
+    ).toContain(`/work/library?note=${noteId}`);
 
     await page.goto("/work/library?note=HN-NOT-A-REAL-NOTE");
     await expect(page.locator(".library-room")).toHaveAttribute("data-ready", "true");
@@ -155,7 +170,10 @@ test.describe("deep links", () => {
     await page.evaluate(() => document.fonts.ready);
     await keep(page, "path-node");
     await page.getByRole("button", { name: "Copy link" }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("/school/path?node=task-one-page");
+    await expect(page.locator(".copy-link")).toHaveAttribute("data-copied", "true");
+    expect(
+      (await page.evaluate(() => (window as Window & { __copied?: string[] }).__copied ?? [])).join("\n"),
+    ).toContain("/school/path?node=task-one-page");
 
     await page.goto("/school/path?node=missing-station");
     await expect(page.getByRole("dialog", { name: "Reading Room path" })).toBeVisible();
