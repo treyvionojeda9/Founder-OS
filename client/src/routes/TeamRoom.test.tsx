@@ -642,7 +642,8 @@ describe("work library shelf", () => {
     expect(screen.getByRole("heading", { name: "Library" })).toBeInTheDocument();
     expect(document.querySelector(".bookcase .library-head")).toBeTruthy();
     expect(screen.getByText("The shelf is bare.")).toBeInTheDocument();
-    expect(screen.getByText("Place a sheet.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add a note" })).toBeInTheDocument();
+    expect(document.querySelectorAll(".dust-spine")).toHaveLength(3);
     expect(screen.getByText("Human notes for this team.")).toBeInTheDocument();
     expect(document.querySelector(".library-room")).toHaveAttribute("data-vault", "human");
     expect(screen.queryByText(/Library is a stub/)).not.toBeInTheDocument();

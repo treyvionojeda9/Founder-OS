@@ -8,6 +8,7 @@ import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
 import { useSession } from "../storage/session";
 import { usePaperSettle } from "../study/paperSettle";
+import { EmptyShelf } from "./EmptyShelf";
 import { ShelfSpine } from "./ShelfSpine";
 import {
   SHELF_LABEL,
@@ -266,12 +267,7 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
                       </span>
                     </button>
                   ) : null}
-                  {bare ? (
-                    <div className="shelf-empty" role="status">
-                      <p>The shelf is bare.</p>
-                      <p className="shelf-next">Place a sheet.</p>
-                    </div>
-                  ) : null}
+                  {bare ? <EmptyShelf still={still} onAdd={placeSheet} /> : null}
                   {none ? <p className="shelf-none">None on this shelf.</p> : null}
                 </div>
               </div>

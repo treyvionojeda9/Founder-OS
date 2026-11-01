@@ -191,6 +191,13 @@
           "timestamp": "2026-10-29T07:48:00Z"
         }
       ]
+    },
+    {
+      "id": "quiet-bench",
+      "name": "Quiet Bench",
+      "agents": [],
+      "tools": [],
+      "transcript": []
     }
   ]
 }

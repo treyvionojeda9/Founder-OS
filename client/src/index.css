@@ -3621,8 +3621,8 @@ html:has(.room-portal-layer) body {
 }
 
 .shelf-books[data-empty="true"] {
-  align-items: center;
-  justify-content: center;
+  align-items: flex-end;
+  justify-content: flex-start;
 }
 
 .shelf-none {
@@ -5040,6 +5040,9 @@ button:disabled {
 .library-head p,
 .shelf-empty p,
 .shelf-next,
+.shelf-dust-line,
+.empty-desk-line,
+.empty-desk-plaque,
 .hint {
   font-family: var(--font-pixel);
 }
@@ -5578,5 +5581,174 @@ input {
 @media (prefers-reduced-motion: reduce) {
   .command-ledger .ledger-sheet {
     animation: none;
+  }
+}
+
+/* Empty desk and empty shelf are scene objects. One frame. Founder Ember only. */
+.desk-grid[data-empty="true"] .desk-grid-list {
+  display: flex;
+  justify-content: center;
+  grid-auto-flow: row;
+  grid-template-columns: none;
+}
+
+.empty-desk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: min(280px, 100%);
+  margin: 0 auto 8px;
+  color: var(--paper);
+}
+
+.empty-desk-bay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.empty-desk-seat {
+  width: 72px;
+  height: 56px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: 4px dashed var(--paper);
+  box-shadow: inset 0 0 0 4px var(--night);
+}
+
+.empty-desk-top {
+  width: 100%;
+  height: 16px;
+  background: var(--wood);
+  border: 4px solid var(--darkwood);
+}
+
+.empty-desk-front {
+  width: 100%;
+  height: 22px;
+  background: var(--darkwood);
+  border: 4px solid var(--night);
+  border-top: 0;
+}
+
+.empty-desk-plaque {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  background: var(--darkwood);
+  color: var(--paper);
+  border: 4px solid var(--wood);
+  box-shadow: inset 0 0 0 4px var(--night);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  text-align: center;
+}
+
+.empty-desk-line {
+  margin: 8px 0;
+  max-width: 22ch;
+  color: var(--paper);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  text-align: center;
+}
+
+.empty-desk-action,
+.shelf-dust-action {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 10px 12px;
+  background: var(--ember);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  box-shadow: 4px 4px 0 var(--night);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.empty-desk-action:hover,
+.shelf-dust-action:hover {
+  background: var(--flame);
+}
+
+.empty-desk-action:active,
+.shelf-dust-action:active {
+  background: var(--plum);
+  color: var(--paper);
+}
+
+.team-board .empty-desk {
+  width: 100%;
+  margin: 0;
+}
+
+.library-room .shelf-books[data-empty="true"] {
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.shelf-dust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+  max-width: 100%;
+  min-height: 132px;
+  margin: 0 0 8px;
+  color: var(--paper);
+}
+
+.dust-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.dust-spine {
+  display: block;
+  width: 28px;
+  background: transparent;
+  border: 4px dashed var(--paper);
+  box-shadow: inset 6px 0 0 var(--ember);
+}
+
+.dust-spine[data-band="high"] {
+  height: 112px;
+}
+
+.dust-spine[data-band="mid"] {
+  height: 96px;
+  box-shadow: inset 0 14px 0 var(--slate);
+}
+
+.dust-spine[data-band="low"] {
+  height: 80px;
+  box-shadow: inset 0 -16px 0 var(--wood);
+}
+
+.shelf-dust-line {
+  margin: 0 0 12px;
+  max-width: 18ch;
+  color: var(--paper);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.app[data-layout="portrait"] .shelf-dust {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-desk,
+  .empty-desk-seat,
+  .shelf-dust,
+  .dust-spine,
+  .empty-desk-action,
+  .shelf-dust-action {
+    animation: none;
+    transition: none;
   }
 }
