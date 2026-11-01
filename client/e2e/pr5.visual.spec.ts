@@ -13,30 +13,34 @@ async function keep(page: Page, name: string) {
   copyFileSync(path, `/opt/cursor/artifacts/screenshots/pr5/${name}.png`);
 }
 
+function clipInView(box: { x: number; y: number; width: number; height: number }, viewport: { width: number; height: number }) {
+  const x = Math.max(0, box.x);
+  const y = Math.max(0, box.y);
+  const right = Math.min(viewport.width, box.x + box.width);
+  const bottom = Math.min(viewport.height, box.y + box.height);
+  return { x, y, width: right - x, height: bottom - y };
+}
+
 async function keepClip(page: Page, locator: Locator, name: string) {
+  await locator.scrollIntoViewIfNeeded();
   const box = await locator.boundingBox();
-  if (!box) throw new Error(`missing box for ${name}`);
+  const viewport = page.viewportSize();
+  if (!box || !viewport) throw new Error(`missing box for ${name}`);
+  const clip = clipInView(box, viewport);
+  if (clip.width < 1 || clip.height < 1) throw new Error(`clip outside viewport for ${name}`);
   const path = `${pr5}/${name}.png`;
-  await page.screenshot({
-    path,
-    animations: "disabled",
-    clip: {
-      x: Math.max(0, box.x),
-      y: Math.max(0, box.y),
-      width: Math.max(1, box.width),
-      height: Math.max(1, box.height),
-    },
-  });
+  await page.screenshot({ path, animations: "disabled", clip });
   copyFileSync(path, `/opt/cursor/artifacts/screenshots/pr5/${name}.png`);
 }
 
 async function clipHash(page: Page, locator: Locator) {
+  await locator.scrollIntoViewIfNeeded();
   const box = await locator.boundingBox();
-  if (!box) throw new Error("lamp box missing");
-  const shot = await page.screenshot({
-    animations: "disabled",
-    clip: { x: box.x, y: box.y, width: box.width, height: box.height },
-  });
+  const viewport = page.viewportSize();
+  if (!box || !viewport) throw new Error("lamp box missing");
+  const clip = clipInView(box, viewport);
+  if (clip.width < 1 || clip.height < 1) throw new Error("lamp clip is outside the viewport");
+  const shot = await page.screenshot({ animations: "disabled", clip });
   return createHash("sha256").update(shot).digest("hex");
 }
 
