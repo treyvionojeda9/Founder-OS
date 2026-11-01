@@ -9,6 +9,7 @@ import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
 import { publishRoom } from "../nav/room";
+import { PathMap } from "../study/PathMap";
 import { keepPonderNote, loadPonderNote } from "../study/ponderNote";
 import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
@@ -38,6 +39,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [pathOpen, setPathOpen] = useState(false);
+  const [sheetId, setSheetId] = useState<string | null>(null);
   const [keeping, setKeeping] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const bookRef = useRef<HTMLButtonElement>(null);
@@ -85,8 +87,15 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     // nothing: a modal dialog makes the desk inert, then unmounting the dialog
     // drops focus on the document.
     if (node?.open && typeof node.close === "function") node.close();
+    setSheetId(null);
     setPathOpen(false);
     bookRef.current?.focus();
+  };
+
+  const closeSheet = () => {
+    const nodeId = sheetId;
+    setSheetId(null);
+    if (nodeId) document.getElementById(`path-node-${nodeId}`)?.focus();
   };
 
   useLayoutEffect(() => {
@@ -99,6 +108,11 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (pathOpen) {
+        if (sheetId) {
+          event.preventDefault();
+          closeSheet();
+          return;
+        }
         closeBook();
         return;
       }
@@ -106,7 +120,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pose, pathOpen]);
+  }, [pose, pathOpen, sheetId]);
 
   const lift = () => setPose("lifted");
 
@@ -265,24 +279,28 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
           className="path-panel"
           aria-labelledby="path-title"
           aria-modal="true"
+          onKeyDown={(event) => {
+            if (event.key !== "Escape" || !sheetId) return;
+            event.preventDefault();
+            event.stopPropagation();
+            closeSheet();
+          }}
+          onCancel={(event) => {
+            if (!sheetId) return;
+            event.preventDefault();
+            closeSheet();
+          }}
         >
           <h2 id="path-title">{path?.title ?? "No path on this desk"}</h2>
           <p className="path-note">A fixture. No course is loaded.</p>
           {path ? (
-            <>
-              <h3>Current task</h3>
-              <p className="path-task">{path.task.title}</p>
-              <p>{path.task.detail}</p>
-              {path.assignment ? (
-                <>
-                  <h3>Assignment</h3>
-                  <p className="path-task">{path.assignment.title}</p>
-                  <p>{path.assignment.prompt}</p>
-                </>
-              ) : (
-                <p>No assignment on this desk.</p>
-              )}
-            </>
+            <PathMap
+              path={path}
+              still={still}
+              openId={sheetId}
+              onOpen={setSheetId}
+              onCloseSheet={closeSheet}
+            />
           ) : (
             <p>This desk has no path yet.</p>
           )}

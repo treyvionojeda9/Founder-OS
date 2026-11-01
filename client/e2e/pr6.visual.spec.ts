@@ -102,13 +102,17 @@ test.describe("school learning desk", () => {
     else await book.click();
     const dialog = page.getByRole("dialog", { name: "Reading Room path" });
     await expect(dialog).toBeVisible();
+    await expect(dialog.locator(".path-map")).toBeVisible();
     await expect(dialog).toContainText("Sit with one page");
     await expect(dialog).toContainText("A fixture. No course is loaded.");
     await expect(dialog).toContainText("Margin key");
-    await expect(dialog).toContainText("Write that sentence in your own words.");
     if (proj === "tablet-portrait") await keep(page, "learn-book-tablet-portrait");
     if (proj === "tablet-landscape") await keep(page, "learn-book-tablet-landscape");
     if (proj === "desktop") await keep(page, "learn-book-desktop");
+    await dialog.getByRole("button", { name: "Later Margin key" }).click();
+    await expect(dialog.getByRole("region", { name: "Margin key" })).toContainText(
+      "Write that sentence in your own words.",
+    );
     await page.getByRole("button", { name: "Close the book" }).click();
     await expect(dialog).toHaveCount(0);
     await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");

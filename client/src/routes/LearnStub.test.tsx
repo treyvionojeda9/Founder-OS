@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import ponderSource from "../study/ponderNote.ts?raw";
+import mapSource from "../study/pathMap.ts?raw";
+import mapViewSource from "../study/PathMap.tsx?raw";
 import learnSource from "./LearnStub.tsx?raw";
 import { localDb, noteRepo, sessionSource } from "../storage/services";
 import { SessionProvider } from "../storage/session";
@@ -161,22 +163,41 @@ describe("learning desk", () => {
     expect(await localDb.humanNotes.count()).toBe(0);
   });
 
-  it("opens the fixture path from the book and does not write a note", async () => {
+  it("opens the fixture path as a map and does not write a note", async () => {
     const user = userEvent.setup();
     const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     await readyDesk();
     await user.click(screen.getByRole("button", { name: "Open the current path" }));
     const dialog = screen.getByRole("dialog", { name: "Reading Room path" });
+    const map = dialog.querySelector(".path-map");
+    expect(map).toHaveAttribute("data-focus", "task-one-page");
+    expect(map?.querySelectorAll(".path-node")).toHaveLength(4);
+    expect(map?.querySelectorAll(".path-link").length).toBeGreaterThanOrEqual(3);
+    expect(dialog.querySelector('.path-node[data-mark="current"]')).toHaveAttribute("data-pattern", "double");
+    expect(dialog.querySelector('.path-node[data-mark="current"]')).toHaveAttribute("aria-current", "step");
+    expect(dialog.querySelector('.path-node[data-mark="done"]')).toHaveAttribute("data-pattern", "corners");
+    expect(dialog.querySelector('.path-node[data-mark="locked"]')).toHaveAttribute("data-pattern", "dotted");
     expect(dialog).toHaveTextContent("Sit with one page");
     expect(dialog).toHaveTextContent("A fixture. No course is loaded.");
     expect(dialog).toHaveTextContent("Margin key");
-    expect(dialog).toHaveTextContent("Write that sentence in your own words.");
+    expect(dialog).not.toHaveTextContent("Write that sentence in your own words.");
+
+    await user.click(screen.getByRole("button", { name: "Later Margin key" }));
+    const sheet = screen.getByRole("region", { name: "Margin key" });
+    expect(sheet).toHaveTextContent("Write that sentence in your own words.");
+    expect(sheet.querySelector("textarea, form")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Set the sheet down" }));
+    expect(screen.queryByRole("region", { name: "Margin key" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Later Margin key" })).toHaveFocus();
+
     await user.click(screen.getByRole("button", { name: "Close the book" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open the current path" })).toHaveFocus();
     expect(saveHuman).not.toHaveBeenCalled();
     expect(fetchSpy).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.machineNotes.count()).toBe(0);
   });
 
   it("returns focus to the book when Escape closes the path", async () => {
@@ -188,6 +209,26 @@ describe("learning desk", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(book).toHaveFocus();
+  });
+
+  it("Escape sets the station sheet down before it closes the book", async () => {
+    const user = userEvent.setup();
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    await readyDesk();
+    const book = screen.getByRole("button", { name: "Open the current path" });
+    await user.click(book);
+    await user.click(screen.getByRole("button", { name: "Now Sit with one page" }));
+    expect(screen.getByRole("region", { name: "Sit with one page" })).toHaveTextContent(
+      "Mark a sentence you want to remember. This task is a fixture.",
+    );
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("region", { name: "Sit with one page" })).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Reading Room path" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Now Sit with one page" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(book).toHaveFocus();
+    expect(saveHuman).not.toHaveBeenCalled();
   });
 
   it("opens the field notes path without an assignment", async () => {
@@ -211,10 +252,23 @@ describe("learning desk", () => {
     expect(document.querySelector(".learn-room")).toHaveAttribute("data-focus", "sheet");
   });
 
-  it("has no machine vault write in the ponder save path", () => {
+  it("holds the path highlight to one frame when motion is reduced", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    await readyDesk();
+    await user.click(screen.getByRole("button", { name: "Open the current path" }));
+    const map = document.querySelector(".path-map");
+    expect(map).toHaveAttribute("data-still", "true");
+    expect(map).toHaveAttribute("data-frames", "1");
+    expect(map?.querySelector('.path-node[data-mark="current"]')).toHaveAttribute("data-frames", "1");
+  });
+
+  it("has no machine vault write in the ponder save path or the path map", () => {
     expect(ponderSource).not.toMatch(/saveMachineOutput|machineNotes/);
     expect(ponderSource).toMatch(/saveHumanEdit/);
     expect(learnSource).not.toMatch(/saveMachineOutput|machineNotes/);
+    expect(mapSource).not.toMatch(/saveHumanEdit|saveMachineOutput|humanNotes|machineNotes/);
+    expect(mapViewSource).not.toMatch(/saveHumanEdit|saveMachineOutput|humanNotes|machineNotes/);
   });
 
   it("keeps the quill as a visual rest and does not store stylus ink", () => {
