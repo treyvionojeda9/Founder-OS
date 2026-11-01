@@ -6446,3 +6446,210 @@ html[data-recede="dim"] .mail-caption {
     transform: none;
   }
 }
+
+/* Desk drawer. A pull on the front, and a local paper list. Founder Ember only. */
+.desk-drawer-pull {
+  position: absolute;
+  z-index: 9;
+  right: 8%;
+  bottom: 36%;
+  transform: none;
+  box-sizing: border-box;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  background: var(--darkwood);
+  color: var(--paper);
+  border: 4px solid var(--wood);
+  box-shadow:
+    inset 0 8px 0 var(--wood),
+    0 4px 0 var(--night);
+  image-rendering: pixelated;
+}
+
+.desk-grid-list > li:has(.desk-drawer-pull[data-placed="true"]) .desk-drawer-pull {
+  right: auto;
+  bottom: auto;
+  left: var(--pull-x);
+  top: var(--pull-y);
+  transform: translate(-100%, -50%);
+}
+
+.drawer-lip {
+  display: block;
+  width: 36px;
+  height: 6px;
+  background: var(--ember);
+  box-shadow: 0 2px 0 var(--night);
+}
+
+.drawer-knob {
+  display: block;
+  width: 20px;
+  height: 8px;
+  margin-bottom: 6px;
+  background: var(--flame);
+  box-shadow: 0 4px 0 var(--darkwood);
+}
+
+.desk-drawer-pull[data-pattern="pulled"] {
+  border-style: dashed;
+  border-color: var(--paper);
+  background: var(--night);
+  box-shadow:
+    inset 0 0 0 4px var(--darkwood),
+    0 8px 0 var(--night);
+}
+
+.desk-drawer-pull[data-pattern="pulled"] .drawer-lip {
+  background: var(--paper);
+}
+
+.desk-drawer-pull[data-pattern="pulled"] .drawer-knob {
+  background: var(--paper);
+  box-shadow: 0 6px 0 var(--darkwood);
+}
+
+.desk-drawer-pull[data-frames="2"][data-pattern="pulled"] .drawer-knob {
+  animation: drawer-knob 160ms steps(2, end);
+}
+
+.desk-drawer-pull:hover,
+.desk-drawer-pull:active {
+  background: var(--darkwood);
+  color: var(--paper);
+}
+
+.desk-drawer-pull[data-pattern="pulled"]:hover,
+.desk-drawer-pull[data-pattern="pulled"]:active {
+  background: var(--night);
+  color: var(--paper);
+}
+
+.desk-drawer {
+  position: absolute;
+  z-index: 8;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  max-height: 156px;
+  overflow: auto;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  box-shadow: 6px 6px 0 var(--night);
+  padding: 8px 8px 6px;
+}
+
+.desk-grid-list > li:has(.desk-drawer[data-placed="true"]) .desk-drawer {
+  top: var(--drawer-top);
+  bottom: 0;
+  max-height: none;
+}
+
+.desk-drawer-kicker,
+.desk-drawer-note,
+.desk-drawer-title {
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.desk-drawer-kicker,
+.desk-drawer-note {
+  margin: 0;
+  color: var(--darkwood);
+}
+
+.desk-drawer-note {
+  margin-top: 4px;
+}
+
+.desk-drawer-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+}
+
+.desk-drawer-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 32px;
+  padding: 1px 4px;
+  background: var(--paper);
+  color: var(--night);
+  border-bottom: 2px solid var(--wood);
+  cursor: pointer;
+}
+
+.desk-drawer-row[data-pattern="mark"] {
+  box-shadow: inset 8px 0 0 var(--night);
+}
+
+.desk-drawer-title {
+  color: var(--night);
+  overflow-wrap: anywhere;
+}
+
+.desk-drawer .status-frame {
+  margin: 0;
+  padding: 2px 4px;
+  box-shadow: 2px 2px 0 var(--darkwood);
+}
+
+.desk-drawer .status-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.desk-drawer:focus {
+  outline: none;
+}
+
+.desk-drawer:focus-visible {
+  outline: 3px solid var(--flame);
+  outline-offset: 2px;
+}
+
+.desk-drawer[data-frames="2"] {
+  animation: drawer-sheet 160ms steps(2, end);
+}
+
+@keyframes drawer-knob {
+  from { transform: translateY(-6px); }
+  to { transform: translateY(2px); }
+}
+
+@keyframes drawer-sheet {
+  from { transform: translateY(10px); }
+  to { transform: translateY(0); }
+}
+
+.desk-drawer-pull[data-frames="1"] .drawer-knob,
+.desk-drawer[data-frames="1"] {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  .desk-drawer-pull .drawer-knob,
+  .desk-drawer {
+    animation: none;
+  }
+}

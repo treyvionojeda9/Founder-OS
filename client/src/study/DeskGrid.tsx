@@ -12,6 +12,7 @@ import { SpaceWash } from "../hall/SpaceWash";
 import { EmptyDesk } from "./EmptyDesk";
 import { MailTray } from "./MailTray";
 import type { MailItem } from "./mailSlot";
+import { DeskDrawer } from "./DeskDrawer";
 import { PipelineRooms } from "./PipelineRooms";
 import { deskInStage, stageForStatus, type PipelineStageId } from "./pipelineRooms";
 import { WorkingLamp } from "./WorkingLamp";
@@ -66,6 +67,8 @@ export function DeskGrid({
   const tilesRef = useRef<HTMLFieldSetElement>(null);
   const pipelineRef = useRef<HTMLDivElement>(null);
   const [pipeline, setPipeline] = useState<PipelineStageId | null>(null);
+  const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [drawerCursor, setDrawerCursor] = useState(-1);
   const openTimer = useRef<number | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
   const pauseKey = useSyncExternalStore(subscribeWorkPause, pauseSnapshot, () => "");
@@ -92,6 +95,47 @@ export function DeskGrid({
       if (openTimer.current !== null) window.clearTimeout(openTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!drawerId || covered) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const target = event.target;
+      if (target instanceof Element && target.closest(".mail-slot[data-open='true'], .command-ledger")) return;
+      if (document.querySelector(".command-ledger")) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const id = drawerId;
+      setDrawerId(null);
+      setDrawerCursor(-1);
+      document.querySelector<HTMLButtonElement>(`.desk-drawer-pull[data-agent="${id}"]`)?.focus({ preventScroll: true });
+    };
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const pull = target.closest(".desk-drawer-pull");
+      if (pull?.getAttribute("data-agent") === drawerId) return;
+      const sheet = target.closest(".desk-drawer");
+      if (sheet?.getAttribute("data-agent") === drawerId) return;
+      setDrawerId(null);
+      setDrawerCursor(-1);
+    };
+    window.addEventListener("keydown", onKey, true);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [drawerId, covered]);
+
+  const toggleDrawer = (agentId: string) => {
+    setDrawerId((current) => (current === agentId ? null : agentId));
+    setDrawerCursor(-1);
+  };
+
+  const chooseDrawer = (agentId: string) => {
+    onOpen(agentId);
+  };
 
   const focusTile = (agentId: string) => {
     if (openTimer.current !== null) window.clearTimeout(openTimer.current);
@@ -141,6 +185,7 @@ export function DeskGrid({
       data-space="work"
       data-lighting="ember"
       data-pipeline={showPipeline ? (pipeline ?? "all") : undefined}
+      data-drawer={drawerId ?? "shut"}
       style={arrange === "tiles" ? { ["--tile-count" as string]: String(tiles) } : undefined}
     >
       <h1 className="overview-title" hidden={covered}>
@@ -241,7 +286,9 @@ export function DeskGrid({
                 >
                   <span className="agent-desk-bay">
                     <span className="agent-desk-plaque" data-plaque="engraved">
-                      <span className="agent-desk-name">{agent.name}</span>
+                      <span className="agent-desk-name" id={`agent-desk-name-${agent.id}`}>
+                        {agent.name}
+                      </span>
                       <span className="desk-stamp" data-stamp="desk" data-task={stamp.task}>
                         <span className="desk-stamp-agent">{stamp.agent}</span>
                         <span className="desk-stamp-task">{stamp.task}</span>
@@ -321,6 +368,18 @@ export function DeskGrid({
                   <span className="chain-link" data-link="2" />
                   <span className="chain-link" data-link="3" />
                 </button>
+                <DeskDrawer
+                  teamId={teamId}
+                  agentId={agent.id}
+                  agentName={agent.name}
+                  describedBy={`agent-desk-name-${agent.id}`}
+                  open={drawerId === agent.id}
+                  still={still}
+                  cursor={drawerId === agent.id ? drawerCursor : -1}
+                  onToggle={() => toggleDrawer(agent.id)}
+                  onHighlight={setDrawerCursor}
+                  onChoose={() => chooseDrawer(agent.id)}
+                />
               </li>
             );
           })}
