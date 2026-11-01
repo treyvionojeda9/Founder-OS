@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent }
 import { Sprite } from "../design/Sprite";
 import { mailHand, mailSeal } from "../design/sprites/mailMarks";
 import { subscribeChat, type TeamAgent } from "../team/chatStore";
-import { filterMailItems, mailItemsFor, mailMark, mailSlotName, stepMailIndex, type MailItem } from "./mailSlot";
+import { filterMailItems, MAIL_SLOT_CAPTION, mailItemsFor, mailMark, mailSlotName, stepMailIndex, type MailItem } from "./mailSlot";
 
 type MailTrayProps = {
   teamId: string;
@@ -128,7 +128,8 @@ export function MailTray({ teamId, agents, still, onOpen }: MailTrayProps) {
             <Sprite rows={items.some((item) => item.kind === "waiting") ? mailHand : mailSeal} scale={2} title="" />
           </span>
           <span className="mail-count">{items.length}</span>
-          <span className="mail-caption">Needs you</span>
+          {" "}
+          <span className="mail-caption">{MAIL_SLOT_CAPTION}</span>
         </span>
       </button>
       {open ? (

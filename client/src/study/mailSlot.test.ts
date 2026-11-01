@@ -9,6 +9,8 @@ import {
   filterMailItems,
   mailItemsFor,
   mailMark,
+  MAIL_SLOT_CAPTION,
+  mailSlotName,
   stepMailIndex,
 } from "./mailSlot";
 
@@ -38,6 +40,13 @@ describe("mail slot slips", () => {
     expect(filterMailItems(hale, "courier")).toEqual([]);
     expect(filterMailItems(hale, "all")).toHaveLength(hale.length);
     expect(mailItemsFor("hale-design-lab")).toBe(hale);
+  });
+
+  it("names the slot with the plaque words first", () => {
+    expect(mailSlotName(2)).toBe("2 Needs you, mail slot");
+    expect(mailSlotName(1)).toBe("1 Needs you, mail slot");
+    expect(mailSlotName(0)).toBe("0 Needs you, mail slot");
+    expect(mailSlotName(2).startsWith(`2 ${MAIL_SLOT_CAPTION}`)).toBe(true);
   });
 
   it("steps J down and K up and stops at the ends", () => {
