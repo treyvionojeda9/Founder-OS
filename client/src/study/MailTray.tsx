@@ -27,6 +27,7 @@ function slipDomId(item: MailItem): string {
  * A wall mail slot and the wooden in-tray behind it.
  * J/K move the slip. Enter opens the desk or the existing approval stamp.
  * Escape returns focus to the slot. This fixture never approves and never writes a vault.
+ * The mouth stays on the wall when the top bar recedes.
  */
 export function MailTray({ teamId, agents, still, onOpen }: MailTrayProps) {
   const items = useMailItems(teamId);
@@ -106,6 +107,7 @@ export function MailTray({ teamId, agents, still, onOpen }: MailTrayProps) {
         ref={mouthRef}
         type="button"
         className="mail-mouth"
+        data-discoverable="mouth"
         aria-label={mailSlotName(items.length)}
         aria-expanded={open}
         aria-controls={open ? "mail-tray" : undefined}
