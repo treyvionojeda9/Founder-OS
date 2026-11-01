@@ -1,6 +1,6 @@
 import teamsJson from "../fixtures/teams.json";
 
-export type AgentStatus = "working" | "idle" | "failed";
+export type AgentStatus = "working" | "idle" | "failed" | "waiting" | "done";
 
 export type AgentAction = {
   id: string;
@@ -70,7 +70,7 @@ export function formatMachineTime(iso: string): string {
   return `${pick("day")} ${pick("month")} ${pick("year")}, ${pick("hour")}:${pick("minute")}`;
 }
 
-const STATUSES: readonly AgentStatus[] = ["working", "idle", "failed"];
+const STATUSES: readonly AgentStatus[] = ["working", "idle", "failed", "waiting", "done"];
 const KINDS: readonly AgentAction["kind"][] = ["spend", "publish", "contact", "delete", "write"];
 
 function asStatus(value: string): AgentStatus {

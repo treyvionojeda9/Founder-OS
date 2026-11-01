@@ -24,13 +24,18 @@ export const typeLine = {
 
 export const pixelFont = '"Press Start 2P", monospace';
 
-export type StatusName = "working" | "idle" | "failed";
+export type StatusName = "working" | "idle" | "failed" | "waiting" | "done";
 
-/** Working / Idle / Failed stay inside Founder Ember. Failed is plum, not black on white. */
+/**
+ * Chip fills stay inside Founder Ember. Failed is plum, not black on white.
+ * Waiting and Done are fills only. The outline pattern is what separates them in grayscale.
+ */
 export const statusChip: Record<StatusName, { background: string; color: string; border: string }> = {
   working: { background: founderEmber.ember, color: founderEmber.night, border: founderEmber.darkwood },
   idle: { background: founderEmber.slate, color: founderEmber.paper, border: founderEmber.darkwood },
   failed: { background: founderEmber.plum, color: founderEmber.paper, border: founderEmber.darkwood },
+  waiting: { background: founderEmber.paper, color: founderEmber.night, border: founderEmber.night },
+  done: { background: founderEmber.darkwood, color: founderEmber.flame, border: founderEmber.flame },
 };
 
 export function applyType(root: HTMLElement) {
@@ -53,6 +58,12 @@ export function applyType(root: HTMLElement) {
     "--chip-failed-bg": statusChip.failed.background,
     "--chip-failed-fg": statusChip.failed.color,
     "--chip-failed-border": statusChip.failed.border,
+    "--chip-waiting-bg": statusChip.waiting.background,
+    "--chip-waiting-fg": statusChip.waiting.color,
+    "--chip-waiting-border": statusChip.waiting.border,
+    "--chip-done-bg": statusChip.done.background,
+    "--chip-done-fg": statusChip.done.color,
+    "--chip-done-border": statusChip.done.border,
   };
   for (const [key, value] of Object.entries(vars)) {
     root.style.setProperty(key, value);

@@ -156,7 +156,7 @@ test.describe("approval stamp over the live room", () => {
     await expect(page.locator(".approval-slip")).toHaveCSS("background-color", "rgb(233, 223, 199)");
     await expect(page.locator(".approval-actions .approve")).toHaveCSS("background-color", "rgb(210, 140, 64)");
 
-    const lamp = await page.locator(".lamp-spot canvas").boundingBox();
+    const lamp = await page.locator(".lamp-spot .lamp-flame canvas").boundingBox();
     const slip = await page.locator(".approval-slip").boundingBox();
     const ceo = await page.locator(".ceo-stand canvas").boundingBox();
     if (!lamp || !slip || !ceo) throw new Error("room or stamp missing");

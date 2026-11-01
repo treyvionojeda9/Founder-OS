@@ -115,7 +115,7 @@ test.describe("pixel chrome and type", () => {
     const failed = page.locator(".plaque[data-status='failed'] .status-chip");
     await expect(failed).toHaveCSS("background-color", plum);
     await expect(failed).toHaveCSS("color", paper);
-    await expect(failed).toContainText("Failed");
+    await expect(failed).toContainText("Error");
     await expect(page.locator(".plaque[data-status='working'] .status-chip")).toHaveCSS("background-color", ember);
     await expect(page.locator(".plaque[data-status='working'] .status-chip")).toHaveCSS("color", night);
     await expect(page.locator(".plaque[data-status='idle'] .status-chip")).toHaveCSS("color", paper);

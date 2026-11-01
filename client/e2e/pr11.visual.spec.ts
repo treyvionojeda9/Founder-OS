@@ -91,7 +91,7 @@ test.describe("room materials", () => {
     expect(cardWall.mask).not.toContain("gradient");
     await expect(page.locator(".agent-desk[data-status='working'] .status-chip")).toContainText("Working");
     await expect(page.locator(".agent-desk[data-status='idle'] .status-chip")).toContainText("Idle");
-    await expect(page.locator(".agent-desk[data-status='failed'] .status-chip")).toContainText("Failed");
+    await expect(page.locator(".agent-desk[data-status='failed'] .status-chip")).toContainText("Error");
     if (shot) await keep(page, `overview-${proj}`);
 
     await page.getByRole("button", { name: "Library" }).click();
@@ -115,7 +115,7 @@ test.describe("room materials", () => {
     expect(teamWall.colors).toContain(slate);
     expect(teamFloor.colors).toContain(wood);
     expect(teamWall.mask).not.toContain("gradient");
-    await expect(page.locator(".plaque[data-status='failed'] .status-chip")).toContainText("Failed");
+    await expect(page.locator(".plaque[data-status='failed'] .status-chip")).toContainText("Error");
     if (shot) await keep(page, `team-${proj}`);
 
     await page.goto("/learn/reading-room");

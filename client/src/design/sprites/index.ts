@@ -17,10 +17,12 @@ import {
   faceWashHair,
   faceWashHood,
   paperLightPool,
+  raisedHand,
   seatedCollar,
   seatedHair,
   seatedHood,
 } from "./seatedAgent";
+import { glyphCheck, glyphCrack, glyphFlame, glyphFlameLift, glyphHand, glyphRest } from "./statusGlyphs";
 
 export type { SpriteGrid } from "./types";
 export { flame } from "./flame";
@@ -56,10 +58,12 @@ export {
   faceWashHair,
   faceWashHood,
   paperLightPool,
+  raisedHand,
   seatedCollar,
   seatedHair,
   seatedHood,
 } from "./seatedAgent";
+export { glyphCheck, glyphCrack, glyphFlame, glyphFlameLift, glyphHand, glyphRest } from "./statusGlyphs";
 
 export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "flame", rows: flame },
@@ -101,6 +105,13 @@ export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "seated hair", rows: seatedHair },
   { name: "seated hood", rows: seatedHood },
   { name: "seated collar", rows: seatedCollar },
+  { name: "raised hand", rows: raisedHand },
+  { name: "status glyph rest", rows: glyphRest },
+  { name: "status glyph flame", rows: glyphFlame },
+  { name: "status glyph flame lift", rows: glyphFlameLift },
+  { name: "status glyph hand", rows: glyphHand },
+  { name: "status glyph check", rows: glyphCheck },
+  { name: "status glyph crack", rows: glyphCrack },
   { name: "face wash hair", rows: faceWashHair },
   { name: "face wash hood", rows: faceWashHood },
   { name: "face wash collar", rows: faceWashCollar },

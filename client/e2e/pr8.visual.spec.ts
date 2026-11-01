@@ -40,7 +40,7 @@ test.describe("work team board", () => {
     await expect(page.getByRole("img", { name: "Desk lamp, failed" })).toBeVisible();
     await expect(page.locator(".plaque[data-status='working']")).toContainText("Working");
     await expect(page.locator(".plaque[data-status='idle']")).toContainText("Idle");
-    await expect(page.locator(".plaque[data-status='failed']")).toContainText("Failed");
+    await expect(page.locator(".plaque[data-status='failed']")).toContainText("Error");
     await expect(page.locator(".board-void")).toHaveCSS("perspective", /px/);
     await expect(page.locator(".board-hanger")).toHaveCSS("transform", /matrix/);
     const layout = await page.locator(".app").getAttribute("data-layout");
@@ -117,7 +117,7 @@ test("grayscale board stays readable", async ({ page }, info) => {
   await expect(page.getByRole("button", { name: /Courier/ })).toBeVisible();
   await expect(page.locator(".plaque[data-status='working']")).toContainText("Working");
   await expect(page.locator(".plaque[data-status='idle']")).toContainText("Idle");
-  await expect(page.locator(".plaque[data-status='failed']")).toContainText("Failed");
+  await expect(page.locator(".plaque[data-status='failed']")).toContainText("Error");
   await keep(page, "team-board-grayscale-tablet-portrait");
 });
 

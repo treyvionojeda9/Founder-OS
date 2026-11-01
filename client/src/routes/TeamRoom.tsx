@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type
 import { useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { agent, forgeNote, founderSeal } from "../design/sprites";
+import { raisedHand } from "../design/sprites/seatedAgent";
 import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
@@ -383,8 +384,13 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
           pose={pose}
           still={still}
           behind={
-            <figure className="figure ceo-stand agent-stand">
+            <figure className="figure ceo-stand agent-stand" data-pose={lampStatus === "waiting" ? "raised-hand" : "standing"}>
               <Sprite rows={agent} scale={agentScale} title={figureName} />
+              {lampStatus === "waiting" ? (
+                <span className="raised-hand stand-hand">
+                  <Sprite rows={raisedHand} scale={agentScale} title="" />
+                </span>
+              ) : null}
               <figcaption>{figureName}</figcaption>
             </figure>
           }

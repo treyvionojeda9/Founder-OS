@@ -13,6 +13,10 @@ describe("desk light pool", () => {
     expect(on.rows).toBeGreaterThan(off.rows);
     expect(washSpec("working").rows).toBeGreaterThan(washSpec("idle").rows);
     expect(washSpec("failed")).not.toEqual(washSpec("working"));
+    expect(poolSpec("waiting")).toEqual(poolSpec("idle"));
+    expect(poolSpec("done")).toEqual(poolSpec("idle"));
+    expect(washSpec("waiting")).toEqual(washSpec("idle"));
+    expect(washSpec("done")).toEqual(washSpec("idle"));
   });
 
   it("keeps the ember pool on a school desk because school accent is not lighter than wood", () => {

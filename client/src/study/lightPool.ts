@@ -1,5 +1,6 @@
 import { founderEmber, schoolAccent } from "../design/palette";
 import type { AgentStatus } from "../team/chatStore";
+import { lampPosture } from "./lampArt";
 
 function channelLuma(hex: string): number {
   const r = Number.parseInt(hex.slice(1, 3), 16);
@@ -37,14 +38,16 @@ type PoolSpec = {
 };
 
 export function poolSpec(status: AgentStatus): PoolSpec {
-  if (status === "working") return { cols: 44, rows: 22 };
-  if (status === "failed") return { cols: 26, rows: 16 };
+  const posture = lampPosture(status);
+  if (posture === "working") return { cols: 44, rows: 22 };
+  if (posture === "failed") return { cols: 26, rows: 16 };
   return { cols: 18, rows: 5 };
 }
 
 export function washSpec(status: AgentStatus): PoolSpec {
-  if (status === "working") return { cols: 20, rows: 18 };
-  if (status === "failed") return { cols: 12, rows: 12 };
+  const posture = lampPosture(status);
+  if (posture === "working") return { cols: 20, rows: 18 };
+  if (posture === "failed") return { cols: 12, rows: 12 };
   return { cols: 10, rows: 4 };
 }
 
@@ -69,13 +72,14 @@ function dot(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number,
 
 /** Wide stippled pool, a short contact bar, or a broken ring. Shapes differ, not only colours. */
 export function paintDeskPool(canvas: HTMLCanvasElement, status: AgentStatus) {
+  const posture = lampPosture(status);
   const { cols, rows } = poolSpec(status);
-  const scale = status === "working" ? 6 : 4;
+  const scale = posture === "working" ? 6 : 4;
   const ctx = prepare(canvas, cols, rows, scale);
   if (!ctx) return;
   const { flame, ember, wood, darkwood, slate, plum } = founderEmber;
 
-  if (status === "idle") {
+  if (posture === "idle") {
     for (let y = 0; y < rows; y += 1) {
       for (let x = 0; x < cols; x += 1) {
         if (y === 0 && x % 3 !== 0) continue;
@@ -85,7 +89,7 @@ export function paintDeskPool(canvas: HTMLCanvasElement, status: AgentStatus) {
     return;
   }
 
-  if (status === "failed") {
+  if (posture === "failed") {
     for (let y = 0; y < rows; y += 1) {
       for (let x = 0; x < cols; x += 1) {
         const dx = (x - cols * 0.5) / (cols * 0.42);
@@ -122,18 +126,19 @@ export function paintDeskPool(canvas: HTMLCanvasElement, status: AgentStatus) {
 
 /** Light that lands on the sheet. Idle is a thin shadow, not a smaller copy of the pool. */
 export function paintPaperWash(canvas: HTMLCanvasElement, status: AgentStatus) {
+  const posture = lampPosture(status);
   const { cols, rows } = washSpec(status);
   const scale = 4;
   const ctx = prepare(canvas, cols, rows, scale);
   if (!ctx) return;
   const { flame, ember, wood, darkwood, plum } = founderEmber;
 
-  if (status === "idle") {
+  if (posture === "idle") {
     for (let x = 0; x < cols; x += 1) dot(ctx, x, rows - 1, scale, x % 4 === 0 ? wood : darkwood);
     return;
   }
 
-  if (status === "failed") {
+  if (posture === "failed") {
     const sparks: [number, number][] = [
       [2, 2],
       [5, 4],

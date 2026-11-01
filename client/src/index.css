@@ -27,6 +27,12 @@
   --chip-failed-bg: #854550;
   --chip-failed-fg: #e9dfc7;
   --chip-failed-border: #4f352e;
+  --chip-waiting-bg: #e9dfc7;
+  --chip-waiting-fg: #1b1a24;
+  --chip-waiting-border: #1b1a24;
+  --chip-done-bg: #4f352e;
+  --chip-done-fg: #f2c14e;
+  --chip-done-border: #f2c14e;
 }
 
 *,
@@ -1684,10 +1690,24 @@ html:has(.room-portal-layer) body {
   line-height: 0;
 }
 
-.face-pool {
+.face-pool,
+.agent-figure .raised-hand {
   position: absolute;
   left: 0;
   top: 0;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.agent-stand {
+  position: relative;
+}
+
+.stand-hand {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
   line-height: 0;
   pointer-events: none;
 }
@@ -2552,6 +2572,15 @@ html:has(.room-portal-layer) body {
   .lamp-frame[data-frame="0"] {
     opacity: 1;
   }
+
+  .glyph-frame {
+    animation: none;
+    opacity: 0;
+  }
+
+  .glyph-frame[data-frame="0"] {
+    opacity: 1;
+  }
 }
 
 @media (update: slow) {
@@ -2597,6 +2626,15 @@ html:has(.room-portal-layer) body {
   }
 
   .lamp-frame[data-frame="0"] {
+    opacity: 1;
+  }
+
+  .glyph-frame {
+    animation: none;
+    opacity: 0;
+  }
+
+  .glyph-frame[data-frame="0"] {
     opacity: 1;
   }
 }
@@ -3276,6 +3314,14 @@ html:has(.room-portal-layer) body {
   background: var(--plum);
 }
 
+.spine .status-frame {
+  position: absolute;
+  z-index: 2;
+  left: 8px;
+  right: 12px;
+  bottom: 8px;
+}
+
 .spine-title {
   position: relative;
   z-index: 1;
@@ -3289,7 +3335,7 @@ html:has(.room-portal-layer) body {
   overflow: hidden;
   writing-mode: horizontal-tb;
   text-orientation: mixed;
-  padding: 6px 4px;
+  padding: 6px 4px 72px;
   background-color: var(--darkwood);
   background-image: none;
   font-family: var(--font-pixel);
@@ -3960,6 +4006,232 @@ button:disabled {
   background: var(--chip-failed-bg);
   color: var(--chip-failed-fg);
   border-color: var(--chip-failed-border);
+}
+
+.status-chip[data-status="waiting"] {
+  background: var(--chip-waiting-bg);
+  color: var(--chip-waiting-fg);
+  border-color: var(--chip-waiting-border);
+}
+
+.status-chip[data-status="done"] {
+  background: var(--chip-done-bg);
+  color: var(--chip-done-fg);
+  border-color: var(--chip-done-border);
+}
+
+.status-frame {
+  position: relative;
+  gap: 6px;
+  white-space: normal;
+  image-rendering: pixelated;
+}
+
+.status-glyph {
+  position: relative;
+  display: grid;
+  flex: none;
+  line-height: 0;
+}
+
+.glyph-frame {
+  grid-area: 1 / 1;
+}
+
+.status-label {
+  text-align: center;
+}
+
+.status-frame:not(.is-spine) .status-label {
+  white-space: nowrap;
+}
+
+.status-frame.is-spine {
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 2px;
+  box-shadow: none;
+}
+
+.status-frame.is-spine .status-label {
+  max-width: 10ch;
+  white-space: normal;
+}
+
+.status-frame[data-pattern="solid"] {
+  border-style: solid;
+  border-width: 4px;
+  border-color: var(--night);
+}
+
+.status-frame[data-pattern="dash"] {
+  border: 4px solid transparent;
+  background-color: var(--chip-working-bg);
+  background-image:
+    repeating-linear-gradient(90deg, var(--night) 0 8px, transparent 8px 12px),
+    repeating-linear-gradient(90deg, var(--night) 0 8px, transparent 8px 12px),
+    repeating-linear-gradient(0deg, var(--night) 0 8px, transparent 8px 12px),
+    repeating-linear-gradient(0deg, var(--night) 0 8px, transparent 8px 12px);
+  background-size: 100% 4px, 100% 4px, 4px 100%, 4px 100%;
+  background-position: left top, left bottom, left top, right top;
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-clip: border-box;
+  background-origin: border-box;
+}
+
+.status-frame[data-pattern="double"] {
+  border: 3px solid var(--night);
+  box-shadow:
+    inset 0 0 0 3px var(--wood),
+    inset 0 0 0 6px var(--night),
+    3px 3px 0 var(--night);
+  padding: 10px 12px;
+}
+
+.status-frame[data-pattern="corners"] {
+  border: 4px solid transparent;
+  background-color: var(--chip-done-bg);
+  color: var(--chip-done-fg);
+  background-image:
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame));
+  background-repeat: no-repeat;
+  background-size: 14px 4px, 4px 14px, 14px 4px, 4px 14px, 14px 4px, 4px 14px, 14px 4px, 4px 14px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+}
+
+.status-frame[data-pattern="crack"] {
+  border-style: dotted;
+  border-width: 4px;
+  border-color: var(--paper);
+  border-bottom-style: none;
+}
+
+.status-frame[data-pattern="crack"]::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background:
+    linear-gradient(var(--paper), var(--paper)) left top / 12px 4px no-repeat,
+    linear-gradient(var(--paper), var(--paper)) left top / 4px 12px no-repeat;
+  pointer-events: none;
+}
+
+.status-frame[data-frames="2"] .glyph-frame {
+  opacity: 0;
+}
+
+.status-frame[data-frames="2"] .glyph-frame[data-frame="0"] {
+  opacity: 1;
+  animation: status-glyph-hold 880ms linear infinite;
+}
+
+.status-frame[data-frames="2"] .glyph-frame[data-frame="1"] {
+  animation: status-glyph-lift 880ms linear infinite;
+}
+
+@keyframes status-glyph-hold {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes status-glyph-lift {
+  0%,
+  49% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+.status-stage {
+  display: block;
+  padding: 16px 16px 48px;
+  background: var(--night);
+  color: var(--paper);
+}
+
+.status-intro,
+.status-block {
+  margin: 0 auto 20px;
+  max-width: 960px;
+}
+
+.status-intro p,
+.status-stage h1,
+.status-stage h2 {
+  color: var(--paper);
+}
+
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  background: var(--wood);
+  border: 4px solid var(--darkwood);
+}
+
+.status-desk {
+  width: min(440px, 100%);
+  margin: 0 auto 16px;
+}
+
+.status-desk .desk-grid {
+  flex: none;
+  height: 420px;
+  min-height: 420px;
+  overflow: hidden;
+}
+
+.status-desk + .status-desk .overview-title,
+.status-desk + .status-desk .overview-legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.status-stage .team-board {
+  flex: none;
+  min-height: 0;
+  height: auto;
+  overflow: visible;
+}
+
+.status-spines {
+  flex: none;
+  min-height: 280px;
+  height: auto;
+}
+
+.status-spines .shelf-bays {
+  flex: none;
+  min-height: 240px;
+  overflow: visible;
+}
+
+.status-spines .shelf-bay {
+  flex-wrap: wrap;
+  min-height: 240px;
 }
 
 .type-display {
