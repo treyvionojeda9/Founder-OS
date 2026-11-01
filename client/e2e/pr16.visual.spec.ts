@@ -193,7 +193,7 @@ test.describe("team plaques and library spines", () => {
 
     await expect(page.getByRole("button", { name: "Camp log." })).toBeVisible();
     await expect(page.getByText("The shelf is bare.")).toHaveCount(0);
-    const spines = page.locator(".spine");
+    const spines = page.locator('.shelf-bay[data-kind="notes"] .spine');
     await expect(spines).toHaveCount(3);
     const tones = await spines.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-tone")));
     expect(new Set(tones).size).toBeGreaterThan(1);

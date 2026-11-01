@@ -1,5 +1,6 @@
 import type { AgentStatus } from "../team/chatStore";
 import { StatusFrame } from "../design/StatusFrame";
+import { statusLabel } from "../design/statusFrame";
 import { spineLines, type SpineBand, type SpineTone } from "./shelfNote";
 
 type ShelfSpineProps = {
@@ -23,7 +24,7 @@ export function ShelfSpine({ id, label, tone, band, status, still, onClick }: Sh
       className="spine"
       data-tone={tone}
       data-band={band}
-      aria-label={label}
+      aria-label={`${label} ${statusLabel(status)}`}
       aria-describedby={stateId}
       onClick={onClick}
     >
@@ -31,9 +32,10 @@ export function ShelfSpine({ id, label, tone, band, status, still, onClick }: Sh
         <span className="spine-band" />
       </span>
       <span className="spine-title" data-label="pixel" aria-hidden="true">
+        {/* The space keeps each painted word apart so the name can include it. */}
         {lines.map((line, lineIndex) => (
           <span key={`${lineIndex}-${line}`} className="spine-line">
-            {line}
+            {line}{" "}
           </span>
         ))}
       </span>

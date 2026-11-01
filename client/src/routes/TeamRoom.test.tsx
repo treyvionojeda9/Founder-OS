@@ -691,11 +691,14 @@ describe("work library shelf", () => {
     );
 
     const user = await openLibrary();
-    expect(screen.getByRole("button", { name: "A margin I kept." })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Lamp hours on the forge." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /A margin I kept\./ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Lamp hours on the forge\./ })).toBeInTheDocument();
     expect(screen.queryByText("A machine draft that must stay off the shelf.")).not.toBeInTheDocument();
     expect(screen.queryByText("The shelf is bare.")).not.toBeInTheDocument();
-    const spines = document.querySelectorAll(".spine");
+    const notesBay = document.querySelector('.shelf-bay[data-kind="notes"]');
+    const spines = notesBay?.querySelectorAll(".spine") ?? [];
+    expect(notesBay?.contains(screen.getByRole("button", { name: /A margin I kept\./ }))).toBe(true);
+    expect(document.querySelector('.shelf-bay[data-kind="kit"]')).toHaveAttribute("data-pinned", "true");
     expect(spines[0]?.getAttribute("data-band")).not.toBe(spines[1]?.getAttribute("data-band"));
     expect(spines[0]?.getAttribute("data-tone")).not.toBe(spines[1]?.getAttribute("data-tone"));
     expect(spines[0]?.querySelector(".spine-title")).toHaveAttribute("data-label", "pixel");
@@ -704,7 +707,7 @@ describe("work library shelf", () => {
     expect(spines[0]?.querySelector(".status-frame")).toHaveAttribute("data-pattern", "corners");
     expect(spines[1]?.querySelector(".status-frame")).toHaveTextContent("Done");
 
-    await user.click(screen.getByRole("button", { name: "A margin I kept." }));
+    await user.click(screen.getByRole("button", { name: /A margin I kept\./ }));
     expect(screen.getByRole("heading", { name: "A margin I kept." })).toBeInTheDocument();
     const box = screen.getByRole("textbox", { name: "Your note" });
     expect(box).toHaveValue("A margin I kept.");
@@ -725,7 +728,7 @@ describe("work library shelf", () => {
 
     await user.click(screen.getByRole("button", { name: "Set it down" }));
     expect(screen.getByRole("heading", { name: "Library" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "A margin I rewrote." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /A margin I rewrote\./ })).toBeInTheDocument();
   });
 
   it("places a new sheet only when a person saves it", async () => {
@@ -760,15 +763,18 @@ describe("work library shelf", () => {
     sessionSource.principal = "machine";
     const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
     const user = await openLibrary();
-    await user.click(screen.getByRole("button", { name: "Read this. Do not overwrite it." }));
-    await user.type(screen.getByRole("textbox", { name: "Your note" }), " Extra.");
-    await user.click(screen.getByRole("button", { name: "Save this note" }));
-    expect(await screen.findByText("Only you can write on this sheet.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Read this\. Do not overwrite it\./ }));
+    expect(screen.queryByRole("textbox", { name: "Your note" })).not.toBeInTheDocument();
+    expect(await screen.findByText("Only you can open this sheet.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Place a sheet" }));
+    expect(screen.queryByRole("textbox", { name: "Your note" })).not.toBeInTheDocument();
+    await user.type(screen.getByRole("textbox", { name: "Filter Notes" }), "overwrite");
     expect(saveHuman).not.toHaveBeenCalled();
     expect(await localDb.humanNotes.get("HN-READ")).toMatchObject({
       content: "Read this. Do not overwrite it.",
       revision: 1,
     });
+    expect(await localDb.machineNotes.count()).toBe(0);
   });
 
   it("returns to Overview when the shelf was opened from the desks", async () => {
@@ -784,9 +790,84 @@ describe("work library shelf", () => {
     expect(document.querySelector(".library-room")).not.toBeInTheDocument();
   });
 
+  it("groups shelves, pins the default kit first, and filters without a vault write", async () => {
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    const user = await openLibrary();
+    expect(
+      [...document.querySelectorAll(".shelf-bay")].map((bay) => bay.getAttribute("data-kind")),
+    ).toEqual(["kit", "notes", "paths"]);
+    expect(document.querySelector(".shelf-kind")).toHaveAttribute("data-label", "pixel");
+    expect(screen.getByText("Default kit")).toBeInTheDocument();
+    expect(screen.getByText("Paths")).toBeInTheDocument();
+    expect(document.querySelector('.shelf-bay[data-kind="paths"]')).toContainElement(
+      screen.getByRole("button", { name: /Reading Room path/ }),
+    );
+    expect(document.querySelector('.shelf-bay[data-kind="kit"] .status-frame')).toHaveAttribute("data-state", "idle");
+    expect(document.querySelector('.shelf-bay[data-kind="kit"] .status-frame')).toHaveAttribute("data-pattern", "solid");
+    expect(screen.getByText("The shelf is bare.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Founder seal/ }));
+    expect(screen.queryByRole("textbox", { name: "Your note" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Unpin default kit" }));
+    expect(
+      [...document.querySelectorAll(".shelf-bay")].map((bay) => bay.getAttribute("data-kind")),
+    ).toEqual(["notes", "paths", "kit"]);
+    expect(document.querySelector('.shelf-bay[data-kind="kit"]')).toHaveAttribute("data-pinned", "false");
+    expect(localStorage.getItem("founder-os.library-shelf")).toContain("false");
+    await user.click(screen.getByRole("button", { name: "Pin default kit" }));
+    expect(document.querySelector(".shelf-bay")?.getAttribute("data-kind")).toBe("kit");
+
+    await user.type(screen.getByRole("textbox", { name: "Filter Default kit" }), "quill");
+    expect(screen.getByRole("button", { name: /Quill/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Founder seal/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "+4 more on Default kit" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Reading Room path/ })).toBeInTheDocument();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.machineNotes.count()).toBe(0);
+  });
+
+  it("opens +N as a title list and keeps human edits on the notes shelf", async () => {
+    const stamps = ["09", "10", "11", "12"];
+    for (const [index, stamp] of stamps.entries()) {
+      await noteRepo.saveHumanEdit(
+        {
+          id: `HN-ROW${index + 1}`,
+          projectId: "work:hale-design-lab",
+          vault: "human",
+          content: `Sheet ${index + 1}.`,
+          revision: 1,
+          updatedAt: `2026-10-29T${stamp}:00:00.000Z`,
+        },
+        "human",
+      );
+    }
+    const user = await openLibrary();
+    const notesBay = document.querySelector('.shelf-bay[data-kind="notes"]');
+    expect(notesBay?.querySelectorAll(".spine:not(.spine-more)")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: /Sheet 4\./ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Sheet 1\./ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "+2 more on Notes" }));
+    const list = screen.getByRole("region", { name: "More on Notes" });
+    expect(list).toHaveTextContent("Sheet 1.");
+    expect(list).toHaveTextContent("Sheet 2.");
+    expect(screen.queryByRole("textbox", { name: "Your note" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Sheet 1." }));
+    expect(screen.getByRole("textbox", { name: "Your note" })).toHaveValue("Sheet 1.");
+    expect(await localDb.humanNotes.count()).toBe(4);
+  });
+
   it("cuts the open sheet to one frame when motion is reduced", async () => {
     preferStillFrames();
     const user = await openLibrary();
+    await user.click(screen.getByRole("button", { name: "+4 more on Default kit" }));
+    expect(document.querySelector(".overflow-slip")).toHaveAttribute("data-still", "true");
+    expect(document.querySelector(".overflow-slip")).toHaveAttribute("data-pose", "shown");
+    expect(document.querySelector('.shelf-bay[data-kind="kit"] .status-frame')).toHaveAttribute("data-frames", "1");
+    expect(document.querySelector('.shelf-bay[data-kind="kit"] .status-frame')).toHaveAttribute("data-still", "true");
+    await user.keyboard("{Escape}");
+    expect(document.querySelector(".overflow-slip")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Place a sheet" }));
     const paper = document.querySelector(".library-paper");
     expect(paper).toHaveAttribute("data-still", "true");
