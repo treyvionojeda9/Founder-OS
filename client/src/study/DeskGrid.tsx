@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useSyncExternalStore, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { Sprite } from "../design/Sprite";
 import { StatusFrame } from "../design/StatusFrame";
 import { STATUS_LEGEND } from "../design/statusFrame";
@@ -7,6 +7,7 @@ import { useFormFactor } from "../hooks/useFormFactor";
 import { linesForAgent, type TeamAgent } from "../team/chatStore";
 import { pauseSnapshot, subscribeWorkPause, toggleWorkPause } from "./deskPause";
 import { deskStampFor } from "./deskStamp";
+import { setTileCount, subscribeDeskTiles, TILE_COUNTS, TILE_TAP_MS, tileCount, type TileCount } from "./deskTiles";
 import { MailTray } from "./MailTray";
 import type { MailItem } from "./mailSlot";
 import { WorkingLamp } from "./WorkingLamp";
@@ -22,6 +23,9 @@ type DeskGridProps = {
   panelId?: string;
   labelledBy?: string;
   onOpen: (agentId: string) => void;
+  /** Desktop only. Enlarge this desk in the room. Does not approve or write a vault. */
+  onFocusTile?: (agentId: string) => void;
+  focusedId?: string | null;
   /** Open a needs-you slip. The tray does not approve it. */
   onOpenMail?: (item: MailItem) => void;
 };
@@ -38,21 +42,71 @@ export function DeskGrid({
   panelId,
   labelledBy,
   onOpen,
+  onFocusTile,
+  focusedId = null,
   onOpenMail,
 }: DeskGridProps) {
   const layout = useFormFactor();
+  const arrange = layout === "desktop" ? "tiles" : "strip";
+  const tiles = useSyncExternalStore(subscribeDeskTiles, tileCount, () => 3 as TileCount);
   const lampScale = layout === "portrait" ? 3 : 4;
   const seatScale = 4;
   const poolScale = 3;
   const roomRef = useRef<HTMLDivElement>(null);
+  const tilesRef = useRef<HTMLFieldSetElement>(null);
+  const openTimer = useRef<number | null>(null);
+  const lastTap = useRef<{ id: string; at: number } | null>(null);
   const pauseKey = useSyncExternalStore(subscribeWorkPause, pauseSnapshot, () => "");
+  const canFocus = arrange === "tiles" && !!onFocusTile;
 
   useEffect(() => {
     const room = roomRef.current;
     if (!room) return;
     if (covered) room.setAttribute("inert", "");
     else room.removeAttribute("inert");
+    const tilesNode = tilesRef.current;
+    if (!tilesNode) return;
+    if (covered) tilesNode.setAttribute("inert", "");
+    else tilesNode.removeAttribute("inert");
   }, [covered]);
+
+  useEffect(() => {
+    return () => {
+      if (openTimer.current !== null) window.clearTimeout(openTimer.current);
+    };
+  }, []);
+
+  const focusTile = (agentId: string) => {
+    if (openTimer.current !== null) window.clearTimeout(openTimer.current);
+    openTimer.current = null;
+    onFocusTile?.(agentId);
+  };
+
+  const activateDesk = (agentId: string, detail: number) => {
+    if (!canFocus || !onFocusTile) {
+      onOpen(agentId);
+      return;
+    }
+    const now = Date.now();
+    const previous = lastTap.current;
+    const double = detail > 1 || (previous?.id === agentId && now - previous.at < TILE_TAP_MS);
+    lastTap.current = { id: agentId, at: now };
+    if (double) {
+      focusTile(agentId);
+      return;
+    }
+    if (openTimer.current !== null) window.clearTimeout(openTimer.current);
+    openTimer.current = window.setTimeout(() => {
+      openTimer.current = null;
+      onOpen(agentId);
+    }, TILE_TAP_MS);
+  };
+
+  const onDeskKeyDown = (event: KeyboardEvent<HTMLButtonElement>, agentId: string) => {
+    if (!canFocus || event.key !== "Enter") return;
+    event.preventDefault();
+    focusTile(agentId);
+  };
 
   return (
     <div
@@ -63,6 +117,10 @@ export function DeskGrid({
       data-still={still ? "true" : "false"}
       data-count={agents.length}
       data-sheet={covered ? "open" : "shut"}
+      data-arrange={arrange}
+      data-tiles={arrange === "tiles" ? String(tiles) : undefined}
+      data-focus={focusedId ?? "none"}
+      style={arrange === "tiles" ? { ["--tile-count" as string]: String(tiles) } : undefined}
     >
       <h1 className="overview-title" hidden={covered}>
         Overview
@@ -113,6 +171,10 @@ export function DeskGrid({
           </span>
         </span>
         <div className="desk-floor-row">
+        <div
+          className="desk-scroll"
+          data-strip={arrange === "strip" ? "snap" : undefined}
+        >
         <ul className="desk-grid-list">
           {agents.map((agent, index) => {
             const mark = seatMark(index);
@@ -120,8 +182,9 @@ export function DeskGrid({
             const lit = agent.status === "working" && !paused;
             const waiting = agent.status === "waiting";
             const stamp = deskStampFor(agent, linesForAgent(teamId, agent.id));
+            const focused = focusedId === agent.id;
             return (
-              <li key={agent.id}>
+              <li key={agent.id} data-agent={agent.id} data-focused={focused ? "true" : "false"}>
                 <button
                   type="button"
                   className="agent-desk"
@@ -129,8 +192,15 @@ export function DeskGrid({
                   data-status={agent.status}
                   data-paused={paused ? "true" : "false"}
                   data-work={paused ? "halted" : "live"}
+                  data-focused={focused ? "true" : "false"}
                   data-expanding={expandingId === agent.id ? "true" : "false"}
-                  onClick={() => onOpen(agent.id)}
+                  onClick={(event: MouseEvent<HTMLButtonElement>) => activateDesk(agent.id, event.detail)}
+                  onDoubleClick={(event) => {
+                    if (!canFocus) return;
+                    event.preventDefault();
+                    focusTile(agent.id);
+                  }}
+                  onKeyDown={(event) => onDeskKeyDown(event, agent.id)}
                 >
                   <span className="agent-desk-bay">
                     <span className="agent-desk-plaque" data-plaque="engraved">
@@ -193,40 +263,53 @@ export function DeskGrid({
                     </span>
                   </span>
                 </button>
+                <button
+                  type="button"
+                  role="switch"
+                  className="lamp-chain"
+                  data-agent={agent.id}
+                  data-focused={focused ? "true" : "false"}
+                  data-paused={paused ? "true" : "false"}
+                  data-pattern={paused ? "pulled" : "hanging"}
+                  data-still={still ? "true" : "false"}
+                  aria-checked={paused}
+                  aria-label={paused ? `Resume ${agent.name}` : `Pause ${agent.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleWorkPause(teamId, agent.id);
+                  }}
+                >
+                  <span className="chain-link" data-link="1" />
+                  <span className="chain-link" data-link="2" />
+                  <span className="chain-link" data-link="3" />
+                </button>
               </li>
             );
           })}
         </ul>
-        <div className="lamp-chains">
-          {agents.map((agent) => {
-            const paused = pauseKey.split("|").includes(`${teamId}:${agent.id}`);
-            return (
-              <button
-                key={agent.id}
-                type="button"
-                role="switch"
-                className="lamp-chain"
-                data-agent={agent.id}
-                data-paused={paused ? "true" : "false"}
-                data-pattern={paused ? "pulled" : "hanging"}
-                data-still={still ? "true" : "false"}
-                aria-checked={paused}
-                aria-label={paused ? `Resume ${agent.name}` : `Pause ${agent.name}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  toggleWorkPause(teamId, agent.id);
-                }}
-              >
-                <span className="chain-link" data-link="1" />
-                <span className="chain-link" data-link="2" />
-                <span className="chain-link" data-link="3" />
-              </button>
-            );
-          })}
         </div>
         </div>
         <MailTray teamId={teamId} agents={agents} still={still} onOpen={onOpenMail ?? (() => {})} />
       </div>
+      {canFocus && agents.length > 1 ? (
+        <fieldset ref={tilesRef} className="tile-count" data-reach="local" aria-label="Desk tiles">
+          {TILE_COUNTS.map((count) => (
+            <label key={count} className="tile-choice">
+              <input
+                type="radio"
+                name={`desk-tiles-${teamId}`}
+                value={count}
+                checked={tiles === count}
+                aria-label={`${count} tiles`}
+                onChange={() => {
+                  setTileCount(count);
+                }}
+              />
+              <span aria-hidden="true">{count}</span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
       {sheet}
     </div>
   );
