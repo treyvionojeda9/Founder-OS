@@ -7,13 +7,49 @@ mkdirSync("/tmp/founder-os-e2e", { recursive: true });
 
 const shot = (name: string) => `/tmp/founder-os-e2e/${name}.png`;
 
+/**
+ * Freeze the mocked clock.
+ * pauseAt throws if the running clock ticks past the sampled instant before the call lands.
+ * Sample and pause in one turn; if that target is already behind, pin the later instant.
+ */
+async function pauseClockAt(page: Page, time?: number) {
+  const paused = await page.evaluate(async (target) => {
+    const clock = (globalThis as { __pwClock?: { controller: {
+      pauseAt: (time: number) => Promise<void>;
+      setFixedTime: (time: number) => void;
+    } } }).__pwClock?.controller;
+    if (!clock) return false;
+    const at = target ?? Date.now();
+    const pause = async (when: number) => {
+      if (when < Date.now()) {
+        clock.setFixedTime(Date.now());
+        await clock.pauseAt(Date.now());
+        return;
+      }
+      try {
+        await clock.pauseAt(when);
+      } catch (error) {
+        if (!String(error).includes("Cannot fast-forward")) throw error;
+        await clock.pauseAt(Date.now());
+      }
+    };
+    await pause(at);
+    return true;
+  }, time ?? null);
+  if (paused) return;
+  const now = await page.evaluate(() => Date.now());
+  const at = time ?? now;
+  if (at >= now) await page.clock.pauseAt(at);
+  else await page.clock.setFixedTime(now);
+}
+
 /** Hold the hall clock so swing and dolly stay readable. The route waits until enter. */
 async function holdHall(page: Page) {
   await page.clock.install({ time: new Date("2026-10-29T12:00:00Z") });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/home");
   await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeVisible();
-  await page.clock.pauseAt(await page.evaluate(() => Date.now()));
+  await pauseClockAt(page);
 }
 
 async function expectSwingThenDolly(page: Page, name: RegExp, url: RegExp, proj?: string) {
@@ -109,7 +145,7 @@ test("enter and space on a focused door run the open sequence", async ({ page },
   await page.clock.resume();
   await page.goto("/home");
   await expect(page.getByRole("button", { name: /Cloud Agent Team/ })).toBeVisible();
-  await page.clock.pauseAt(await page.evaluate(() => Date.now()));
+  await pauseClockAt(page);
   await page.getByRole("button", { name: /Cloud Agent Team/ }).focus();
   await page.keyboard.press("Space");
   await expectSwingThenDolly(page, /Cloud Agent Team/, /\/team\/cloud-agent-team$/);
