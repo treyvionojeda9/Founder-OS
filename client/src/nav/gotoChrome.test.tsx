@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -66,14 +66,14 @@ describe("go-to chords in the hall", () => {
     await user.keyboard("g");
     expect(document.documentElement).toHaveAttribute("data-chord", "armed");
     await user.keyboard("s");
-    expect(await screen.findByRole("tab", { name: "School" })).toHaveAttribute("aria-selected", "true");
+    await waitFor(() => expect(screen.getByRole("tab", { name: "School" })).toHaveAttribute("aria-selected", "true"));
     expect(screen.getByRole("button", { name: "Open Reading Room" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open Hale Design Lab" })).not.toBeInTheDocument();
     expect(document.querySelector("[data-place='school']")).toBeTruthy();
 
     await user.keyboard("g");
     await user.keyboard("o");
-    expect(await screen.findByRole("heading", { name: "Overview" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument());
     expect(document.querySelector("[data-place='overview']")).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Approve this action?" })).not.toBeInTheDocument();
   });
