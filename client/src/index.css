@@ -1219,8 +1219,12 @@ html:has(.room-portal-layer) body {
 }
 
 .study-bar {
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
+}
+
+.study-side {
+  margin-left: auto;
 }
 
 .study-team {
@@ -1272,6 +1276,10 @@ html:has(.room-portal-layer) body {
   flex-direction: column;
   position: relative;
   padding: 12px 16px 16px;
+}
+
+.study[data-room="board"] .study-scene {
+  overflow: auto;
 }
 
 .desk-grid {
@@ -1389,8 +1397,8 @@ html:has(.room-portal-layer) body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
-  min-height: 48px;
+  min-width: 52px;
+  min-height: 52px;
   padding: 0 10px;
   background: var(--darkwood);
   color: var(--paper);
@@ -2750,8 +2758,12 @@ html:has(.room-portal-layer) body {
   overflow: auto;
 }
 
-.desk-grid[data-tiles="2"] .desk-grid-list {
+.desk-grid[data-tiles="2"] .agent-desk-stage {
   zoom: 0.9;
+}
+
+.app[data-layout="landscape"] .desk-grid[data-arrange="strip"] .agent-desk-stage {
+  zoom: 0.78;
 }
 
 .desk-grid[data-arrange="tiles"] .agent-desk-lamp-row {
@@ -5403,6 +5415,7 @@ input {
   gap: 0;
   width: max-content;
   max-width: calc(100% - 24px);
+  max-height: calc(var(--floor-rise) + var(--wainscot-rise) - 10px);
   pointer-events: none;
 }
 
@@ -5412,6 +5425,7 @@ input {
 
 .mail-mouth {
   display: flex;
+  flex: none;
   flex-direction: column;
   align-items: center;
   gap: 4px;
@@ -5530,10 +5544,13 @@ input {
 
 .mail-tray {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 8px;
   width: min(440px, 100%);
+  min-height: 0;
   margin-top: 4px;
+  overflow: auto;
   padding: 12px 12px 10px;
   border: 4px solid var(--darkwood);
   box-shadow:
@@ -5706,11 +5723,22 @@ input {
   position: fixed;
   inset: 0;
   z-index: 90;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding: 8vh 16px 16px;
+  border: 0;
   background: rgba(27, 26, 36, 0.72);
+  color: var(--paper);
+}
+
+.command-ledger::backdrop {
+  background: transparent;
 }
 
 .ledger-sheet {
@@ -6597,7 +6625,7 @@ html[data-recede="dim"] .mail-caption {
   grid-template-columns: auto minmax(0, 1fr);
   gap: 8px;
   align-items: center;
-  min-height: 32px;
+  min-height: 44px;
   padding: 1px 4px;
   background: var(--paper);
   color: var(--night);
