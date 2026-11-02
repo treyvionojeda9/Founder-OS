@@ -62,4 +62,35 @@ Door leaves, the room dolly's discrete steps, the overview sheet, the mail tray,
 
 `npm run bundle-budget` fails if the main entry gzip exceeds 131,270 bytes (109,380 plus about 20%).
 
-`npx playwright test --config=playwright.perf.config.ts` is the throttled tablet walk. It fails if boot-to-doors exceeds 4,650 ms, the door open records more than 10 long tasks or 900 ms of them or more than 2,500 `fillRect` calls (the open used to be ~97,000), or a room switch exceeds the budget in `e2e/perf-budget.spec.ts`. Those room ceilings are the slower of the lab median and a full throttled walk in this harness, plus about 20%. The harness click is a little slower than the lab script, so the hall ceilings sit above the medians in the table and still below the old hall times.
+`npx playwright test --config=playwright.perf.config.ts` is the throttled tablet walk. It fails if the median boot-to-doors exceeds 4,680 ms, the median door open records more than 10 long tasks or 900 ms of them or more than 2,500 `fillRect` calls (the open used to be ~97,000), or a room-switch median exceeds the ceiling in `e2e/perf-budget.spec.ts`.
+
+## CI gate
+
+The first gate used one sample. That sample moved by room and by runner. The push run failed on the school hall at 684 ms against 620. The PR run failed on overview at 290.5 ms against 260. Nothing else in the client job failed, and the same overview click is not a missed chunk or a sprite decode.
+
+On a 4-vCPU host, with the same 4× throttle, Fast 3G harness, and production build, the overview switch added no resource-timing entries. `drawImage` of the overview wall (a 48×32 wash scaled to a 1520×1060 backing store) returned in under a millisecond. A DevTools trace of that click showed a 65 ms function call in the entry bundle, a 37 ms commit, and 9.5 ms of layout. Roughly 40–55 ms of the old timer was Playwright checking the tab before `pointerdown`. The desk room really does take a couple of hundred milliseconds under 4×, and that cost was already in the lab number (196 ms median). The lab machine was faster in absolute time, so a ceiling 20% over 196 ms (260 ms) sits under a single GitHub sample.
+
+Three cold walks on this host, repeated three times, put the overview median at 242 ms, 266 ms, and 270 ms. The school-hall median was 600 ms, 584 ms, and 557 ms. Individual walks still spike (overview 334 ms from the library, reading room 687 ms, command ledger 275 ms, hall from reading 978 ms, work hall 916 ms). The gate now takes the median of three cold loads, which drops a single spike and still moves when every walk gets slower. The load that recorded work hall at 916 ms had a median of 491 ms.
+
+Ceilings are about 20% above the higher of that median and the GitHub sample that actually failed. Rooms whose walks already spiked on this host use about 20% above the spike, so a slow median still fits. They stay low enough that a real stall does not.
+
+A 400 ms busy loop inside the measured switch, then removed, moved the school-hall median to 935 ms (ceiling 830) and the overview walks to 636 ms, 637 ms, and 701 ms (ceiling 360). Door `fillRect` stayed 634. The sprite ceiling is unchanged.
+
+| Check | Median on this host | Ceiling |
+| --- | ---: | ---: |
+| Boot to doors | 3,895 ms | 4,680 ms |
+| School hall | 546–600 ms (GitHub sample 684) | 830 ms |
+| Work hall | 454–492 ms | 860 ms |
+| Overview | 242–270 ms (GitHub sample 290.5) | 360 ms |
+| Desk drawer | 133–144 ms | 220 ms |
+| Mail tray | 103–135 ms | 180 ms |
+| Pipeline filter | 106–122 ms | 160 ms |
+| Team board | 125–139 ms | 180 ms |
+| Library | 125–138 ms | 200 ms |
+| Overview from library | 233–263 ms | 420 ms |
+| Hall from overview | 754–799 ms | 1,080 ms |
+| Reading room | 458–516 ms | 760 ms |
+| School path | 303–340 ms | 500 ms |
+| Hall from reading | 835–895 ms | 1,180 ms |
+| Field notes | 442–462 ms | 800 ms |
+| Command ledger | 159–195 ms | 340 ms |
