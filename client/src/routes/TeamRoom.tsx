@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { agent, forgeNote, founderSeal } from "../design/sprites";
@@ -28,6 +28,8 @@ import {
   type MachineLine,
 } from "../team/chatStore";
 
+export { primeTeamArt } from "../study/primeTeamArt";
+
 type TeamRoomProps = {
   teamId?: string;
   preview?: boolean;
@@ -44,7 +46,7 @@ function clearTimer(timer: { current: number | null }) {
   timer.current = null;
 }
 
-export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps) {
+export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps) {
   const params = useParams();
   const location = useLocation();
   const request = useMemo(() => {
@@ -746,7 +748,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       ) : null}
     </main>
   );
-}
+});
 
 function ChatSheet({
   lines,

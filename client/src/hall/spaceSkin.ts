@@ -329,15 +329,6 @@ export function deskBandRows(buf: Uint8ClampedArray, cols: number): number {
 }
 
 export function blitPixels(canvas: HTMLCanvasElement, pixels: Uint8ClampedArray, cols: number, rows: number): boolean {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return false;
-  const parent = canvas.parentElement;
-  const width = Math.max(1, Math.round(parent?.clientWidth || canvas.clientWidth || cols));
-  const height = Math.max(1, Math.round(parent?.clientHeight || canvas.clientHeight || rows));
-  if (width < 2 || height < 2) return false;
-  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
   const off = document.createElement("canvas");
   off.width = cols;
   off.height = rows;
@@ -346,8 +337,68 @@ export function blitPixels(canvas: HTMLCanvasElement, pixels: Uint8ClampedArray,
   const image = source.createImageData(cols, rows);
   image.data.set(pixels);
   source.putImageData(image, 0, 0);
+  return blitSource(canvas, off, cols, rows, "");
+}
+
+const layerSource = new Map<string, HTMLCanvasElement>();
+
+function sourceFor(space: SpaceId, kind: "hall" | "wall" | "desk"): { canvas: HTMLCanvasElement; cols: number; rows: number } | null {
+  const key = `${kind}:${space}`;
+  const hit = layerSource.get(key);
+  if (hit) {
+    return { canvas: hit, cols: hit.width, rows: hit.height };
+  }
+  const pixels = kind === "wall" ? paintWallWash(space) : kind === "desk" ? paintDeskWash(space) : paintSpaceBackdrop(space);
+  const cols = kind === "hall" ? SPACE_COLS : 48;
+  const rows = kind === "wall" ? 32 : kind === "desk" ? 16 : SPACE_ROWS;
+  const off = document.createElement("canvas");
+  off.width = cols;
+  off.height = rows;
+  const source = off.getContext("2d");
+  if (!source) return null;
+  const image = source.createImageData(cols, rows);
+  image.data.set(pixels);
+  source.putImageData(image, 0, 0);
+  layerSource.set(key, off);
+  return { canvas: off, cols, rows };
+}
+
+function blitSource(
+  canvas: HTMLCanvasElement,
+  source: HTMLCanvasElement,
+  cols: number,
+  rows: number,
+  stampKey: string,
+): boolean {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return false;
+  const parent = canvas.parentElement;
+  const width = Math.max(1, Math.round(parent?.clientWidth || canvas.clientWidth || cols));
+  const height = Math.max(1, Math.round(parent?.clientHeight || canvas.clientHeight || rows));
+  if (width < 2 || height < 2) return false;
+  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
+  const targetW = width * dpr;
+  const targetH = height * dpr;
+  const stamp = stampKey ? `${stampKey}:${targetW}x${targetH}` : "";
+  if (stamp && canvas.dataset.blit === stamp && canvas.width === targetW && canvas.height === targetH) return true;
+  if (canvas.width !== targetW) canvas.width = targetW;
+  if (canvas.height !== targetH) canvas.height = targetH;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, targetW, targetH);
+  ctx.drawImage(source, 0, 0, targetW, targetH);
+  if (stamp) canvas.dataset.blit = stamp;
   return true;
+}
+
+/**
+ * Hall, wall, and desk washes. The small source is built once, then scaled into the
+ * element with nearest-neighbor. CSS stretch of that source is not the same stipple
+ * once the viewport is not an integer multiple of the grid, so the backing store
+ * stays at device resolution.
+ */
+export function paintSpaceLayer(canvas: HTMLCanvasElement, space: SpaceId, kind: "hall" | "wall" | "desk" = "hall"): boolean {
+  const src = sourceFor(space, kind);
+  if (!src) return false;
+  return blitSource(canvas, src.canvas, src.cols, src.rows, `${kind}:${space}`);
 }

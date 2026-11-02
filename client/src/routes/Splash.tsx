@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { SPLASH_FLAME_FRAME_MS, splashFlameFrames, splashFlameIndex } from "../design/splashFlicker";
+import { primeDoorArt } from "../hall/primeDoorArt";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useFlameLongPress } from "../nav/FlamePress";
+import { prefetchLearnRoom, prefetchTeamRoom } from "./loadRooms";
 
 export function Splash() {
   const navigate = useNavigate();
@@ -24,6 +26,13 @@ export function Splash() {
     const timer = window.setTimeout(go, 1500);
     return () => window.clearTimeout(timer);
   }, [go, reduce]);
+
+  useEffect(() => {
+    void prefetchTeamRoom();
+    void prefetchLearnRoom();
+    const warm = window.setTimeout(() => primeDoorArt(), 0);
+    return () => window.clearTimeout(warm);
+  }, []);
 
   useEffect(() => {
     if (reduce) return;

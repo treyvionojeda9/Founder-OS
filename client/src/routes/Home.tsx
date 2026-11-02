@@ -11,8 +11,10 @@ import { spaceSwapFrames } from "../hall/spaceSkin";
 import { SpaceSoundToggle } from "../hall/SpaceSoundToggle";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
+import { primeDoorArt } from "../hall/primeDoorArt";
 import { SparkFlame } from "../nav/FlamePress";
 import { publishRoom, readHallGoto } from "../nav/room";
+import { prefetchLearnRoom, prefetchTeamRoom } from "./loadRooms";
 import { settingsRepo } from "../storage/services";
 
 type HomeProps = {
@@ -37,6 +39,13 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
   const still = useStillFrame();
   const showToggle = hallDoors.length >= 2;
   sectionNow.current = section;
+
+  useEffect(() => {
+    void prefetchTeamRoom();
+    void prefetchLearnRoom();
+    const warm = window.setTimeout(() => primeDoorArt(), 0);
+    return () => window.clearTimeout(warm);
+  }, []);
 
   useEffect(() => {
     let live = true;

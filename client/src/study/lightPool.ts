@@ -70,8 +70,34 @@ function dot(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number,
   ctx.fillRect(x * scale, y * scale, scale, scale);
 }
 
+const poolCache = new Map<string, HTMLCanvasElement>();
+
+function paintCached(key: string, canvas: HTMLCanvasElement, paint: (target: HTMLCanvasElement) => void) {
+  let src = poolCache.get(key);
+  if (!src) {
+    src = document.createElement("canvas");
+    paint(src);
+    if (src.width > 0) poolCache.set(key, src);
+  }
+  if (canvas.width !== src.width) canvas.width = src.width;
+  if (canvas.height !== src.height) canvas.height = src.height;
+  canvas.style.width = src.style.width;
+  canvas.style.height = src.style.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx || src.width === 0) return;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(src, 0, 0);
+}
+
 /** Wide stippled pool, a short contact bar, or a broken ring. Shapes differ, not only colours. */
 export function paintDeskPool(canvas: HTMLCanvasElement, status: AgentStatus) {
+  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
+  paintCached(`desk:${status}:${dpr}`, canvas, (target) => paintDeskPoolNow(target, status));
+}
+
+function paintDeskPoolNow(canvas: HTMLCanvasElement, status: AgentStatus) {
   const posture = lampPosture(status);
   const { cols, rows } = poolSpec(status);
   const scale = posture === "working" ? 6 : 4;
@@ -126,6 +152,11 @@ export function paintDeskPool(canvas: HTMLCanvasElement, status: AgentStatus) {
 
 /** Light that lands on the sheet. Idle is a thin shadow, not a smaller copy of the pool. */
 export function paintPaperWash(canvas: HTMLCanvasElement, status: AgentStatus) {
+  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
+  paintCached(`paper:${status}:${dpr}`, canvas, (target) => paintPaperWashNow(target, status));
+}
+
+function paintPaperWashNow(canvas: HTMLCanvasElement, status: AgentStatus) {
   const posture = lampPosture(status);
   const { cols, rows } = washSpec(status);
   const scale = 4;

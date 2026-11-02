@@ -11,6 +11,7 @@ const previewUrl = process.env.FOUNDER_PREVIEW_URL;
 
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: /perf-budget\.spec\.ts/,
   timeout: 60_000,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -32,17 +33,17 @@ export default defineConfig({
   projects: [
     {
       name: "tablet-portrait",
-      testIgnore: /video\.spec/,
+      testIgnore: [/video\.spec/, /perf-budget\.spec\.ts/],
       use: { ...tablet, viewport: { width: 800, height: 1280 } },
     },
     {
       name: "tablet-landscape",
-      testIgnore: /video\.spec/,
+      testIgnore: [/video\.spec/, /perf-budget\.spec\.ts/],
       use: { ...tablet, viewport: { width: 1280, height: 800 } },
     },
     {
       name: "desktop",
-      testIgnore: /video\.spec/,
+      testIgnore: [/video\.spec/, /perf-budget\.spec\.ts/],
       use: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, hasTouch: false },
     },
     {

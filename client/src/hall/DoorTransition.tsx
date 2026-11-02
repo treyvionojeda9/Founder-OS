@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { WarmCover } from "../components/HallLight";
 import { doorSpec } from "../design/sprites/doorFaces";
 import { doors } from "../fixtures/doors";
 import { useStillFrame } from "../hooks/useStillFrame";
-import { LearnStub } from "../routes/LearnStub";
-import { TeamRoom } from "../routes/TeamRoom";
+import { LearnRoomReady, TeamRoomReady } from "../routes/loadRooms";
 import { DoorApiContext, type HallLocationState } from "./doorApi";
 import { DoorGhost } from "./DoorGhost";
 import { fallbackFrame, type DoorFrame } from "./doorFrame";
@@ -125,8 +124,10 @@ export function DoorTransition({ children }: { children: ReactNode }) {
     [clearTimers, navigate, still],
   );
 
+  const api = useMemo(() => ({ open, arm, shut }), [open, arm, shut]);
+
   return (
-    <DoorApiContext.Provider value={{ open, arm, shut }}>
+    <DoorApiContext.Provider value={api}>
       <div className="route-shell" data-cover={cover} style={{ "--reveal-ms": `${REVEAL_MS}ms` } as CSSProperties}>
         {children}
         {cover !== "idle" ? <WarmCover className="route-cover" phase={cover} /> : null}
@@ -155,9 +156,9 @@ function RoomPortal({ reveal }: { reveal: Reveal }) {
     >
       <div className={reveal.mode === "shut" ? "room-portal is-shut" : "room-portal"} data-mode={reveal.mode}>
         {reveal.kind === "learn" ? (
-          <LearnStub doorId={reveal.doorId} preview />
+          <LearnRoomReady doorId={reveal.doorId} preview />
         ) : (
-          <TeamRoom teamId={reveal.doorId} preview />
+          <TeamRoomReady teamId={reveal.doorId} preview />
         )}
       </div>
       {reveal.mode === "shut" ? <DoorGhost frame={reveal.frame} /> : null}
