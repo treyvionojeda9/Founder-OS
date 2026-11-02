@@ -77,7 +77,7 @@ test.describe("pixel chrome and type", () => {
     await pixelFont(page, ".pixel-bar button");
     await pixelFont(page, ".study-team");
     await pixelFont(page, ".paper-log p");
-    const chatSize = proj === "desktop" ? "16px" : "24px";
+    const chatSize = "16px";
     await expect(page.locator(".paper h1")).toHaveCSS("font-size", chatSize);
     await expect(page.locator(".machine-line > p").first()).toHaveCSS("font-size", chatSize);
     await expect(page.locator(".desk-nameplate .status-chip")).toHaveCSS("background-color", ember);

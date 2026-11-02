@@ -47,7 +47,10 @@ export function StudyStage({
   const poolPalette = lampPoolPalette(variant);
   const settle = usePaperSettle(pose, still);
   const fitted = variant === "work" && pose === "desk" && !!paper;
-  const stageStyle = { "--dolly-ms": `${DOLLY_MS}ms` } as CSSProperties;
+  const stageStyle = {
+    "--dolly-ms": `${DOLLY_MS}ms`,
+    "--lamp-h": `${32 * lampScale}px`,
+  } as CSSProperties;
   return (
     <div
       className="study-stage"

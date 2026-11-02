@@ -25,21 +25,28 @@ test.describe("agent desk", () => {
     const paper = await boxOf(page, ".paper");
     if (!viewport) throw new Error("viewport missing");
     const ratio = desk.width / viewport.width;
-    expect(ratio).toBeGreaterThanOrEqual(0.4);
-    expect(ratio).toBeLessThanOrEqual(0.55);
+    if (info.project.name === "tablet-portrait") {
+      expect(ratio).toBeGreaterThanOrEqual(0.85);
+      expect(paper.width).toBeGreaterThan(paper.height);
+    } else {
+      expect(ratio).toBeGreaterThanOrEqual(0.4);
+      expect(ratio).toBeLessThanOrEqual(0.62);
+    }
     expect(paper.x).toBeGreaterThanOrEqual(top.x - 1);
     expect(paper.y).toBeGreaterThanOrEqual(top.y - 1);
     expect(paper.x + paper.width).toBeLessThanOrEqual(top.x + top.width + 1);
     expect(paper.y + paper.height).toBeLessThanOrEqual(top.y + top.height + 1);
 
     const fontSize = await page.locator(".machine-line > p").first().evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
-    expect(fontSize).toBeGreaterThanOrEqual(info.project.name === "desktop" ? 16 : 18);
+    expect(fontSize).toBeGreaterThanOrEqual(16);
+    expect(fontSize).toBeLessThanOrEqual(info.project.name === "tablet-portrait" ? 20 : 24);
     await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
     await expect(page.locator("[data-approval='inline']")).toBeVisible();
     await expect(page.locator(".approval-overlay")).toHaveCount(0);
     await expect(page.getByText("Keep it on this sheet.")).toBeVisible();
     await expect(page.getByText("I can publish the forge note to the studio channel.")).toBeVisible();
     await expect(page.getByLabel("Message the CEO")).toBeVisible();
+    await expect(page.getByPlaceholder("Message the CEO")).toBeVisible();
 
     const agent = await boxOf(page, ".ceo-seat");
     expect(agent.y).toBeLessThan(top.y);
@@ -88,9 +95,12 @@ test.describe("agent desk", () => {
         return { text: node.innerText.replace(/\s+/g, " ").trim().slice(0, 48), full, seen };
       });
       const visible = boxes.filter((item) => item.seen.width > 1 && item.seen.height > 1);
-      const clipped = visible.filter(
-        (item) => item.seen.height < item.full.height - 1 || item.seen.width < item.full.width - 1,
-      );
+      const clipped = visible
+        .filter((item) => item.seen.height < item.full.height - 1 || item.seen.width < item.full.width - 1)
+        .map((item) => item.text);
+      const overflow = rows
+        .filter((node) => node.scrollWidth > node.clientWidth + 1 || node.scrollHeight > node.clientHeight + 1)
+        .map((node) => node.innerText.replace(/\s+/g, " ").trim().slice(0, 48));
       const hits: string[] = [];
       for (let i = 0; i < visible.length; i += 1) {
         for (let j = i + 1; j < visible.length; j += 1) {
@@ -107,7 +117,7 @@ test.describe("agent desk", () => {
           if (overlap && !contains) hits.push(`${visible[i].text} ∩ ${visible[j].text}`);
         }
       }
-      return { clipped: clipped.map((item) => item.text), hits };
+      return { clipped: [...clipped, ...overflow], hits };
     });
     expect(collisions.clipped, JSON.stringify(collisions.clipped)).toEqual([]);
     expect(collisions.hits, JSON.stringify(collisions.hits)).toEqual([]);

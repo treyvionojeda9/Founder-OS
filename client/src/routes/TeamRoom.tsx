@@ -664,7 +664,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
         ) : (
         <StudyStage
           lampStatus={lampStatus}
-          lampScale={lampScale}
+          lampScale={5}
           pose={pose}
           still={still}
           approach={approach}
@@ -743,6 +743,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
                       id={composerId}
                       ref={composerRef}
                       rows={1}
+                      placeholder={composerLabel}
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}
                     />

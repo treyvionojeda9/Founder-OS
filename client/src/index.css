@@ -6801,75 +6801,82 @@ html[data-recede="dim"] .mail-caption {
   }
 }
 
-/* Wide, low desk seen from slightly above. The top is a trapezoid; the front edge stays short. */
+/* Wide, low desk seen from slightly above. The top is a trapezoid; the front edge stays short.
+   --paper-frac is the wood shelf (lamp base) as a fraction of the desk top. */
+.study-stage[data-variant="work"] {
+  --desk-top-top: 16%;
+  --desk-top-h: 62%;
+  --paper-frac: 0.22;
+}
+
 .study-stage[data-variant="work"] .desk-rig {
   left: 50%;
   right: auto;
   width: 54vw;
-  height: 90%;
+  height: 86%;
   top: auto;
   bottom: 1%;
   transform: translateX(-50%);
 }
 
+.app[data-layout="portrait"] .study-stage[data-variant="work"] {
+  --desk-top-top: 12%;
+  --desk-top-h: 68%;
+  --paper-frac: 0.2;
+}
+
 .app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-rig {
-  height: 96%;
-  bottom: 0;
+  width: 96vw;
+  height: 70%;
+  bottom: 2%;
 }
 
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-top {
-  top: 6%;
-  height: 86%;
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .note-spot {
+  left: auto;
+  right: 6%;
+  top: 2%;
 }
 
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-front,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-nameplate {
-  top: 92%;
+.app[data-layout="landscape"] .study-stage[data-variant="work"] {
+  --desk-top-top: 8%;
+  --desk-top-h: 82%;
+  --paper-frac: 0.05;
 }
 
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-leg {
-  top: 96%;
+.app[data-layout="desktop"] .study-stage[data-variant="work"] {
+  --desk-top-top: 8%;
+  --desk-top-h: 80%;
+  --paper-frac: 0.05;
 }
 
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-top {
-  top: 4%;
-  height: 91%;
-}
-
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-front,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-nameplate {
-  top: 95%;
-}
-
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-leg {
-  top: 96%;
-}
-
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
-  top: 0;
-  bottom: 0;
-}
-
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-title {
-  line-height: 32px;
-  padding: 0 12px;
-}
-
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-form {
-  padding-top: 0;
-  padding-bottom: 0;
+@media (max-height: 860px) {
+  .app[data-layout="desktop"] .study-stage[data-variant="work"] {
+    --desk-top-top: 4%;
+    --desk-top-h: 86%;
+  }
 }
 
 .app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-rig {
-  width: 50vw;
-  height: 96%;
+  width: 60vw;
+  height: 90%;
   bottom: 0;
 }
 
 .app[data-layout="desktop"] .study-stage[data-variant="work"] .desk-rig {
-  width: 50vw;
-  height: 92%;
+  width: 56vw;
+  height: 86%;
   bottom: 0;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"],
+.app[data-layout="desktop"] .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
+  left: 20%;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .lamp-spot,
+.app[data-layout="desktop"] .study-stage[data-variant="work"] .lamp-spot {
+  left: 4%;
+  top: calc(var(--desk-top-top) + 0.22 * var(--desk-top-h) - var(--lamp-h, 160px));
 }
 
 .study-stage[data-variant="work"] .desk-shadow {
@@ -6885,10 +6892,10 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .study-stage[data-variant="work"] .desk-top {
-  left: 4%;
-  right: 8%;
-  top: 12%;
-  height: 72%;
+  left: 3%;
+  right: 6%;
+  top: var(--desk-top-top);
+  height: var(--desk-top-h);
   overflow: visible;
   transform: rotateX(8deg);
   transform-origin: 50% 100%;
@@ -6900,28 +6907,46 @@ html[data-recede="dim"] .mail-caption {
   box-shadow: none;
 }
 
+.study-stage[data-variant="work"] .desk-top::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--wood);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .study-stage[data-variant="work"] .desk-top .space-wash,
 .study-stage[data-variant="work"] .desk-top .plank {
   display: none;
 }
 
+.study-stage[data-variant="work"] .back-wall .space-wash {
+  inset: auto;
+  left: 28%;
+  bottom: 6%;
+  width: 44%;
+  height: 28%;
+  opacity: 0.34;
+}
+
 .study-stage[data-variant="work"] .desk-pool {
-  left: 10%;
-  top: 4%;
-  width: 128px;
-  height: 56px;
+  left: 3%;
+  top: 10%;
+  width: 88px !important;
+  height: 20px !important;
   overflow: hidden;
-  opacity: 0.95;
-  z-index: 1;
-  clip-path: ellipse(48% 42% at 42% 58%);
+  opacity: 0.4;
+  z-index: 2;
+  clip-path: ellipse(48% 46% at 42% 70%);
 }
 
 .study-stage[data-variant="work"] .desk-side {
   position: absolute;
-  right: 4%;
-  top: 62%;
+  right: 2%;
+  top: calc(var(--desk-top-top) + 0.42 * var(--desk-top-h));
   width: 5%;
-  height: 22%;
+  height: 20%;
   background: var(--darkwood);
   border: 4px solid var(--night);
   box-shadow: inset 4px 0 0 var(--plum);
@@ -6932,17 +6957,17 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .study-stage[data-variant="work"] .desk-front {
-  left: 2%;
-  right: 6%;
-  top: 84%;
-  height: 7%;
+  left: 1%;
+  right: 4%;
+  top: calc(var(--desk-top-top) + var(--desk-top-h));
+  height: 6%;
   background: var(--darkwood);
   z-index: 4;
 }
 
 .study-stage[data-variant="work"] .desk-leg {
-  top: 93%;
-  height: 6%;
+  top: calc(var(--desk-top-top) + var(--desk-top-h) + 6%);
+  height: 4%;
   width: 16px;
   z-index: 3;
 }
@@ -6982,15 +7007,15 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .study-stage[data-variant="work"] .lamp-spot {
-  left: 8%;
-  top: 10%;
+  left: 5%;
+  top: calc(var(--desk-top-top) + var(--paper-frac) * var(--desk-top-h) - var(--lamp-h, 160px) - 4px);
   z-index: 6;
 }
 
 .study-stage[data-variant="work"] .desk-nameplate {
   position: absolute;
   left: 8%;
-  top: 84%;
+  top: calc(var(--desk-top-top) + var(--desk-top-h));
   z-index: 7;
   pointer-events: none;
   display: flex;
@@ -7002,22 +7027,26 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .study-stage[data-variant="work"] .note-spot {
-  left: auto;
-  right: 14%;
-  top: 2%;
+  left: 5%;
+  right: auto;
+  top: 42%;
   transform: none;
-  z-index: 2;
+  z-index: 4;
 }
 
 .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
-  left: 5%;
-  right: 4%;
-  top: 6%;
-  bottom: 2%;
+  left: 3%;
+  right: 3%;
+  top: calc(var(--paper-frac) * 100%);
+  bottom: 3%;
   width: auto;
   height: auto;
   transform: none;
   z-index: 5;
+}
+
+.study-stage[data-variant="work"] .paper-wash {
+  display: none;
 }
 
 .study-stage[data-variant="work"] .paper-log h1,
@@ -7077,6 +7106,9 @@ html[data-recede="dim"] .mail-caption {
 .study-stage[data-variant="work"] .approval-card .action-chip {
   min-height: 52px;
   margin-top: 0;
+  white-space: normal;
+  overflow: visible;
+  text-align: center;
 }
 
 .study-stage[data-variant="work"] .paper {
@@ -7099,17 +7131,13 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .app[data-layout="portrait"] .study-stage[data-variant="work"] .paper-title,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-title {
-  font-size: var(--type-title);
-  line-height: var(--leading-title);
-}
-
 .app[data-layout="portrait"] .study-stage[data-variant="work"] .machine-line > p:first-child,
 .app[data-layout="portrait"] .study-stage[data-variant="work"] .founder-line > p:last-child,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-title,
 .app[data-layout="landscape"] .study-stage[data-variant="work"] .machine-line > p:first-child,
 .app[data-layout="landscape"] .study-stage[data-variant="work"] .founder-line > p:last-child {
-  font-size: var(--type-title);
-  line-height: 32px;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .study-stage[data-variant="work"] .composer-label {
@@ -7122,6 +7150,11 @@ html[data-recede="dim"] .mail-caption {
   line-height: var(--leading-body);
   min-height: 44px;
   max-height: 44px;
+}
+
+.study-stage[data-variant="work"] .composer-label textarea::placeholder {
+  color: var(--darkwood);
+  opacity: 1;
 }
 
 .approval-card {
@@ -7179,6 +7212,16 @@ html[data-recede="dim"] .mail-caption {
   white-space: nowrap;
   min-height: 52px;
   padding: 4px 8px;
+}
+
+.study-stage[data-variant="work"] .approval-card .action-chip {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  white-space: normal;
+  overflow: visible;
+  text-align: center;
+  padding: 8px 10px;
 }
 
 .approval-card-actions .approve {
