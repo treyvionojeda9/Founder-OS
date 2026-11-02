@@ -2686,6 +2686,11 @@ html:has(.room-portal-layer) body {
   color: var(--night);
 }
 
+.app[data-layout="portrait"] .approval-slip {
+  top: auto;
+  bottom: 16px;
+}
+
 .ran-nothing {
   align-self: flex-start;
   display: inline-block;
@@ -6766,6 +6771,289 @@ html[data-recede="dim"] .mail-caption {
   background: var(--night);
   border-color: var(--paper);
   box-shadow: 4px 0 0 var(--ember);
+}
+
+.copy-link,
+.copy-link .copy-corner,
+.copy-link .copy-pin {
+  animation: none;
+}
+
+/* Walk-up dolly. Duration matches DOLLY_MS. Reduced motion never sets data-still="false". */
+.study-stage[data-variant="work"][data-approach="far"] {
+  transform: scale(0.62);
+  transform-origin: 50% 70%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .study-stage[data-variant="work"][data-approach="near"][data-still="false"] {
+    transform-origin: 50% 70%;
+    animation: desk-dolly var(--dolly-ms, 280ms) steps(5, end) both;
+  }
+}
+
+@keyframes desk-dolly {
+  from {
+    transform: scale(0.62);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* A desk, not a wall: about half the viewport, with a top, a front, a side, and a shadow. */
+.study-stage[data-variant="work"] .desk-rig {
+  left: 50%;
+  right: auto;
+  width: 54vw;
+  height: 78%;
+  top: auto;
+  bottom: 1%;
+  transform: translateX(-50%);
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-rig {
+  width: 50vw;
+  height: 82%;
+}
+
+.app[data-layout="desktop"] .study-stage[data-variant="work"] .desk-rig {
+  width: 48vw;
+  height: 84%;
+}
+
+.study-stage[data-variant="work"] .desk-shadow {
+  position: absolute;
+  left: 4%;
+  right: 8%;
+  bottom: 2%;
+  height: 12px;
+  background: var(--night);
+  box-shadow: 12px 4px 0 var(--slate);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.study-stage[data-variant="work"] .desk-top {
+  left: 0;
+  right: 12%;
+  top: 16%;
+  height: 66%;
+  overflow: hidden;
+  transform: rotateX(4deg);
+  transform-origin: 50% 50%;
+  z-index: 3;
+  border-width: 4px;
+  box-shadow: inset 0 0 0 4px var(--darkwood);
+}
+
+.study-stage[data-variant="work"] .desk-side {
+  position: absolute;
+  right: 2%;
+  top: 18%;
+  width: 12%;
+  height: 62%;
+  background: var(--darkwood);
+  border: 4px solid var(--night);
+  box-shadow: inset 6px 0 0 var(--plum);
+  transform: skewY(-18deg);
+  transform-origin: left top;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.study-stage[data-variant="work"] .desk-front {
+  left: 0;
+  right: 12%;
+  top: 82%;
+  height: 7%;
+  background: var(--darkwood);
+  z-index: 4;
+}
+
+.study-stage[data-variant="work"] .desk-leg {
+  top: 88%;
+  height: 9%;
+  width: 18px;
+  z-index: 3;
+}
+
+.study-stage[data-variant="work"] .leg-left {
+  left: 6%;
+}
+
+.study-stage[data-variant="work"] .leg-right {
+  right: 20%;
+}
+
+.study-stage[data-variant="work"] .behind-cast {
+  top: 22%;
+  bottom: auto;
+  z-index: 2;
+}
+
+.study-stage[data-variant="work"] .ceo-seat {
+  flex-direction: column;
+  align-items: center;
+}
+
+.study-stage[data-variant="work"] .ceo-seat figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.study-stage[data-variant="work"] .ceo-seat .agent-figure {
+  position: relative;
+  line-height: 0;
+}
+
+.study-stage[data-variant="work"] .lamp-spot {
+  left: 2px;
+  top: 28%;
+  z-index: 6;
+}
+
+.study-stage[data-variant="work"] .note-spot {
+  left: auto;
+  right: 16%;
+  top: 2%;
+  transform: none;
+  z-index: 6;
+}
+
+.study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
+  left: 120px;
+  right: 12px;
+  top: 12px;
+  bottom: 10px;
+  width: auto;
+  height: auto;
+  transform: none;
+  z-index: 5;
+}
+
+.study-stage[data-variant="work"] .paper-form {
+  padding: 6px;
+}
+
+.study-stage[data-variant="work"] .composer-label textarea {
+  min-height: 44px;
+}
+
+.study-stage[data-variant="work"] .paper {
+  min-height: 0;
+}
+
+.study-stage[data-variant="work"] .paper h1,
+.study-stage[data-variant="work"] .machine-line > p:first-child,
+.study-stage[data-variant="work"] .founder-line .who,
+.study-stage[data-variant="work"] .founder-line > p:last-child,
+.study-stage[data-variant="work"] .approval-card-label,
+.study-stage[data-variant="work"] .approval-card-effect,
+.study-stage[data-variant="work"] .approval-wait,
+.study-stage[data-variant="work"] .composer-label,
+.study-stage[data-variant="work"] .composer-label textarea,
+.study-stage[data-variant="work"] .paper-form button,
+.study-stage[data-variant="work"] .approval-card button {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .paper h1,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .machine-line > p:first-child,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .founder-line .who,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .founder-line > p:last-child,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-card-label,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-card-effect,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-wait,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .composer-label,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .composer-label textarea,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .paper-form button,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-card button,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper h1,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .machine-line > p:first-child,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .founder-line .who,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .founder-line > p:last-child,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-card-label,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-card-effect,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-wait,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .composer-label,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .composer-label textarea,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-form button,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-card button {
+  font-size: var(--type-title);
+  line-height: var(--leading-title);
+}
+
+.approval-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 4px solid var(--darkwood);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--slate);
+}
+
+.approval-wait {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-pixel);
+  color: var(--night);
+}
+
+.approval-glyph {
+  display: block;
+  line-height: 0;
+}
+
+.approval-card-label,
+.approval-card-effect {
+  margin: 0;
+  color: var(--night);
+}
+
+.approval-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.approval-card-actions button {
+  flex: 1 1 8em;
+  min-width: 44px;
+  min-height: 48px;
+}
+
+.approval-card-actions .approve {
+  background: var(--ember);
+  color: var(--night);
+  border: 4px solid var(--night);
+}
+
+.approval-card-actions .decline {
+  background: var(--paper);
+  color: var(--night);
+  border: 4px dashed var(--darkwood);
+}
+
+.door-ghost-bay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  perspective-origin: 50% 42%;
+}
+
+.door-ghost {
+  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
 }
 
 .copy-link,

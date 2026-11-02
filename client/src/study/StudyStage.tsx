@@ -1,6 +1,7 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { StatusFrame } from "../design/StatusFrame";
 import type { AgentStatus } from "../team/chatStore";
+import { DOLLY_MS } from "../hall/doorMotion";
 import { SpaceWash } from "../hall/SpaceWash";
 import { lampPoolPalette, paintDeskPool, paintPaperWash } from "./lightPool";
 import { usePaperSettle } from "./paperSettle";
@@ -11,6 +12,7 @@ const SHELF_BAYS = [0, 1, 2, 3] as const;
 
 export type PaperPose = "desk" | "lifted";
 export type StudyVariant = "work" | "school";
+export type DeskApproach = "far" | "near";
 
 type StudyStageProps = {
   lampStatus: AgentStatus;
@@ -22,6 +24,8 @@ type StudyStageProps = {
   paper?: ReactNode;
   pose?: PaperPose;
   still?: boolean;
+  /** Walk-up: far is the room at a distance, near is the desk the dolly lands on. */
+  approach?: DeskApproach;
   caption?: ReactNode;
   overlay?: ReactNode;
 };
@@ -36,17 +40,22 @@ export function StudyStage({
   paper,
   pose = "desk",
   still = false,
+  approach = "near",
   caption,
   overlay,
 }: StudyStageProps) {
   const poolPalette = lampPoolPalette(variant);
   const settle = usePaperSettle(pose, still);
+  const fitted = variant === "work" && pose === "desk" && !!paper;
+  const stageStyle = { "--dolly-ms": `${DOLLY_MS}ms` } as CSSProperties;
   return (
     <div
       className="study-stage"
       data-variant={variant}
       data-space={variant}
       data-lighting={variant === "school" ? "school" : "ember"}
+      data-approach={variant === "work" ? approach : undefined}
+      style={stageStyle}
     >
       <div className="study-world">
         <div className="back-wall" data-material="plaster" aria-hidden="true">
@@ -61,7 +70,8 @@ export function StudyStage({
           {variant === "school" ? <ReadingFloor /> : null}
         </div>
         {behind ? <div className="behind-cast">{behind}</div> : null}
-        <div className="desk-rig">
+        <div className="desk-rig" data-desk={variant === "work" ? "fitted" : "study"}>
+          {variant === "work" ? <span className="desk-shadow" aria-hidden="true" /> : null}
           <div className="desk-top" data-material="desk">
             <SpaceWash space={variant} part="desk" />
             <span className="plank plank-a" aria-hidden="true" />
@@ -69,7 +79,18 @@ export function StudyStage({
             <span className="plank plank-c" aria-hidden="true" />
             <DeskPool status={lampStatus} palette={poolPalette} />
             {onDesk}
+            {fitted ? (
+              <div
+                className="paper-slot"
+                data-pose={pose}
+                data-still={still ? "true" : "false"}
+                data-settle={settle ?? undefined}
+              >
+                {paper}
+              </div>
+            ) : null}
           </div>
+          {variant === "work" ? <span className="desk-side" data-material="wainscot" aria-hidden="true" /> : null}
           <div className="desk-front" data-material="wainscot" aria-hidden="true">
             {variant === "school" ? (
               <span className="desk-apron" data-material="desk">
@@ -84,7 +105,7 @@ export function StudyStage({
           {beside}
         </div>
       </div>
-      {paper ? (
+      {paper && !fitted ? (
         <div
           className="paper-slot"
           data-pose={pose}

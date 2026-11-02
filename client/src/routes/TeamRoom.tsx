@@ -1,8 +1,9 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
-import { agent, forgeNote, founderSeal } from "../design/sprites";
-import { raisedHand } from "../design/sprites/seatedAgent";
+import { forgeNote, founderSeal } from "../design/sprites";
+import { glyphHand } from "../design/sprites/statusGlyphs";
+import { faceWashByMark, raisedHand, seatMark, seatedByMark } from "../design/sprites/seatedAgent";
 import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
@@ -11,7 +12,7 @@ import { DeskGrid } from "../study/DeskGrid";
 import type { MailItem } from "../study/mailSlot";
 import { isWorkPaused, pauseSnapshot, subscribeWorkPause } from "../study/deskPause";
 import { OverviewSheet } from "../study/OverviewSheet";
-import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
+import { PaperWash, StudyStage, type DeskApproach, type PaperPose } from "../study/StudyStage";
 import { agentFocus, pickWorkTeam, readDeepRequest, resolveLibraryNote } from "../nav/deepLink";
 import { publishRoom, readRoomGoto, rememberTeam } from "../nav/room";
 import { noteRepo } from "../storage/services";
@@ -68,8 +69,8 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
   const shut = useDoorShut();
   const layout = useFormFactor();
   const still = useStillFrame();
-  const agentScale = layout === "portrait" ? 3 : 2;
   const lampScale = layout === "portrait" ? 4 : 3;
+  const seatScale = layout === "portrait" ? 6 : 5;
   const [tab, setTab] = useState<TabKey>(
     request?.surface === "overview" ||
       request?.surface === "library" ||
@@ -99,6 +100,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
   const [pending, setPending] = useState<MachineLine["action"] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pose, setPose] = useState<PaperPose>("desk");
+  const [approach, setApproach] = useState<DeskApproach>(preview || still ? "near" : "far");
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const expandTimer = useRef<number | null>(null);
@@ -273,6 +275,16 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
   }, [preview, team, drawer, tab]);
 
   useEffect(() => {
+    if (preview || still) {
+      setApproach("near");
+      return;
+    }
+    setApproach("far");
+    const id = window.setTimeout(() => setApproach("near"), 32);
+    return () => window.clearTimeout(id);
+  }, [preview, still]);
+
+  useEffect(() => {
     if (pose !== "lifted") return;
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape" || pending) return;
@@ -315,6 +327,8 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
   const sheetName = sheetRecord?.name ?? "Agent";
   const sheetStatus: AgentStatus = sheetRecord?.status ?? "idle";
   const sheetComposerId = !sheetRecord || preview ? undefined : `composer-${sheetRecord.id}`;
+  const seatIndex = Math.max(0, team.agents.findIndex((item) => item.id === (selected === "overview" ? "ceo" : selected)));
+  const mark = seatMark(seatIndex);
 
   const settle = (choice: "approve" | "decline") => {
     setPending(null);
@@ -497,7 +511,12 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
       data-deep={request?.surface ?? "room"}
       data-deep-focus={showGrid ? (sheetId ?? "none") : "none"}
     >
-      <div className="pixel-bar">
+      <div
+        className="pixel-bar"
+        ref={(node) => {
+          if (node) node.inert = pending !== null;
+        }}
+      >
       <header className="study-bar">
         <button type="button" className="text-link" onClick={leave}>
           Back
@@ -569,7 +588,12 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
         })}
       </div>
       </div>
-      <div className="study-scene">
+      <div
+        className="study-scene"
+        ref={(node) => {
+          if (node) node.inert = pending !== null;
+        }}
+      >
         {drawer === "library" ? (
           <LibraryShelf
             teamId={team.id}
@@ -614,6 +638,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
                     <ChatSheet
                       lines={lines}
                       notice={notice}
+                      onSettle={settle}
                       onReview={(action) => {
                         setNotice(null);
                         setPending(action);
@@ -642,14 +667,26 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
           lampScale={lampScale}
           pose={pose}
           still={still}
+          approach={approach}
           behind={
-            <figure className="figure ceo-stand agent-stand" data-pose={lampStatus === "waiting" ? "raised-hand" : "standing"}>
-              <Sprite rows={agent} scale={agentScale} title={figureName} />
-              {lampStatus === "waiting" ? (
-                <span className="raised-hand stand-hand">
-                  <Sprite rows={raisedHand} scale={agentScale} title="" />
-                </span>
-              ) : null}
+            <figure
+              className="figure ceo-stand agent-stand ceo-seat"
+              data-pose={lampStatus === "waiting" ? "raised-hand" : "seated"}
+              data-seat={mark}
+            >
+              <span className="agent-figure">
+                <Sprite rows={seatedByMark[mark]} scale={seatScale} title={figureName} />
+                {lampStatus === "waiting" ? (
+                  <span className="raised-hand stand-hand">
+                    <Sprite rows={raisedHand} scale={seatScale} title="" />
+                  </span>
+                ) : null}
+                {lampStatus === "working" ? (
+                  <span className="face-pool" aria-hidden="true">
+                    <Sprite rows={faceWashByMark[mark]} scale={seatScale} title="" />
+                  </span>
+                ) : null}
+              </span>
               <figcaption>{figureName}</figcaption>
             </figure>
           }
@@ -691,6 +728,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
                 <ChatSheet
                   lines={lines}
                   notice={notice}
+                  onSettle={settle}
                   onReview={(action) => {
                     setNotice(null);
                     setPending(action);
@@ -707,7 +745,6 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
                       rows={layout === "portrait" ? 3 : 2}
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}
-                      onFocus={lift}
                     />
                   </label>
                   <button type="submit">Send</button>
@@ -754,13 +791,20 @@ function ChatSheet({
   lines,
   notice,
   onReview,
+  onSettle,
 }: {
   lines: ChatLine[];
   notice: string | null;
   onReview: (action: NonNullable<MachineLine["action"]>) => void;
+  onSettle: (choice: "approve" | "decline") => void;
 }) {
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const log = transcriptRef.current?.closest(".paper-log");
+    if (log instanceof HTMLElement) log.scrollTop = log.scrollHeight;
+  }, [lines, notice]);
   return (
-    <div className="transcript" role="log" aria-live="polite">
+    <div className="transcript" role="log" aria-live="polite" ref={transcriptRef}>
       {lines.map((line) =>
         isMachineLine(line) ? (
           <article key={line.id} className="machine-line">
@@ -771,16 +815,50 @@ function ChatSheet({
               <span className="unverified">{STAMP}</span>
             </p>
             {line.action ? (
-              <button
-                type="button"
-                className="action-chip"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onReview(line.action!);
-                }}
-              >
-                {line.action.label}
-              </button>
+              <div className="approval-card" data-approval="inline">
+                <p className="approval-wait">
+                  <span className="approval-glyph" aria-hidden="true">
+                    <Sprite rows={glyphHand} scale={2} title="" />
+                  </span>
+                  <span>Waiting for you</span>
+                </p>
+                <p className="approval-card-label">{line.action.label}</p>
+                <p className="approval-card-effect">This would {line.action.kind}. Nothing is sent.</p>
+                <div className="approval-card-actions">
+                  <button
+                    type="button"
+                    className="approve"
+                    data-choice="approve"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSettle("approve");
+                    }}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    className="decline"
+                    data-choice="decline"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSettle("decline");
+                    }}
+                  >
+                    Decline
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="action-chip"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onReview(line.action!);
+                  }}
+                >
+                  {line.action.label}
+                </button>
+              </div>
             ) : null}
           </article>
         ) : (

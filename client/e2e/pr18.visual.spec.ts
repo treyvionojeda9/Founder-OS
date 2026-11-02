@@ -158,7 +158,7 @@ test.describe("approval stamp over the live room", () => {
 
     const lamp = await page.locator(".lamp-spot .lamp-flame canvas").boundingBox();
     const slip = await page.locator(".approval-slip").boundingBox();
-    const ceo = await page.locator(".ceo-stand canvas").boundingBox();
+    const ceo = await page.getByRole("img", { name: "CEO" }).boundingBox();
     if (!lamp || !slip || !ceo) throw new Error("room or stamp missing");
     const clears = (box: { x: number; y: number; width: number; height: number }) =>
       box.y + box.height <= slip.y + 8 ||
@@ -207,7 +207,7 @@ test.describe("approval stamp over the live room", () => {
     const bad = results.violations.filter((item) => item.impact === "serious" || item.impact === "critical");
     expect(bad, JSON.stringify(bad, null, 2)).toEqual([]);
 
-    await page.getByRole("button", { name: "Approve" }).click();
+    await page.getByRole("dialog", { name: "Approve this action?" }).getByRole("button", { name: "Approve" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("status")).toHaveText("Approved. Nothing ran.");
     await expect(page.locator(".ran-nothing")).toHaveAttribute("data-stamp", "approve");
@@ -251,8 +251,9 @@ test.describe("approval stamp over the live room", () => {
       document.documentElement.style.filter = "grayscale(1)";
     });
     await expect(page.getByRole("heading", { name: "Approve this action?" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Decline" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Approve" })).toBeVisible();
+    const slip = page.getByRole("dialog", { name: "Approve this action?" });
+    await expect(slip.getByRole("button", { name: "Decline" })).toBeVisible();
+    await expect(slip.getByRole("button", { name: "Approve" })).toBeVisible();
     await expect(page.locator(".lamp-spot")).toBeVisible();
     await keep(page, "approval-overlay-grayscale-tablet-portrait");
   });

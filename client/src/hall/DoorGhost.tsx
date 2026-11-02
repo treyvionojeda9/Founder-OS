@@ -14,12 +14,14 @@ export function DoorGhost({ frame }: { frame: DoorFrame }) {
     top: Math.round(frame.oy - openingCenterY),
     width: px(doorSpec.frameW),
     height: px(doorSpec.frameH),
+    transform: `translate3d(0, ${frame.drop}px, ${frame.z}px) rotateY(${frame.yaw}deg)`,
     "--edge": `${px(doorSpec.depth)}px`,
     "--shut-ms": `${SHUT_MS}ms`,
   } as CSSProperties;
 
   return (
-    <div className="door-ghost is-shut" style={style}>
+    <div className="door-ghost-bay" style={{ perspective: `${frame.perspective}px` }}>
+      <div className="door-ghost is-shut" style={style}>
       <div className="door-rig" style={{ width: style.width, height: style.height }}>
         <span
           className="ghost-lintel"
@@ -52,6 +54,7 @@ export function DoorGhost({ frame }: { frame: DoorFrame }) {
             <Sprite rows={doorLeafOpen} scale={scale} title="" />
           </span>
         </span>
+      </div>
       </div>
     </div>
   );

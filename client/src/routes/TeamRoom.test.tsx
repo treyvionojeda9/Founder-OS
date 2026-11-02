@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -101,8 +101,9 @@ describe("CEO paper chat", () => {
     renderRoom();
 
     await user.click(screen.getByRole("button", { name: "Publish the forge note" }));
-    expect(screen.getByRole("dialog", { name: "Approve this action?" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Approve" }));
+    const dialog = screen.getByRole("dialog", { name: "Approve this action?" });
+    expect(dialog).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Approve" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Approved. Nothing ran.");
@@ -130,7 +131,7 @@ describe("CEO paper chat", () => {
     expect(screen.getByRole("img", { name: "Desk lamp, lit" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "CEO" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Decline" }));
+    await user.click(within(dialog).getByRole("button", { name: "Decline" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveAttribute("data-stamp", "decline");
     expect(screen.getByRole("status")).toHaveTextContent("Declined. Nothing ran.");
@@ -206,7 +207,27 @@ describe("CEO paper chat", () => {
     expect(slot()).toHaveAttribute("data-pose", "desk");
 
     await user.click(screen.getByRole("textbox", { name: "Message the CEO" }));
-    expect(slot()).toHaveAttribute("data-pose", "lifted");
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+  });
+
+  it("settles an inline approval on the desk without the overlay", async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    renderRoom();
+    const slot = () => document.querySelector(".paper-slot");
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+    expect(document.querySelector("[data-approval='inline']")).toBeTruthy();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Approve" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+    expect(screen.getByRole("status")).toHaveTextContent("Approved. Nothing ran.");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    await localDb.open();
+    expect(await localDb.humanNotes.count()).toBe(0);
   });
 
   it("settles the sheet on lift and set, and cuts that motion when frames are still", async () => {
@@ -296,8 +317,9 @@ describe("team overview desks", () => {
     expect(screen.getByText("Pin the swatch.")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "File the swatch" }));
-    expect(screen.getByRole("dialog", { name: "Approve this action?" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Approve" }));
+    const dialog = screen.getByRole("dialog", { name: "Approve this action?" });
+    expect(dialog).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Approve" }));
     expect(screen.getByRole("status")).toHaveTextContent("Approved. Nothing ran.");
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(saveHuman).not.toHaveBeenCalled();
@@ -386,7 +408,7 @@ describe("team board", () => {
     await user.click(screen.getByRole("button", { name: "Send" }));
     expect(screen.getByText("Pin the swatch.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "File the swatch" }));
-    await user.click(screen.getByRole("button", { name: "Approve" }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Approve" }));
     expect(screen.getByRole("status")).toHaveTextContent("Approved. Nothing ran.");
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(saveHuman).not.toHaveBeenCalled();

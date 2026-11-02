@@ -59,7 +59,8 @@ describe("deep link rooms", () => {
     expect(screen.getByRole("button", { name: "Library" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Team" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy link" })).toHaveAttribute("data-kind", "agent");
-    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Approve this action?" })).not.toBeInTheDocument();
     expect(saveHuman).not.toHaveBeenCalled();
     expect(saveMachine).not.toHaveBeenCalled();
