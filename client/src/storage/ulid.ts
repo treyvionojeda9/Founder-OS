@@ -24,3 +24,7 @@ export function createHumanNoteId(now?: number): string {
 export function createMachineNoteId(now?: number): string {
   return `MN-${ulid(now)}`;
 }
+
+export function createInkAssetId(now?: number): string {
+  return `INK-${ulid(now)}`;
+}

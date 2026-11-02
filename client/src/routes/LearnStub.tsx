@@ -11,6 +11,9 @@ import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
 import { focusNode, pickSchoolDoor, readDeepRequest } from "../nav/deepLink";
 import { publishRoom } from "../nav/room";
 import { PathMap } from "../study/PathMap";
+import { InkPage } from "../study/InkPage";
+import { ponderBody } from "../study/ponderContent";
+import { isRevisionConflict } from "../study/ponderInk";
 import { keepPonderNote, loadPonderNote } from "../study/ponderNote";
 import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
@@ -52,6 +55,12 @@ export const LearnStub = memo(function LearnStub({ doorId: doorIdProp, preview =
     request?.surface === "path" ? focusNode(request.rawId, id) : null,
   );
   const [keeping, setKeeping] = useState(false);
+  const [inkDoor, setInkDoor] = useState(id);
+  const [inkCount, setInkCount] = useState(0);
+  if (inkDoor !== id) {
+    setInkDoor(id);
+    setInkCount(0);
+  }
   const dialogRef = useRef<HTMLDialogElement>(null);
   const bookRef = useRef<HTMLButtonElement>(null);
   const touched = useRef(false);
@@ -63,7 +72,7 @@ export const LearnStub = memo(function LearnStub({ doorId: doorIdProp, preview =
       .then((note) => {
         if (!live) return;
         if (note && !touched.current) {
-          setDraft(note.content);
+          setDraft(ponderBody(note.content));
           setSaved(note);
         } else if (note) {
           setSaved(note);
@@ -169,23 +178,35 @@ export const LearnStub = memo(function LearnStub({ doorId: doorIdProp, preview =
     event.preventDefault();
     if (keeping) return;
     setKeeping(true);
-    try {
-      const result = await keepPonderNote({
+    const write = (existing: Note | null) =>
+      keepPonderNote({
         doorId: id,
         content: draft,
         principal: session.principal,
-        existing: saved,
+        existing,
         repo: noteRepo,
       });
+    const apply = (result: Awaited<ReturnType<typeof keepPonderNote>>) => {
       if (!result.ok) {
         setNotice(result.reason === "empty" ? "Write a line before you keep it." : "Only you can keep this note.");
         return;
       }
       setSaved(result.note);
-      setDraft(result.note.content);
+      setDraft(ponderBody(result.note.content));
       setNotice("Kept with your notes.");
-    } catch {
-      setNotice("That note could not be kept.");
+    };
+    try {
+      apply(await write(saved));
+    } catch (error) {
+      if (!isRevisionConflict(error)) {
+        setNotice("That note could not be kept.");
+        return;
+      }
+      try {
+        apply(await write(await loadPonderNote(id, noteRepo)));
+      } catch {
+        setNotice("That note could not be kept.");
+      }
     } finally {
       setKeeping(false);
     }
@@ -249,7 +270,6 @@ export const LearnStub = memo(function LearnStub({ doorId: doorIdProp, preview =
             >
               <span className="ink-margin" aria-hidden="true" />
               <PaperWash status="working" />
-              {/* Visual ink rest only. Stylus stroke capture stays paused and is not stored. */}
               <figure className="ink-rest" aria-hidden="true">
                 <Sprite rows={readingQuill} scale={quillScale} title="" />
               </figure>
@@ -267,6 +287,19 @@ export const LearnStub = memo(function LearnStub({ doorId: doorIdProp, preview =
               ) : null}
               <div className="paper-log" tabIndex={0} aria-label="Ponder">
                 <h1>Ponder</h1>
+                {preview ? null : (
+                  <InkPage
+                    key={id}
+                    doorId={id}
+                    interactive={pose === "lifted"}
+                    enabled={ready}
+                    principal={session.principal}
+                    note={saved}
+                    onNote={setSaved}
+                    onStrokeCount={setInkCount}
+                    onStatus={setNotice}
+                  />
+                )}
                 {pose === "lifted" ? (
                   <form className="ponder-form" onSubmit={keep} onClick={(event) => event.stopPropagation()}>
                     <label className="ponder-label" htmlFor={preview ? undefined : "ponder-note"}>
@@ -287,7 +320,13 @@ export const LearnStub = memo(function LearnStub({ doorId: doorIdProp, preview =
                     </button>
                   </form>
                 ) : (
-                  <p className="ponder-preview">{draft.trim() ? draft : "A blank sheet. Lift it to write."}</p>
+                  <p className="ponder-preview">
+                    {draft.trim()
+                      ? draft
+                      : inkCount > 0
+                        ? "Ink on this sheet. Lift it to continue."
+                        : "A blank sheet. Lift it to write."}
+                  </p>
                 )}
                 {notice ? (
                   <p className="ponder-status" role="status">

@@ -47,6 +47,7 @@ describe("Dexie vault migration", () => {
       content: "ink",
     });
     expect(await upgraded.humanRevisions.count()).toBe(1);
+    expect(await upgraded.humanInk.count()).toBe(0);
     upgraded.close();
   });
 });

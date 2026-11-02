@@ -99,4 +99,38 @@ describe("IndexedDBNoteRepository", () => {
     expect((await repo.getRevision(first.id, 1))?.content).toBe("first");
     expect((await repo.get(first.id))?.content).toBe("second");
   });
+
+  it("rejects a machine principal on saveHumanInk before opening a write", async () => {
+    const { db, repo } = await freshRepo("machine");
+    await expect(
+      repo.saveHumanInk({
+        id: "INK-MACHINE",
+        noteId: "HN-01JEXAMPLE42",
+        pageId: "PAGE-01",
+        strokesJson: "[]",
+        pageWidth: 10,
+        pageHeight: 10,
+        updatedAt: "2026-10-28T00:00:00.000Z",
+        previewPng: "data:image/png;base64,aaaa",
+      }),
+    ).rejects.toThrow(/SECURITY_BOUNDARY_VIOLATION/);
+    expect(await db.humanInk.count()).toBe(0);
+    await expect(
+      repo.saveHumanInk(
+        {
+          id: "INK-PNGONLY",
+          noteId: "HN-01JEXAMPLE42",
+          pageId: "PAGE-01",
+          strokesJson: "",
+          pageWidth: 1,
+          pageHeight: 1,
+          updatedAt: "2026-10-28T00:00:00.000Z",
+          previewPng: "data:image/png;base64,aaaa",
+        },
+        "human",
+      ),
+    ).rejects.toThrow(/INK_ORIGINAL_REQUIRED/);
+    expect(await db.humanInk.count()).toBe(0);
+    db.close();
+  });
 });
