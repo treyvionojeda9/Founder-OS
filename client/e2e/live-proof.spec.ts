@@ -126,7 +126,7 @@ test.describe("milestone 1 live path", () => {
         const room = page.locator(".route-content .study");
         await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
         await expect(room).toHaveAttribute("data-lamp", "working");
-        await expect(room.locator(".lamp-spot .status-chip")).toHaveText("Working");
+        await expect(room.locator(".desk-nameplate .status-chip")).toHaveText("Working");
         await expect(page.locator(".machine-line").first()).toContainText("generated · not verified");
         await shot(page, pass, proj, "05-ceo-chat");
         await assertQuiet(page, guard);

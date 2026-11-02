@@ -80,8 +80,8 @@ test.describe("pixel chrome and type", () => {
     const chatSize = proj === "desktop" ? "16px" : "24px";
     await expect(page.locator(".paper h1")).toHaveCSS("font-size", chatSize);
     await expect(page.locator(".machine-line > p").first()).toHaveCSS("font-size", chatSize);
-    await expect(page.locator(".lamp-spot .status-chip")).toHaveCSS("background-color", ember);
-    await expect(page.locator(".lamp-spot .status-chip")).toHaveCSS("color", night);
+    await expect(page.locator(".desk-nameplate .status-chip")).toHaveCSS("background-color", ember);
+    await expect(page.locator(".desk-nameplate .status-chip")).toHaveCSS("color", night);
     if (shot) await keep(page, `ceo-${proj}`);
 
     await page.getByRole("tab", { name: "Overview" }).click();

@@ -6801,95 +6801,166 @@ html[data-recede="dim"] .mail-caption {
   }
 }
 
-/* A desk, not a wall: about half the viewport, with a top, a front, a side, and a shadow. */
+/* Wide, low desk seen from slightly above. The top is a trapezoid; the front edge stays short. */
 .study-stage[data-variant="work"] .desk-rig {
   left: 50%;
   right: auto;
   width: 54vw;
-  height: 78%;
+  height: 90%;
   top: auto;
   bottom: 1%;
   transform: translateX(-50%);
 }
 
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-rig {
+  height: 96%;
+  bottom: 0;
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-top {
+  top: 6%;
+  height: 86%;
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-front,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-nameplate {
+  top: 92%;
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-leg {
+  top: 96%;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-top {
+  top: 4%;
+  height: 91%;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-front,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-nameplate {
+  top: 95%;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-leg {
+  top: 96%;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
+  top: 0;
+  bottom: 0;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-title {
+  line-height: 32px;
+  padding: 0 12px;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-form {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-rig {
   width: 50vw;
-  height: 82%;
+  height: 96%;
+  bottom: 0;
 }
 
 .app[data-layout="desktop"] .study-stage[data-variant="work"] .desk-rig {
-  width: 48vw;
-  height: 84%;
+  width: 50vw;
+  height: 92%;
+  bottom: 0;
 }
 
 .study-stage[data-variant="work"] .desk-shadow {
   position: absolute;
-  left: 4%;
-  right: 8%;
-  bottom: 2%;
-  height: 12px;
+  left: 6%;
+  right: 10%;
+  bottom: 1%;
+  height: 10px;
   background: var(--night);
-  box-shadow: 12px 4px 0 var(--slate);
+  box-shadow: 8px 0 0 var(--slate);
   z-index: 0;
   pointer-events: none;
 }
 
 .study-stage[data-variant="work"] .desk-top {
-  left: 0;
-  right: 12%;
-  top: 16%;
-  height: 66%;
-  overflow: hidden;
-  transform: rotateX(4deg);
-  transform-origin: 50% 50%;
+  left: 4%;
+  right: 8%;
+  top: 12%;
+  height: 72%;
+  overflow: visible;
+  transform: rotateX(8deg);
+  transform-origin: 50% 100%;
   z-index: 3;
+  background-color: var(--wood);
+  background-image: var(--mat-desk);
   border-width: 4px;
-  box-shadow: inset 0 0 0 4px var(--darkwood);
+  clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
+  box-shadow: none;
+}
+
+.study-stage[data-variant="work"] .desk-top .space-wash,
+.study-stage[data-variant="work"] .desk-top .plank {
+  display: none;
+}
+
+.study-stage[data-variant="work"] .desk-pool {
+  left: 10%;
+  top: 4%;
+  width: 128px;
+  height: 56px;
+  overflow: hidden;
+  opacity: 0.95;
+  z-index: 1;
+  clip-path: ellipse(48% 42% at 42% 58%);
 }
 
 .study-stage[data-variant="work"] .desk-side {
   position: absolute;
-  right: 2%;
-  top: 18%;
-  width: 12%;
-  height: 62%;
+  right: 4%;
+  top: 62%;
+  width: 5%;
+  height: 22%;
   background: var(--darkwood);
   border: 4px solid var(--night);
-  box-shadow: inset 6px 0 0 var(--plum);
-  transform: skewY(-18deg);
+  box-shadow: inset 4px 0 0 var(--plum);
+  transform: skewY(-16deg);
   transform-origin: left top;
   z-index: 2;
   pointer-events: none;
 }
 
 .study-stage[data-variant="work"] .desk-front {
-  left: 0;
-  right: 12%;
-  top: 82%;
+  left: 2%;
+  right: 6%;
+  top: 84%;
   height: 7%;
   background: var(--darkwood);
   z-index: 4;
 }
 
 .study-stage[data-variant="work"] .desk-leg {
-  top: 88%;
-  height: 9%;
-  width: 18px;
+  top: 93%;
+  height: 6%;
+  width: 16px;
   z-index: 3;
 }
 
 .study-stage[data-variant="work"] .leg-left {
-  left: 6%;
+  left: 10%;
 }
 
 .study-stage[data-variant="work"] .leg-right {
-  right: 20%;
+  right: 14%;
 }
 
 .study-stage[data-variant="work"] .behind-cast {
-  top: 22%;
+  left: 50%;
+  top: -24px;
   bottom: auto;
   z-index: 2;
+  transform: translateX(-50%);
 }
 
 .study-stage[data-variant="work"] .ceo-seat {
@@ -6911,36 +6982,101 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .study-stage[data-variant="work"] .lamp-spot {
-  left: 2px;
-  top: 28%;
+  left: 8%;
+  top: 10%;
   z-index: 6;
+}
+
+.study-stage[data-variant="work"] .desk-nameplate {
+  position: absolute;
+  left: 8%;
+  top: 84%;
+  z-index: 7;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  background: var(--darkwood);
+  border: 4px solid var(--night);
+  box-shadow: 4px 4px 0 var(--night);
 }
 
 .study-stage[data-variant="work"] .note-spot {
   left: auto;
-  right: 16%;
+  right: 14%;
   top: 2%;
   transform: none;
-  z-index: 6;
+  z-index: 2;
 }
 
 .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
-  left: 120px;
-  right: 12px;
-  top: 12px;
-  bottom: 10px;
+  left: 5%;
+  right: 4%;
+  top: 6%;
+  bottom: 2%;
   width: auto;
   height: auto;
   transform: none;
   z-index: 5;
 }
 
+.study-stage[data-variant="work"] .paper-log h1,
+.study-stage[data-variant="work"] .paper-title {
+  position: static;
+  flex: none;
+  margin: 0 0 8px;
+  padding: 0;
+  background: var(--paper);
+  color: var(--night);
+}
+
+.study-stage[data-variant="work"] .paper-log {
+  padding: 2px 12px 0;
+}
+
+.study-stage[data-variant="work"] .machine-line,
+.study-stage[data-variant="work"] .founder-line {
+  margin: 0 0 4px;
+  padding-bottom: 4px;
+}
+
+.study-stage[data-variant="work"] .stamp {
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
 .study-stage[data-variant="work"] .paper-form {
-  padding: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 2px 8px 4px;
+  gap: 8px;
+}
+
+.study-stage[data-variant="work"] .composer-label {
+  gap: 0;
+  font-size: 0;
+  line-height: 0;
+}
+
+.study-stage[data-variant="work"] .composer-label textarea {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
 }
 
 .study-stage[data-variant="work"] .composer-label textarea {
   min-height: 44px;
+  max-height: 44px;
+}
+
+.study-stage[data-variant="work"] .approval-card {
+  gap: 2px;
+  margin-top: 2px;
+  padding: 4px;
+}
+
+.study-stage[data-variant="work"] .approval-card .action-chip {
+  min-height: 52px;
+  margin-top: 0;
 }
 
 .study-stage[data-variant="work"] .paper {
@@ -6962,30 +7098,30 @@ html[data-recede="dim"] .mail-caption {
   line-height: var(--leading-body);
 }
 
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .paper h1,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .machine-line > p:first-child,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .founder-line .who,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .founder-line > p:last-child,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-card-label,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-card-effect,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-wait,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .composer-label,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .composer-label textarea,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .paper-form button,
-.app[data-layout="portrait"] .study-stage[data-variant="work"] .approval-card button,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper h1,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .machine-line > p:first-child,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .founder-line .who,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .founder-line > p:last-child,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-card-label,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-card-effect,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-wait,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .composer-label,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .composer-label textarea,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-form button,
-.app[data-layout="landscape"] .study-stage[data-variant="work"] .approval-card button {
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .paper-title,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-title {
   font-size: var(--type-title);
   line-height: var(--leading-title);
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .machine-line > p:first-child,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .founder-line > p:last-child,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .machine-line > p:first-child,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .founder-line > p:last-child {
+  font-size: var(--type-title);
+  line-height: 32px;
+}
+
+.study-stage[data-variant="work"] .composer-label {
+  font-size: 0;
+  line-height: 0;
+}
+
+.study-stage[data-variant="work"] .composer-label textarea {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  min-height: 44px;
+  max-height: 44px;
 }
 
 .approval-card {
@@ -7030,6 +7166,19 @@ html[data-recede="dim"] .mail-caption {
   flex: 1 1 8em;
   min-width: 44px;
   min-height: 48px;
+}
+
+.study-stage[data-variant="work"] .approval-card-actions {
+  flex-wrap: nowrap;
+}
+
+.study-stage[data-variant="work"] .approval-card button,
+.study-stage[data-variant="work"] .paper-form button {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  white-space: nowrap;
+  min-height: 52px;
+  padding: 4px 8px;
 }
 
 .approval-card-actions .approve {

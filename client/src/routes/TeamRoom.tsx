@@ -69,8 +69,8 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
   const shut = useDoorShut();
   const layout = useFormFactor();
   const still = useStillFrame();
-  const lampScale = layout === "portrait" ? 4 : 3;
-  const seatScale = layout === "portrait" ? 6 : 5;
+  const lampScale = 2;
+  const seatScale = 8;
   const [tab, setTab] = useState<TabKey>(
     request?.surface === "overview" ||
       request?.surface === "library" ||
@@ -724,7 +724,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
                 tabIndex={0}
                 aria-label="Paper chat"
               >
-                <h1>{panelTitle}</h1>
+                <h1 className="paper-title">{panelTitle}</h1>
                 <ChatSheet
                   lines={lines}
                   notice={notice}
@@ -742,7 +742,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
                     <textarea
                       id={composerId}
                       ref={composerRef}
-                      rows={layout === "portrait" ? 3 : 2}
+                      rows={1}
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}
                     />
@@ -801,8 +801,50 @@ function ChatSheet({
   const transcriptRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const log = transcriptRef.current?.closest(".paper-log");
-    if (log instanceof HTMLElement) log.scrollTop = log.scrollHeight;
-  }, [lines, notice]);
+    if (!(log instanceof HTMLElement)) return;
+    const place = () => {
+      const card = log.querySelector(".approval-card");
+      if (!(card instanceof HTMLElement)) return;
+      const slot = log.closest(".paper-slot");
+      if (slot?.getAttribute("data-pose") === "lifted") {
+        log.scrollTop = 0;
+        return;
+      }
+      for (let step = 0; step < 4; step += 1) {
+        const delta = card.getBoundingClientRect().bottom - log.getBoundingClientRect().bottom;
+        if (delta > 0.5) log.scrollTop += delta;
+      }
+      for (let step = 0; step < 6; step += 1) {
+        const view = log.getBoundingClientRect();
+        const cut = [...log.querySelectorAll<HTMLElement>("p, button, time")].find((row) => {
+          const box = row.getBoundingClientRect();
+          return box.height > 1 && box.top < view.top - 0.5 && box.bottom > view.top + 0.5;
+        });
+        if (!cut) return;
+        const box = cut.getBoundingClientRect();
+        const cardBox = card.getBoundingClientRect();
+        const hide = box.bottom - view.top;
+        const show = view.top - box.top;
+        if (cardBox.bottom + hide <= view.bottom + 0.5) {
+          log.scrollTop += hide;
+          continue;
+        }
+        if (show > 0 && cardBox.bottom + show <= view.bottom + 0.5) {
+          log.scrollTop -= show;
+        }
+        return;
+      }
+    };
+    place();
+    const frame = window.requestAnimationFrame(place);
+    const fonts = document.fonts?.ready.then(place);
+    const later = window.setTimeout(place, 60);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(later);
+      void fonts;
+    };
+  }, [lines]);
   return (
     <div className="transcript" role="log" aria-live="polite" ref={transcriptRef}>
       {lines.map((line) =>
@@ -822,7 +864,6 @@ function ChatSheet({
                   </span>
                   <span>Waiting for you</span>
                 </p>
-                <p className="approval-card-label">{line.action.label}</p>
                 <p className="approval-card-effect">This would {line.action.kind}. Nothing is sent.</p>
                 <div className="approval-card-actions">
                   <button

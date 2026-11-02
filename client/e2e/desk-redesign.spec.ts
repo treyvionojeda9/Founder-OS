@@ -37,6 +37,80 @@ test.describe("agent desk", () => {
     await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
     await expect(page.locator("[data-approval='inline']")).toBeVisible();
     await expect(page.locator(".approval-overlay")).toHaveCount(0);
+    await expect(page.getByText("Keep it on this sheet.")).toBeVisible();
+    await expect(page.getByText("I can publish the forge note to the studio channel.")).toBeVisible();
+    await expect(page.getByLabel("Message the CEO")).toBeVisible();
+
+    const agent = await boxOf(page, ".ceo-seat");
+    expect(agent.y).toBeLessThan(top.y);
+    expect(agent.y + agent.height).toBeGreaterThan(top.y);
+    expect(agent.height).toBeGreaterThanOrEqual(96);
+    const lamp = await boxOf(page, ".lamp-spot");
+    const lampOnTop =
+      lamp.x + lamp.width > top.x &&
+      lamp.x < top.x + top.width &&
+      lamp.y + lamp.height > top.y &&
+      lamp.y < top.y + top.height;
+    expect(lampOnTop).toBe(true);
+    const plate = await boxOf(page, ".desk-nameplate");
+    expect(plate.y).toBeGreaterThan(top.y);
+    expect(plate.x).toBeGreaterThanOrEqual(desk.x - 2);
+    expect(plate.x + plate.width).toBeLessThanOrEqual(desk.x + desk.width + 2);
+
+    const collisions = await page.locator(".paper").evaluate((paper) => {
+      const clipOf = (node: Element) => {
+        let box = node.getBoundingClientRect();
+        let current: Element | null = node.parentElement;
+        while (current) {
+          const style = getComputedStyle(current);
+          if (/(auto|scroll|hidden)/.test(style.overflow + style.overflowY)) {
+            const view = current.getBoundingClientRect();
+            const x = Math.max(box.x, view.x);
+            const y = Math.max(box.y, view.y);
+            const right = Math.min(box.x + box.width, view.x + view.width);
+            const bottom = Math.min(box.y + box.height, view.y + view.height);
+            box = { x, y, width: Math.max(0, right - x), height: Math.max(0, bottom - y), top: y, left: x, right, bottom, toJSON() { return {}; } } as DOMRect;
+          }
+          if (current === paper) break;
+          current = current.parentElement;
+        }
+        return box;
+      };
+      const rows = [...paper.querySelectorAll<HTMLElement>("h1, p, button, label, time")].filter((node) => {
+        const text = node.innerText.replace(/\s+/g, " ").trim();
+        if (!text) return false;
+        if ([...node.querySelectorAll("h1, p, button, label, time")].some((child) => child.innerText.trim())) return false;
+        return true;
+      });
+      const boxes = rows.map((node) => {
+        const full = node.getBoundingClientRect();
+        const seen = clipOf(node);
+        return { text: node.innerText.replace(/\s+/g, " ").trim().slice(0, 48), full, seen };
+      });
+      const visible = boxes.filter((item) => item.seen.width > 1 && item.seen.height > 1);
+      const clipped = visible.filter(
+        (item) => item.seen.height < item.full.height - 1 || item.seen.width < item.full.width - 1,
+      );
+      const hits: string[] = [];
+      for (let i = 0; i < visible.length; i += 1) {
+        for (let j = i + 1; j < visible.length; j += 1) {
+          const a = visible[i].seen;
+          const b = visible[j].seen;
+          const overlap =
+            a.x < b.x + b.width - 1 &&
+            a.x + a.width > b.x + 1 &&
+            a.y < b.y + b.height - 1 &&
+            a.y + a.height > b.y + 1;
+          const contains =
+            (a.x <= b.x && a.y <= b.y && a.x + a.width >= b.x + b.width && a.y + a.height >= b.y + b.height) ||
+            (b.x <= a.x && b.y <= a.y && b.x + b.width >= a.x + a.width && b.y + b.height >= a.y + a.height);
+          if (overlap && !contains) hits.push(`${visible[i].text} ∩ ${visible[j].text}`);
+        }
+      }
+      return { clipped: clipped.map((item) => item.text), hits };
+    });
+    expect(collisions.clipped, JSON.stringify(collisions.clipped)).toEqual([]);
+    expect(collisions.hits, JSON.stringify(collisions.hits)).toEqual([]);
   });
 
   test("inline approve, decline, and the docked composer work without lifting", async ({ page }, info) => {
@@ -48,8 +122,8 @@ test.describe("agent desk", () => {
     await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
 
     const approve = page.locator("[data-approval='inline'] [data-choice='approve']");
-    const box = await approve.boundingBox();
-    expect(box && box.width >= 44 && box.height >= 44).toBe(true);
+    const target = await approve.evaluate((el) => ({ w: el.offsetWidth, h: el.offsetHeight }));
+    expect(target.w >= 44 && target.h >= 44).toBe(true);
     await approve.click();
     await expect(page.locator(".approval-overlay")).toHaveCount(0);
     await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");

@@ -69,9 +69,9 @@ export function StudyStage({
         <div className="floor-plane" data-material="floor" aria-hidden="true">
           {variant === "school" ? <ReadingFloor /> : null}
         </div>
-        {behind ? <div className="behind-cast">{behind}</div> : null}
         <div className="desk-rig" data-desk={variant === "work" ? "fitted" : "study"}>
           {variant === "work" ? <span className="desk-shadow" aria-hidden="true" /> : null}
+          {behind ? <div className="behind-cast">{behind}</div> : null}
           <div className="desk-top" data-material="desk">
             <SpaceWash space={variant} part="desk" />
             <span className="plank plank-a" aria-hidden="true" />
@@ -101,7 +101,12 @@ export function StudyStage({
             <span className="desk-leg leg-right" />
           </div>
           {variant === "school" ? <span className="reading-shadow" aria-hidden="true" /> : null}
-          <Lamp status={lampStatus} scale={lampScale} still={still} />
+          {variant === "work" ? (
+            <div className="desk-nameplate">
+              <StatusFrame status={lampStatus} still={still} />
+            </div>
+          ) : null}
+          <Lamp status={lampStatus} scale={lampScale} still={still} chip={variant !== "work"} />
           {beside}
         </div>
       </div>
@@ -198,11 +203,21 @@ function DeskPool({ status, palette }: { status: AgentStatus; palette: "ember" |
   );
 }
 
-function Lamp({ status, scale, still }: { status: AgentStatus; scale: number; still: boolean }) {
+function Lamp({
+  status,
+  scale,
+  still,
+  chip = true,
+}: {
+  status: AgentStatus;
+  scale: number;
+  still: boolean;
+  chip?: boolean;
+}) {
   return (
     <figure className="figure lamp-spot">
       <WorkingLamp status={status} scale={scale} still={still} />
-      <StatusFrame status={status} still={still} />
+      {chip ? <StatusFrame status={status} still={still} /> : null}
     </figure>
   );
 }
