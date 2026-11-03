@@ -6802,11 +6802,15 @@ html[data-recede="dim"] .mail-caption {
 }
 
 /* Wide, low desk seen from slightly above. The top is a trapezoid; the front edge stays short.
-   --paper-frac is the wood shelf (lamp base) as a fraction of the desk top. */
+   --paper-frac is the wood shelf (lamp base) as a fraction of the desk top.
+   --desk-clip matches the top's clip-path inset at the back edge.
+   --seat-tail tucks the bust's empty rows, plus one row of the body, behind that edge. */
 .study-stage[data-variant="work"] {
   --desk-top-top: 16%;
   --desk-top-h: 62%;
   --paper-frac: 0.22;
+  --desk-clip: 7%;
+  --seat-tail: 40px;
 }
 
 .study-stage[data-variant="work"] .desk-rig {
@@ -6821,8 +6825,9 @@ html[data-recede="dim"] .mail-caption {
 
 .app[data-layout="portrait"] .study-stage[data-variant="work"] {
   --desk-top-top: 12%;
-  --desk-top-h: 68%;
+  --desk-top-h: 76%;
   --paper-frac: 0.2;
+  --paper-bottom: 8%;
 }
 
 .app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-rig {
@@ -6903,7 +6908,7 @@ html[data-recede="dim"] .mail-caption {
   background-color: var(--wood);
   background-image: var(--mat-desk);
   border-width: 4px;
-  clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
+  clip-path: polygon(var(--desk-clip) 0, calc(100% - var(--desk-clip)) 0, 100% 100%, 0 100%);
   box-shadow: none;
 }
 
@@ -6982,10 +6987,11 @@ html[data-recede="dim"] .mail-caption {
 
 .study-stage[data-variant="work"] .behind-cast {
   left: 50%;
-  top: -24px;
+  top: var(--desk-top-top);
   bottom: auto;
   z-index: 2;
-  transform: translateX(-50%);
+  /* Sit on the back edge of the top. The tail drops behind the wood (the top paints above). */
+  transform: translate(-50%, calc(-100% + var(--seat-tail)));
 }
 
 .study-stage[data-variant="work"] .ceo-seat {
@@ -7035,10 +7041,13 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
-  left: 3%;
-  right: 3%;
+  /* The painted top is the trapezoid, not the rectangular box that runs out to the front lip.
+     At the sheet's back edge the clip is still inset; stay inside it, and keep wood in front of the apron. */
+  --sheet-inset: calc(var(--desk-clip) * (1 - var(--paper-frac)) + 2px);
+  left: var(--sheet-inset);
+  right: var(--sheet-inset);
   top: calc(var(--paper-frac) * 100%);
-  bottom: 3%;
+  bottom: var(--paper-bottom, 3%);
   width: auto;
   height: auto;
   transform: none;

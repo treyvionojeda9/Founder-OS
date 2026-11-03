@@ -7,6 +7,37 @@ async function boxOf(page: Page, selector: string) {
   return box;
 }
 
+type Point = { x: number; y: number };
+
+/** Painted desk top: the clip-path trapezoid, not the border box that runs to the front lip. */
+function surfaceOf(box: { x: number; y: number; width: number; height: number }, clip: string): Point[] {
+  const body = clip.match(/polygon\((.*)\)/)?.[1];
+  if (!body) throw new Error(`desk top has no surface polygon: ${clip}`);
+  return body.split(",").map((part) => {
+    const [xs, ys] = part.trim().split(/\s+/);
+    const axis = (token: string, size: number, origin: number) => {
+      if (token.endsWith("%")) return origin + (Number.parseFloat(token) / 100) * size;
+      return origin + Number.parseFloat(token);
+    };
+    return { x: axis(xs, box.width, box.x), y: axis(ys, box.height, box.y) };
+  });
+}
+
+function insideSurface(point: Point, poly: Point[], slop = 1.5) {
+  let sign = 0;
+  for (let i = 0; i < poly.length; i += 1) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    const cross = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
+    const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    if (Math.abs(cross) <= slop * len) continue;
+    const next = Math.sign(cross);
+    if (sign === 0) sign = next;
+    else if (next !== sign) return false;
+  }
+  return true;
+}
+
 test.describe("agent desk", () => {
   test("the paper lies on a desk that fits the viewport", async ({ page }, info) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -23,6 +54,7 @@ test.describe("agent desk", () => {
     const desk = await boxOf(page, ".desk-rig");
     const top = await boxOf(page, ".desk-top");
     const paper = await boxOf(page, ".paper");
+    const front = await boxOf(page, ".desk-front");
     if (!viewport) throw new Error("viewport missing");
     const ratio = desk.width / viewport.width;
     if (info.project.name === "tablet-portrait") {
@@ -32,10 +64,18 @@ test.describe("agent desk", () => {
       expect(ratio).toBeGreaterThanOrEqual(0.4);
       expect(ratio).toBeLessThanOrEqual(0.62);
     }
-    expect(paper.x).toBeGreaterThanOrEqual(top.x - 1);
-    expect(paper.y).toBeGreaterThanOrEqual(top.y - 1);
-    expect(paper.x + paper.width).toBeLessThanOrEqual(top.x + top.width + 1);
-    expect(paper.y + paper.height).toBeLessThanOrEqual(top.y + top.height + 1);
+    const clip = await page.locator(".desk-top").evaluate((el) => getComputedStyle(el).clipPath);
+    const surface = surfaceOf(top, clip);
+    const corners = [
+      { x: paper.x, y: paper.y },
+      { x: paper.x + paper.width, y: paper.y },
+      { x: paper.x, y: paper.y + paper.height },
+      { x: paper.x + paper.width, y: paper.y + paper.height },
+    ];
+    for (const corner of corners) {
+      expect(insideSurface(corner, surface), JSON.stringify({ corner, surface })).toBe(true);
+    }
+    expect(paper.y + paper.height).toBeLessThanOrEqual(front.y + 1);
 
     const fontSize = await page.locator(".machine-line > p").first().evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
     expect(fontSize).toBeGreaterThanOrEqual(16);
@@ -49,9 +89,31 @@ test.describe("agent desk", () => {
     await expect(page.getByPlaceholder("Message the CEO")).toBeVisible();
 
     const agent = await boxOf(page, ".ceo-seat");
-    expect(agent.y).toBeLessThan(top.y);
-    expect(agent.y + agent.height).toBeGreaterThan(top.y);
+    const backEdge = Math.min(...surface.map((point) => point.y));
+    const seat = await page.getByRole("img", { name: "CEO" }).evaluate((node) => {
+      const canvas = node as HTMLCanvasElement;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      const { width, height } = canvas;
+      const data = ctx.getImageData(0, 0, width, height).data;
+      let last = -1;
+      for (let y = height - 1; y >= 0; y -= 1) {
+        for (let x = 0; x < width; x += 1) {
+          if ((data[(y * width + x) * 4 + 3] ?? 0) > 10) {
+            last = y;
+            break;
+          }
+        }
+        if (last >= 0) break;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const scale = rect.height / height;
+      return { top: rect.y, opaqueBottom: rect.y + (last + 1) * scale };
+    });
+    if (!seat) throw new Error("seat sprite missing");
     expect(agent.height).toBeGreaterThanOrEqual(96);
+    expect(seat.top).toBeLessThan(backEdge);
+    expect(seat.opaqueBottom).toBeGreaterThanOrEqual(backEdge - 1);
     const lamp = await boxOf(page, ".lamp-spot");
     const lampOnTop =
       lamp.x + lamp.width > top.x &&
