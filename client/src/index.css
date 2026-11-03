@@ -6884,7 +6884,8 @@ html[data-recede="dim"] .mail-caption {
   top: calc(var(--desk-top-top) + 0.22 * var(--desk-top-h) - var(--lamp-h, 160px));
 }
 
-.study-stage[data-variant="work"] .desk-shadow {
+.study-stage[data-variant="work"] .desk-shadow,
+.fitted-desk .desk-shadow {
   position: absolute;
   left: 6%;
   right: 10%;
@@ -6896,7 +6897,8 @@ html[data-recede="dim"] .mail-caption {
   pointer-events: none;
 }
 
-.study-stage[data-variant="work"] .desk-top {
+.study-stage[data-variant="work"] .desk-top,
+.fitted-desk .desk-top {
   left: 3%;
   right: 6%;
   top: var(--desk-top-top);
@@ -6912,7 +6914,8 @@ html[data-recede="dim"] .mail-caption {
   box-shadow: none;
 }
 
-.study-stage[data-variant="work"] .desk-top::after {
+.study-stage[data-variant="work"] .desk-top::after,
+.fitted-desk .desk-top::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -6922,7 +6925,9 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .study-stage[data-variant="work"] .desk-top .space-wash,
-.study-stage[data-variant="work"] .desk-top .plank {
+.study-stage[data-variant="work"] .desk-top .plank,
+.fitted-desk .desk-top .space-wash,
+.fitted-desk .desk-top .plank {
   display: none;
 }
 
@@ -6935,7 +6940,8 @@ html[data-recede="dim"] .mail-caption {
   opacity: 0.34;
 }
 
-.study-stage[data-variant="work"] .desk-pool {
+.study-stage[data-variant="work"] .desk-pool,
+.fitted-desk .desk-pool {
   left: 3%;
   top: 10%;
   width: 88px !important;
@@ -6946,7 +6952,8 @@ html[data-recede="dim"] .mail-caption {
   clip-path: ellipse(48% 46% at 42% 70%);
 }
 
-.study-stage[data-variant="work"] .desk-side {
+.study-stage[data-variant="work"] .desk-side,
+.fitted-desk .desk-side {
   position: absolute;
   right: 2%;
   top: calc(var(--desk-top-top) + 0.42 * var(--desk-top-h));
@@ -6961,7 +6968,8 @@ html[data-recede="dim"] .mail-caption {
   pointer-events: none;
 }
 
-.study-stage[data-variant="work"] .desk-front {
+.study-stage[data-variant="work"] .desk-front,
+.fitted-desk .desk-front {
   left: 1%;
   right: 4%;
   top: calc(var(--desk-top-top) + var(--desk-top-h));
@@ -6970,22 +6978,26 @@ html[data-recede="dim"] .mail-caption {
   z-index: 4;
 }
 
-.study-stage[data-variant="work"] .desk-leg {
+.study-stage[data-variant="work"] .desk-leg,
+.fitted-desk .desk-leg {
   top: calc(var(--desk-top-top) + var(--desk-top-h) + 6%);
   height: 4%;
   width: 16px;
   z-index: 3;
 }
 
-.study-stage[data-variant="work"] .leg-left {
+.study-stage[data-variant="work"] .leg-left,
+.fitted-desk .leg-left {
   left: 10%;
 }
 
-.study-stage[data-variant="work"] .leg-right {
+.study-stage[data-variant="work"] .leg-right,
+.fitted-desk .leg-right {
   right: 14%;
 }
 
-.study-stage[data-variant="work"] .behind-cast {
+.study-stage[data-variant="work"] .behind-cast,
+.fitted-desk .behind-cast {
   left: 50%;
   top: var(--desk-top-top);
   bottom: auto;
@@ -7040,10 +7052,13 @@ html[data-recede="dim"] .mail-caption {
   z-index: 4;
 }
 
-.study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
+.study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"],
+.fitted-desk .desk-top .paper-slot[data-pose="desk"],
+.fitted-desk .desk-top .fitted-sheet[data-pose="desk"] {
   /* The painted top is the trapezoid, not the rectangular box that runs out to the front lip.
      At the sheet's back edge the clip is still inset; stay inside it, and keep wood in front of the apron. */
   --sheet-inset: calc(var(--desk-clip) * (1 - var(--paper-frac)) + 2px);
+  position: absolute;
   left: var(--sheet-inset);
   right: var(--sheet-inset);
   top: calc(var(--paper-frac) * 100%);
@@ -7261,4 +7276,292 @@ html[data-recede="dim"] .mail-caption {
 .copy-link .copy-corner,
 .copy-link .copy-pin {
   animation: none;
+}
+
+/* Overview desks reuse the fitted work desk. Shelves stay a short band above the row. */
+.desk-room {
+  --floor-rise: 14%;
+  --wainscot-rise: 10%;
+}
+
+.desk-room .agent-desk-wall .space-wash {
+  display: none;
+}
+
+.desk-room-windows {
+  top: 8px;
+  height: 52px;
+  min-height: 0;
+  max-height: 52px;
+}
+
+.desk-room .agent-desk-wainscot {
+  top: 64px;
+  bottom: auto;
+  height: 40px;
+}
+
+.desk-room .desk-room-rail {
+  top: 60px;
+  bottom: auto;
+}
+
+.desk-room .wall-bays {
+  inset: 2px 12px 2px;
+}
+
+.desk-room .wall-cubby {
+  min-height: 0;
+}
+
+.desk-room .wall-bay:nth-child(3n + 1) .wall-cubby:first-child::after,
+.desk-room .wall-bay:nth-child(3n + 3) .wall-cubby:first-child::after {
+  width: 12px;
+  height: 10px;
+}
+
+.desk-hall .mail-slot {
+  top: 6px;
+  left: auto;
+  right: 12px;
+  transform: none;
+  max-height: min(70vh, 560px);
+}
+
+.desk-floor-row {
+  top: 116px;
+  bottom: 4px;
+  height: auto;
+}
+
+.desk-scroll,
+.desk-grid-list,
+.desk-grid-list > li,
+.agent-desk,
+.agent-desk-bay {
+  height: 100%;
+}
+
+.desk-grid-list > li {
+  align-items: stretch;
+}
+
+.agent-desk {
+  height: 100%;
+}
+
+.agent-desk-bay {
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.agent-desk-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  perspective: 720px;
+  perspective-origin: 50% 30%;
+}
+
+.desk-grid[data-tiles="2"] .desk-floor-row {
+  top: 116px;
+  bottom: 4px;
+  height: auto;
+  overflow: auto;
+}
+
+.desk-grid[data-tiles="2"] .desk-grid-list {
+  height: auto;
+  grid-auto-rows: minmax(300px, auto);
+}
+
+.desk-grid[data-tiles="2"] .agent-desk-stage {
+  min-height: 180px;
+}
+
+.desk-grid[data-tiles="2"] .agent-desk-stage,
+.app[data-layout="landscape"] .desk-grid[data-arrange="strip"] .agent-desk-stage {
+  zoom: 1;
+}
+
+.overview-desk {
+  --desk-top-top: 28%;
+  --desk-top-h: 40%;
+  --paper-frac: 0.1;
+  --desk-clip: 14%;
+  --seat-tail: 22px;
+  --paper-bottom: 34%;
+  position: absolute;
+  display: block;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: 0;
+  width: auto;
+  height: 100%;
+  max-height: 360px;
+  margin: 0;
+  transform: none;
+}
+
+.desk-grid[data-arrange="strip"] .overview-desk {
+  left: 50%;
+  right: auto;
+  width: min(100%, 560px);
+  transform: translateX(-50%);
+}
+
+.desk-grid[data-tiles="2"] .overview-desk,
+.desk-grid[data-focus]:not([data-focus="none"]) .overview-desk {
+  left: 50%;
+  right: auto;
+  width: min(100%, 640px);
+  transform: translateX(-50%);
+}
+
+.overview-desk .desk-front {
+  height: 12%;
+}
+
+.overview-desk .desk-leg {
+  height: 9%;
+  width: 16px;
+}
+
+.overview-desk .desk-side {
+  height: 22%;
+  width: 7%;
+}
+
+.overview-desk .agent-seat {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.overview-desk .desk-top .fitted-sheet[data-pose="desk"] {
+  left: 34%;
+  right: 6%;
+}
+
+.overview-desk .agent-desk-lamp-row {
+  position: absolute;
+  left: 5%;
+  top: calc(var(--desk-top-top) + var(--paper-frac) * var(--desk-top-h) - var(--lamp-h, 72px) + 10px);
+  z-index: 6;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 8px;
+  width: max-content;
+  margin: 0;
+  padding: 0;
+}
+
+.overview-desk [data-light-pool="desk"] {
+  position: absolute;
+  left: 18%;
+  top: 18%;
+  z-index: 2;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.overview-desk .overview-paper {
+  min-width: 0;
+  padding: 4px 16px 2px 8px;
+  cursor: pointer;
+}
+
+.overview-desk .overview-line {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-pixel);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  color: var(--night);
+}
+
+.overview-desk [data-light-pool="paper"] {
+  position: absolute;
+  left: 4px;
+  bottom: 2px;
+  z-index: 1;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.desk-grid-list > li .lamp-chain {
+  top: 22%;
+  bottom: auto;
+  left: 6px;
+}
+
+.desk-grid[data-arrange="strip"] .desk-grid-list > li .lamp-chain {
+  left: calc(50% - min(250px, 42%));
+}
+
+.app[data-layout="portrait"] .desk-room,
+.app[data-layout="desktop"] .desk-room {
+  --floor-rise: 14%;
+  --wainscot-rise: 10%;
+}
+
+@media (max-height: 860px) {
+  .desk-room-windows {
+    top: 4px;
+    height: 32px;
+    max-height: 32px;
+  }
+
+  .desk-room .agent-desk-wainscot {
+    top: 38px;
+    height: 22px;
+  }
+
+  .desk-room .desk-room-rail {
+    top: 36px;
+  }
+
+  .desk-floor-row,
+  .desk-grid[data-tiles="2"] .desk-floor-row {
+    top: 64px;
+  }
+
+  .agent-desk-plaque {
+    min-height: 0;
+    margin: 2px 8% 0;
+    padding: 6px 6px 4px;
+  }
+
+  .desk-stamp {
+    margin-top: 4px;
+    padding-top: 4px;
+    gap: 0;
+  }
+
+  .overview-desk {
+    --desk-top-top: 18%;
+    --desk-top-h: 36%;
+    --seat-tail: 12px;
+    --paper-frac: 0.08;
+    --paper-bottom: 24%;
+  }
+
+  .overview-desk .agent-figure {
+    zoom: 0.85;
+  }
+
+  .overview-desk .agent-desk-lamp-row {
+    zoom: 0.62;
+  }
 }

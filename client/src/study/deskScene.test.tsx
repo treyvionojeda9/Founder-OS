@@ -157,6 +157,42 @@ describe("overview desk scene", () => {
     expect(screen.getByRole("button", { name: /Shard/ })).toHaveTextContent("Error");
   });
 
+  it("fits each sheet inside the desk top and seats the agent behind it", async () => {
+    const user = userEvent.setup();
+    const walked: string[] = [];
+    const opened: string[] = [];
+    render(
+      <DeskGrid
+        teamId="hale-design-lab"
+        agents={agents}
+        still
+        expandingId={null}
+        onOpen={(id) => opened.push(id)}
+        onWalk={(id) => walked.push(id)}
+      />,
+    );
+
+    for (const agent of agents) {
+      const desk = document.querySelector(`.agent-desk[data-agent='${agent.id}']`);
+      const rig = desk?.querySelector(".fitted-desk");
+      const top = rig?.querySelector(".desk-top");
+      const paper = top?.querySelector(".overview-paper");
+      const seat = rig?.querySelector(".behind-cast .agent-seat");
+      expect(rig).toHaveAttribute("data-desk", "fitted");
+      expect(top).toBeTruthy();
+      expect(paper).toBeTruthy();
+      expect(top?.contains(paper ?? null)).toBe(true);
+      expect(seat).toBeTruthy();
+      expect(paper?.querySelector(".overview-line")?.textContent?.trim().length).toBeGreaterThan(0);
+    }
+
+    const line = document.querySelector(".agent-desk[data-agent='ceo'] .overview-line");
+    expect(line).toHaveTextContent("I can publish the forge note to the studio channel.");
+    await user.click(document.querySelector(".agent-desk[data-agent='ceo'] .overview-paper")!);
+    expect(walked).toEqual(["ceo"]);
+    expect(opened).toEqual([]);
+  });
+
   it("has no human-vault write path on the desk scene", () => {
     const forbidden = /humanNotes|humanRevisions|machineNotes|saveHumanEdit|saveMachineOutput|fetch\(|vault:\s*"human"/;
     expect(deskSource).not.toMatch(forbidden);

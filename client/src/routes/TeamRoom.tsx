@@ -104,6 +104,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const expandTimer = useRef<number | null>(null);
+  const approachTimer = useRef<number | null>(null);
   const deskFocus = useRef<string | null>(null);
   const knownAgent =
     !!team && tab !== "overview" && team.agents.some((item) => item.id === tab) ? tab : "ceo";
@@ -186,7 +187,8 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
 
   useEffect(() => {
     return () => {
-      if (expandTimer.current !== null) window.clearTimeout(expandTimer.current);
+      clearTimer(expandTimer);
+      clearTimer(approachTimer);
     };
   }, []);
 
@@ -274,14 +276,22 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
     publishRoom({ room, teamId: team.id, learnId: null });
   }, [preview, team, drawer, tab]);
 
-  useEffect(() => {
+  const playApproach = () => {
+    clearTimer(approachTimer);
     if (preview || still) {
       setApproach("near");
       return;
     }
     setApproach("far");
-    const id = window.setTimeout(() => setApproach("near"), 32);
-    return () => window.clearTimeout(id);
+    approachTimer.current = window.setTimeout(() => {
+      approachTimer.current = null;
+      setApproach("near");
+    }, 32);
+  };
+
+  useEffect(() => {
+    playApproach();
+    return () => clearTimer(approachTimer);
   }, [preview, still]);
 
   useEffect(() => {
@@ -384,6 +394,22 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
     setNotice(null);
     setPending(null);
     setDraft("");
+  };
+
+  const walkUp = (agentId: string) => {
+    clearTimer(expandTimer);
+    setExpanding(null);
+    setSheetId(null);
+    setFocusedId(null);
+    setFromDesks(true);
+    setFromBoard(false);
+    setDrawer(null);
+    setPose("desk");
+    setNotice(null);
+    setPending(null);
+    setDraft("");
+    setTab(agentId);
+    playApproach();
   };
 
   const openTeam = () => {
@@ -619,6 +645,7 @@ export const TeamRoom = memo(function TeamRoom({ teamId: teamIdProp, preview = f
             panelId={preview ? undefined : "study-panel"}
             labelledBy={preview ? undefined : "team-tab-overview"}
             onOpen={openDesk}
+            onWalk={walkUp}
             onFocusTile={focusTile}
             focusedId={focusedId}
             onOpenMail={openMail}

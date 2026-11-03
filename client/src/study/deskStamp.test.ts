@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { linesForAgent } from "../team/chatStore";
 import source from "./deskStamp.ts?raw";
-import { currentTask, deskStampFor, formatDeskTime } from "./deskStamp";
+import { currentTask, deskStampFor, formatDeskTime, latestSheetLine } from "./deskStamp";
 
 describe("desk stamp", () => {
   it("names the agent, the task or idle, and a local clock", () => {
@@ -25,6 +25,10 @@ describe("desk stamp", () => {
     expect(deskStampFor({ id: "quire", name: "Quire", status: "done" }, []).task).toBe("Done");
     expect(deskStampFor({ id: "empty", name: "Empty", status: "idle" }, []).timeLabel).toBe("—");
     expect(formatDeskTime("not-a-time")).toBe("");
+    expect(latestSheetLine(linesForAgent("hale-design-lab", "ceo"))).toBe(
+      "I can publish the forge note to the studio channel.",
+    );
+    expect(latestSheetLine([])).toBe("The sheet is clear.");
   });
 
   it("does not write a vault", () => {
