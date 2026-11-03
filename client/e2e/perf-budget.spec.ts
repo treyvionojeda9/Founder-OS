@@ -6,7 +6,10 @@ import { expect, test, type Page } from "@playwright/test";
  * swung past a ceiling that a faster machine's median had cleared: the push
  * run recorded school-hall at 684ms, the PR run recorded overview at 290.5ms.
  * Ceilings sit about 20% above the higher of that runner sample and the
- * three-walk median measured on a 4-vCPU host. See docs/perf-audit.md.
+ * three-walk median measured on a 4-vCPU host. The e49e4e9 push run put the
+ * reading-room median at 764ms and the hall-from-reading walks at
+ * 1224, 1225, and 1289ms; the same commit's pull_request run stayed under
+ * the old ceilings. See docs/perf-audit.md.
  * The 1.5s splash hold is part of boot-to-interactive. It is the product timer.
  */
 const FAST_3G = {
@@ -91,7 +94,7 @@ const ROOMS: {
   },
   {
     label: "reading-room",
-    budget: 760,
+    budget: 920,
     setup: async (page) => {
       await page.getByRole("tab", { name: "School" }).click();
       await page.locator('[aria-label="Open Reading Room"]').waitFor();
@@ -107,7 +110,7 @@ const ROOMS: {
   },
   {
     label: "hall-from-reading",
-    budget: 1_180,
+    budget: 1_470,
     setup: (page) => page.keyboard.press("Escape"),
     act: (page) => page.getByRole("button", { name: "Back" }).click(),
     ready: ".door-grid",
