@@ -60,6 +60,276 @@ function visibleFraction(box: Box, clip: Box) {
 }
 
 /**
+ * A line is readable only when its whole fragment sits in the region that is
+ * actually painted: every ancestor that clips (overflow or clip-path), and no
+ * desk front, status chip, drawer, or neighbouring tile painted across it.
+ * Checking the text against its own box misses a parent that slices the glyphs.
+ */
+async function assertTextVisible(page: Page) {
+  const issues = await page.evaluate(() => {
+    const SLOP = 1.5;
+    const OVERLAP = 1;
+
+    type Rect = { x: number; y: number; width: number; height: number };
+
+    const rectOf = (el: Element): Rect => {
+      const box = el.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    };
+
+    const paddingBox = (el: Element): Rect => {
+      const box = rectOf(el);
+      const style = getComputedStyle(el);
+      const top = Number.parseFloat(style.borderTopWidth) || 0;
+      const right = Number.parseFloat(style.borderRightWidth) || 0;
+      const bottom = Number.parseFloat(style.borderBottomWidth) || 0;
+      const left = Number.parseFloat(style.borderLeftWidth) || 0;
+      return {
+        x: box.x + left,
+        y: box.y + top,
+        width: Math.max(0, box.width - left - right),
+        height: Math.max(0, box.height - top - bottom),
+      };
+    };
+
+    const intersect = (a: Rect, b: Rect): Rect => {
+      const x = Math.max(a.x, b.x);
+      const y = Math.max(a.y, b.y);
+      const right = Math.min(a.x + a.width, b.x + b.width);
+      const bottom = Math.min(a.y + a.height, b.y + b.height);
+      return { x, y, width: Math.max(0, right - x), height: Math.max(0, bottom - y) };
+    };
+
+    const covers = (outer: Rect, inner: Rect) =>
+      inner.x >= outer.x - SLOP &&
+      inner.y >= outer.y - SLOP &&
+      inner.x + inner.width <= outer.x + outer.width + SLOP &&
+      inner.y + inner.height <= outer.y + outer.height + SLOP;
+
+    const overlaps = (a: Rect, b: Rect) =>
+      a.width > 0 &&
+      b.width > 0 &&
+      a.height > 0 &&
+      b.height > 0 &&
+      a.x < b.x + b.width - OVERLAP &&
+      a.x + a.width > b.x + OVERLAP &&
+      a.y < b.y + b.height - OVERLAP &&
+      a.y + a.height > b.y + OVERLAP;
+
+    const parseLength = (token: string, extent: number) => {
+      if (token.endsWith("%")) return (Number.parseFloat(token) / 100) * extent;
+      return Number.parseFloat(token) || 0;
+    };
+
+    /** Clip-path painted region, or null when the path isn't a box we can intersect. */
+    const clipBox = (el: Element): Rect | null => {
+      const style = getComputedStyle(el);
+      const raw = style.clipPath;
+      if (!raw || raw === "none") return null;
+      const box = rectOf(el);
+      if (raw.startsWith("inset(")) {
+        const parts = raw
+          .slice(6, -1)
+          .trim()
+          .split(/\s+/)
+          .map((part) => part.trim())
+          .filter(Boolean);
+        const [top = "0", right = top, bottom = top, left = right] = parts;
+        const insetTop = parseLength(top, box.height);
+        const insetRight = parseLength(right, box.width);
+        const insetBottom = parseLength(bottom, box.height);
+        const insetLeft = parseLength(left, box.width);
+        return {
+          x: box.x + insetLeft,
+          y: box.y + insetTop,
+          width: Math.max(0, box.width - insetLeft - insetRight),
+          height: Math.max(0, box.height - insetTop - insetBottom),
+        };
+      }
+      if (!raw.startsWith("polygon(")) return null;
+      const points = raw
+        .slice(raw.indexOf("(") + 1, raw.lastIndexOf(")"))
+        .split(",")
+        .map((part) => {
+          const [xToken, yToken] = part.trim().split(/\s+/);
+          return {
+            x: box.x + parseLength(xToken ?? "0", box.width),
+            y: box.y + parseLength(yToken ?? "0", box.height),
+          };
+        });
+      if (points.length < 3) return null;
+      let minX = Number.POSITIVE_INFINITY;
+      let minY = Number.POSITIVE_INFINITY;
+      let maxX = Number.NEGATIVE_INFINITY;
+      let maxY = Number.NEGATIVE_INFINITY;
+      for (const point of points) {
+        minX = Math.min(minX, point.x);
+        minY = Math.min(minY, point.y);
+        maxX = Math.max(maxX, point.x);
+        maxY = Math.max(maxY, point.y);
+      }
+      const inside = (x: number, y: number) => {
+        let hits = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
+          const a = points[i];
+          const b = points[j];
+          if (!a || !b) continue;
+          const crosses = a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x;
+          if (crosses) hits = !hits;
+        }
+        return hits;
+      };
+      // A transformed trapezoid's viewport hull is a little larger than the painted quad.
+      // Require the fragment's inset corners to fall inside that hull.
+      return {
+        x: minX,
+        y: minY,
+        width: Math.max(0, maxX - minX),
+        height: Math.max(0, maxY - minY),
+        inside,
+      } as Rect & { inside: (x: number, y: number) => boolean };
+    };
+
+    const clippingRegions = (el: Element) => {
+      const rects: Rect[] = [];
+      const polygons: Array<(x: number, y: number) => boolean> = [];
+      let node: Element | null = el;
+      while (node && node !== document.documentElement) {
+        const style = getComputedStyle(node);
+        const scroll = ["auto", "scroll"].includes(style.overflowX) || ["auto", "scroll"].includes(style.overflowY);
+        const hidden = ["hidden", "clip"].includes(style.overflowX) || ["hidden", "clip"].includes(style.overflowY);
+        if (scroll || hidden) rects.push(paddingBox(node));
+        const clipped = clipBox(node);
+        if (clipped && "inside" in clipped && typeof clipped.inside === "function") {
+          polygons.push(clipped.inside);
+          rects.push(clipped);
+        } else if (clipped) rects.push(clipped);
+        node = node.parentElement;
+      }
+      rects.push({ x: 0, y: 0, width: window.innerWidth, height: window.innerHeight });
+      return { rects, polygons };
+    };
+
+    const paintedBox = (el: Element): Rect | null => {
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" || Number.parseFloat(style.opacity) === 0) return null;
+      let box = rectOf(el);
+      const own = clipBox(el);
+      if (own) box = intersect(box, own);
+      let node: Element | null = el.parentElement;
+      while (node && node !== document.documentElement) {
+        const parent = getComputedStyle(node);
+        const scroll = ["auto", "scroll"].includes(parent.overflowX) || ["auto", "scroll"].includes(parent.overflowY);
+        const hidden = ["hidden", "clip"].includes(parent.overflowX) || ["hidden", "clip"].includes(parent.overflowY);
+        if (scroll || hidden) box = intersect(box, paddingBox(node));
+        const clipped = clipBox(node);
+        if (clipped && !("inside" in clipped)) box = intersect(box, clipped);
+        node = node.parentElement;
+      }
+      if (box.width < 1 || box.height < 1) return null;
+      return box;
+    };
+
+    const fragments = (el: Element): Rect[] => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return [...range.getClientRects()]
+        .filter((box) => box.width >= 1 && box.height >= 1)
+        .map((box) => ({ x: box.x, y: box.y, width: box.width, height: box.height }));
+    };
+
+    const round = (box: Rect) => ({
+      x: Math.round(box.x * 10) / 10,
+      y: Math.round(box.y * 10) / 10,
+      width: Math.round(box.width * 10) / 10,
+      height: Math.round(box.height * 10) / 10,
+    });
+
+    const issues: string[] = [];
+    const desks = [...document.querySelectorAll<HTMLElement>(".agent-desk")];
+    for (const desk of desks) {
+      const agent = desk.dataset.agent ?? "desk";
+      const tile = desk.closest("li");
+      const occluders: { name: string; box: Rect }[] = [];
+      for (const selector of [".desk-front", ".desk-leg", ".status-chip", ".desk-drawer-pull", ".desk-drawer"]) {
+        for (const el of tile?.querySelectorAll(selector) ?? []) {
+          const box = paintedBox(el);
+          if (box) occluders.push({ name: selector, box });
+        }
+      }
+      for (const other of document.querySelectorAll(".desk-grid-list > li")) {
+        if (other === tile) continue;
+        const box = paintedBox(other);
+        if (box) occluders.push({ name: "neighbouring tile", box });
+      }
+
+      const viewport: Rect = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
+      const check = (kind: string, el: Element | null) => {
+        if (!el) {
+          issues.push(`${agent} ${kind} missing`);
+          return;
+        }
+        const sample = (el.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 48);
+        const { rects, polygons } = clippingRegions(el);
+        const host = paddingBox(el);
+        let hostVisible = host;
+        for (const clip of rects) hostVisible = intersect(hostVisible, clip);
+        const hostOnScreen =
+          host.width > 1 &&
+          host.height > 1 &&
+          hostVisible.width * hostVisible.height > host.width * host.height * 0.5;
+        let shown = 0;
+        for (const fragment of fragments(el)) {
+          const inView = intersect(fragment, viewport);
+          if (inView.width < 1 || inView.height < 1) continue;
+          let visible = fragment;
+          for (const clip of rects) visible = intersect(visible, clip);
+          if (visible.width < 1 || visible.height < 1) continue;
+          const inset = {
+            x: fragment.x + SLOP,
+            y: fragment.y + SLOP,
+            width: Math.max(0, fragment.width - SLOP * 2),
+            height: Math.max(0, fragment.height - SLOP * 2),
+          };
+          const cornerCut =
+            inset.width > 0 &&
+            inset.height > 0 &&
+            polygons.some((inside) => {
+              const corners = [
+                [inset.x, inset.y],
+                [inset.x + inset.width, inset.y],
+                [inset.x, inset.y + inset.height],
+                [inset.x + inset.width, inset.y + inset.height],
+              ];
+              return corners.some(([x, y]) => x !== undefined && y !== undefined && !inside(x, y));
+            });
+          if (!covers(visible, fragment) || cornerCut) {
+            issues.push(
+              `${agent} ${kind} sliced (${sample}) fragment ${JSON.stringify(round(fragment))} visible ${JSON.stringify(round(visible))}`,
+            );
+            continue;
+          }
+          const cover = occluders.find((item) => overlaps(fragment, item.box));
+          if (cover) {
+            issues.push(
+              `${agent} ${kind} covered by ${cover.name} (${sample}) fragment ${JSON.stringify(round(fragment))} cover ${JSON.stringify(round(cover.box))}`,
+            );
+            continue;
+          }
+          shown += 1;
+        }
+        if (hostOnScreen && shown === 0) issues.push(`${agent} ${kind} has no fully visible line (${sample})`);
+      };
+
+      check("sheet", desk.querySelector(".overview-line"));
+      check("nameplate", desk.querySelector(".agent-desk-name"));
+    }
+    return issues;
+  });
+  expect(issues, issues.join("\n")).toEqual([]);
+}
+
+/**
  * The single desk draws this bust at scale 8 (128px) on a desk that is at most
  * about 800px wide, so the employee reads at ~0.16 of the desk. Same bust here.
  */
@@ -265,6 +535,7 @@ async function assertFitted(page: Page) {
     expect((contentTop - room.y) / room.height).toBeLessThanOrEqual(0.5);
     expect((contentBottom - contentTop) / room.height).toBeGreaterThan(0.5);
   }
+  await assertTextVisible(page);
 }
 
 async function applyTiles(page: Page, count: number) {

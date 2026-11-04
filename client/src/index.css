@@ -7634,6 +7634,12 @@ html[data-recede="dim"] .mail-caption {
   .overview-desk .agent-desk-lamp-row {
     zoom: 1;
   }
+
+  /* Sit the chip on the apron, under the sheet and above the plaque title. */
+  .overview-desk .overview-state {
+    top: auto;
+    bottom: -6px;
+  }
 }
 
 /* A short hall keeps the bust inside the tile. Two sheet lines end in an ellipsis. */
@@ -7686,11 +7692,13 @@ html[data-recede="dim"] .mail-caption {
   .overview-desk .desk-top .fitted-sheet[data-pose="desk"] {
     top: 2px;
     bottom: auto;
-    left: 40%;
+    /* 40% clears the bust. On a narrow tile that still meets the status chip, so never start inside it. */
+    left: max(40%, 120px);
     right: 6%;
     width: auto;
     height: auto;
-    max-height: calc(2 * var(--leading-body) + 4px);
+    /* Border sits inside the max-height. Two line boxes need the 8px frame as well. */
+    max-height: calc(2 * var(--leading-body) + 8px);
   }
 
   .overview-desk .overview-line {
@@ -7700,8 +7708,21 @@ html[data-recede="dim"] .mail-caption {
   }
 
   .overview-desk .overview-paper {
-    max-height: calc(2 * var(--leading-body));
+    max-height: calc(2 * var(--leading-body) + 8px);
     padding: 0 6px;
+  }
+
+  /* The apron used to hang off the rig and cut the plaque title. Keep it in the rig. */
+  .overview-desk .desk-front {
+    height: 8px;
+  }
+
+  .overview-desk .desk-leg {
+    height: 4px;
+  }
+
+  .desk-grid-list > li:has(.desk-drawer-pull[data-placed="true"]) .desk-drawer-pull {
+    transform: translate(-100%, calc(-50% + 8px));
   }
 
   .overview-desk .overview-state {
@@ -7822,7 +7843,7 @@ html[data-recede="dim"] .mail-caption {
     --seat-lane: 80px;
     --seat-tail: 48px;
     --desk-top-top: var(--seat-lane);
-    --desk-top-h: calc(100% - var(--seat-lane) - 32px);
+    --desk-top-h: calc(100% - var(--seat-lane) - 24px);
     --paper-frac: 0.02;
     --paper-bottom: 6%;
   }
@@ -7835,7 +7856,7 @@ html[data-recede="dim"] .mail-caption {
   }
 
   .app[data-layout="portrait"] .overview-paper {
-    max-height: calc(2 * var(--leading-body));
+    max-height: calc(2 * var(--leading-body) + 8px);
     padding: 0 6px;
   }
 
@@ -7843,7 +7864,7 @@ html[data-recede="dim"] .mail-caption {
     top: 2px;
     bottom: auto;
     height: auto;
-    max-height: calc(2 * var(--leading-body) + 4px);
+    max-height: calc(2 * var(--leading-body) + 8px);
   }
 
   .app[data-layout="portrait"] .overview-desk .overview-state {
