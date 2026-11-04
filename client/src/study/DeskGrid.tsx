@@ -63,9 +63,17 @@ export function DeskGrid({
   const layout = useFormFactor();
   const arrange = layout === "desktop" ? "tiles" : "strip";
   const tiles = useSyncExternalStore(subscribeDeskTiles, tileCount, () => 3 as TileCount);
-  // Same bust and lamp as the single desk room (scale 8 and 2). A smaller overview tile was hiding the employee.
+  const [shortHall, setShortHall] = useState(() => typeof window !== "undefined" && window.innerHeight <= 700);
+  useEffect(() => {
+    const update = () => setShortHall(window.innerHeight <= 700);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  // Same bust and lamp as the single desk room (scale 8 and 2). A 640-tall row cannot
+  // keep that bust, a two-line sheet, and the chip in one tile, so the short hall steps down to scale 6.
   const lampScale = 2;
-  const seatScale = 8;
+  const seatScale = shortHall && layout !== "desktop" ? 6 : 8;
   const poolScale = 2;
   const lampHeight = 35 * lampScale;
   const roomRef = useRef<HTMLDivElement>(null);

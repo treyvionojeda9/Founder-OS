@@ -34,6 +34,31 @@ function intersects(a: Box, b: Box) {
   return a.x < b.x + b.width - 1 && a.x + a.width > b.x + 1 && a.y < b.y + b.height - 1 && a.y + a.height > b.y + 1;
 }
 
+/** Hair through the shoulders. The tucked body is allowed to meet the desk top. */
+const HEAD_FRACTION = 9 / 16;
+
+function headOf(sprite: Box): Box {
+  return { x: sprite.x, y: sprite.y, width: sprite.width, height: sprite.height * HEAD_FRACTION };
+}
+
+/** A desk that only nicks the viewport edge is the scrollport's far neighbour, not a clipped one. */
+const VIEW_SLOP = 4;
+
+function mostlyOutside(box: Box, width: number, height: number) {
+  return box.x + box.width <= VIEW_SLOP || box.y + box.height <= VIEW_SLOP || box.x >= width - VIEW_SLOP || box.y >= height - VIEW_SLOP;
+}
+
+function fullyInside(box: Box, width: number, height: number) {
+  return box.x >= -VIEW_SLOP && box.y >= -VIEW_SLOP && box.x + box.width <= width + VIEW_SLOP && box.y + box.height <= height + VIEW_SLOP;
+}
+
+function visibleFraction(box: Box, clip: Box) {
+  const width = Math.max(0, Math.min(box.x + box.width, clip.x + clip.width) - Math.max(box.x, clip.x));
+  const height = Math.max(0, Math.min(box.y + box.height, clip.y + clip.height) - Math.max(box.y, clip.y));
+  const area = box.width * box.height;
+  return area <= 0 ? 0 : (width * height) / area;
+}
+
 /**
  * The single desk draws this bust at scale 8 (128px) on a desk that is at most
  * about 800px wide, so the employee reads at ~0.16 of the desk. Same bust here.
@@ -120,24 +145,122 @@ async function assertFitted(page: Page) {
         deskTop: node.closest(".desk-top")?.getBoundingClientRect().height ?? 0,
         rig: node.closest(".overview-desk")?.getBoundingClientRect().height ?? 0,
         sample: (node.textContent ?? "").trim(),
-        overflow: node.scrollWidth > node.clientWidth + 1 && node.clientWidth < 8,
+        overflow: node.scrollWidth > node.clientWidth + 1 || node.scrollHeight > node.clientHeight + 1,
+        scrollHeight: node.scrollHeight,
+        hostBox: { x: host.x, y: host.y, width: host.width, height: host.height },
+        paperBox: (() => {
+          const paper = node.closest(".overview-paper")?.getBoundingClientRect();
+          return paper ? { x: paper.x, y: paper.y, width: paper.width, height: paper.height } : null;
+        })(),
+        lineRects: (() => {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          return [...range.getClientRects()]
+            .filter((rect) => rect.width >= 1 && rect.height >= 1)
+            .map((rect) => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }));
+        })(),
       };
     });
-    expect(text.overflow).toBe(false);
     expect(text.whiteSpace).not.toContain("nowrap");
-    expect(Number.parseFloat(text.clamp)).toBe(3);
+    const clamp = Number.parseFloat(text.clamp);
+    expect([2, 3]).toContain(clamp);
+    if (text.paperBox) {
+      for (const rect of text.lineRects) {
+        const mid = rect.y + rect.height / 2;
+        if (mid < text.hostBox.y - 1 || mid > text.hostBox.y + text.hostBox.height + 1) continue;
+        expect(rect.height, JSON.stringify(text)).toBeGreaterThanOrEqual(text.fontSize - 1);
+        expect(inside(rect, text.paperBox, 1.5), JSON.stringify({ rect, paper: text.paperBox, sample: text.sample })).toBe(true);
+      }
+    }
+    if (text.overflow) {
+      expect(clamp).toBeGreaterThanOrEqual(2);
+      expect(text.lineRects.length).toBeGreaterThan(0);
+    }
     if (text.sample.length >= 40) {
       expect(text.lines, JSON.stringify(text)).toBeGreaterThanOrEqual(2);
-      expect(text.lines, JSON.stringify(text)).toBeLessThanOrEqual(3);
+      expect(text.lines, JSON.stringify(text)).toBeLessThanOrEqual(clamp);
       const lineBox = Number.parseFloat(text.lineHeight);
-      expect(text.clientHeight, JSON.stringify(text)).toBeGreaterThanOrEqual(lineBox * 2 - 2);
+      expect(text.clientHeight, JSON.stringify(text)).toBeGreaterThanOrEqual(lineBox * Math.min(2, clamp) - 2);
       expect(text.paper, JSON.stringify(text)).toBeGreaterThanOrEqual(text.clientHeight - 1);
       expect(text.minHeight).toBeGreaterThanOrEqual(text.fontSize - 1);
+    }
+    const head = headOf(sprite);
+    const viewportNow = page.viewportSize();
+    const scrolled = await desk.locator(".overview-desk").evaluate((el) => {
+      let node = el.parentElement;
+      while (node) {
+        const style = getComputedStyle(node);
+        if (style.overflowY === "auto" || style.overflowY === "scroll" || style.overflowX === "auto" || style.overflowX === "scroll") {
+          return true;
+        }
+        node = node.parentElement;
+      }
+      return false;
+    });
+    if (viewportNow && !mostlyOutside(rig, viewportNow.width, viewportNow.height)) {
+      if (!scrolled) expect(fullyInside(rig, viewportNow.width, viewportNow.height), JSON.stringify({ rig, viewportNow })).toBe(true);
+      if (!mostlyOutside(head, viewportNow.width, viewportNow.height)) {
+        expect(head.y + head.height, JSON.stringify({ head, top })).toBeLessThanOrEqual(top.y + 1);
+        expect(head.height).toBeGreaterThanOrEqual(48);
+      }
     }
     contentTop = Math.min(contentTop, sprite.y, top.y);
     contentBottom = Math.max(contentBottom, plaque.y + plaque.height, top.y + top.height);
   }
   const viewport = page.viewportSize();
+  const tiles = await page.locator(".desk-grid-list > li").evaluateAll((els) =>
+    els.map((el) => {
+      const box = el.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    }),
+  );
+  for (let i = 0; i < tiles.length; i += 1) {
+    for (let j = i + 1; j < tiles.length; j += 1) {
+      expect(intersects(tiles[i], tiles[j]), JSON.stringify({ a: tiles[i], b: tiles[j] })).toBe(false);
+    }
+  }
+  const mouth = await page.locator(".mail-mouth").boundingBox();
+  if (mouth) expect(intersects(mouth, windows), JSON.stringify({ mouth, windows })).toBe(false);
+  if (viewport) {
+    const heads = await page.locator(".agent-desk .agent-figure canvas").evaluateAll((els) =>
+      els.map((el) => {
+        const box = el.getBoundingClientRect();
+        const clips: { x: number; y: number; width: number; height: number; scroll: boolean }[] = [];
+        let node = el.parentElement;
+        while (node && node !== document.documentElement) {
+          const style = getComputedStyle(node);
+          const scroll = ["auto", "scroll"].includes(style.overflowX) || ["auto", "scroll"].includes(style.overflowY);
+          const hidden = ["hidden", "clip"].includes(style.overflowX) || ["hidden", "clip"].includes(style.overflowY);
+          if (scroll || hidden) {
+            const host = node.getBoundingClientRect();
+            clips.push({ x: host.x, y: host.y, width: host.width, height: host.height, scroll });
+          }
+          node = node.parentElement;
+        }
+        return { x: box.x, y: box.y, width: box.width, height: box.height, clips };
+      }),
+    );
+    const covers = await page.locator(".desk-top, .overview-paper, .agent-desk-plaque, .desk-stamp, .status-chip, .mail-mouth").evaluateAll((els) =>
+      els.map((el) => {
+        const box = el.getBoundingClientRect();
+        return { x: box.x, y: box.y, width: box.width, height: box.height };
+      }),
+    );
+    for (const sprite of heads) {
+      const head = headOf(sprite);
+      const scrolledAway = sprite.clips.some((clip) => clip.scroll && visibleFraction(head, clip) < 0.5);
+      if (scrolledAway || mostlyOutside(head, viewport.width, viewport.height)) continue;
+      for (const clip of sprite.clips) {
+        if (clip.scroll) continue;
+        expect(visibleFraction(head, clip), JSON.stringify({ head, clip })).toBeGreaterThanOrEqual(0.98);
+      }
+      expect(visibleFraction(head, { x: 0, y: 0, width: viewport.width, height: viewport.height }), JSON.stringify({ head, viewport })).toBeGreaterThanOrEqual(0.98);
+      for (const cover of covers) {
+        if (mostlyOutside(cover, viewport.width, viewport.height)) continue;
+        expect(intersects(head, cover), JSON.stringify({ head, cover })).toBe(false);
+      }
+    }
+  }
   if (viewport?.width === 800 && viewport.height === 1280) {
     expect((contentTop - room.y) / room.height).toBeLessThanOrEqual(0.5);
     expect((contentBottom - contentTop) / room.height).toBeGreaterThan(0.5);
@@ -276,6 +399,10 @@ test.describe("overview desks match the fitted desk", () => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/team/hale-design-lab");
     await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page.locator(".agent-desk[data-agent='ceo'] .overview-paper")).toBeVisible();
+    // install() keeps time moving. The far pose lasts 32ms, which is shorter than click()
+    // on a busy runner, so the stage was already "near" when this assertion ran.
+    await page.clock.pauseAt(await page.evaluate(() => Date.now()));
     await page.locator(".agent-desk[data-agent='ceo'] .overview-paper").click();
     await expect(page.locator(".study-stage")).toHaveAttribute("data-approach", "far");
     await expect(page.locator(".study-stage")).toHaveAttribute("data-still", "false");

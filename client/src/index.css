@@ -7279,6 +7279,7 @@ html[data-recede="dim"] .mail-caption {
 .desk-room {
   --floor-rise: 14%;
   --wainscot-rise: 10%;
+  --mail-reserve: 176px;
 }
 
 .desk-room .agent-desk-wall .space-wash {
@@ -7287,6 +7288,7 @@ html[data-recede="dim"] .mail-caption {
 
 .desk-room-windows {
   top: 8px;
+  right: calc(8px + var(--mail-reserve));
   height: 52px;
   min-height: 0;
   max-height: 52px;
@@ -7304,7 +7306,7 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .desk-room .wall-bays {
-  inset: 2px 12px 2px;
+  inset: 2px calc(8px + var(--mail-reserve)) 2px 12px;
 }
 
 .desk-room .wall-cubby {
@@ -7320,9 +7322,43 @@ html[data-recede="dim"] .mail-caption {
 .desk-hall .mail-slot {
   top: 6px;
   left: auto;
-  right: 12px;
+  right: 8px;
   transform: none;
   max-height: min(70vh, 560px);
+}
+
+/* The mouth sits beside the window band, not on the glass, and stops above the floor. */
+.desk-hall .mail-mouth {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  min-height: 44px;
+  max-height: 44px;
+}
+
+.desk-hall .mail-board {
+  width: 52px;
+  padding: 2px;
+}
+
+.desk-hall .mail-peek,
+.desk-hall .mail-peek[data-show="true"] {
+  height: 0;
+}
+
+.desk-hall .mail-gap {
+  height: 4px;
+  margin-top: 0;
+}
+
+.desk-hall .mail-lip {
+  height: 4px;
+}
+
+.desk-hall .mail-plaque {
+  width: 116px;
+  min-height: 0;
+  padding: 2px 4px;
 }
 
 .desk-floor-row {
@@ -7520,8 +7556,8 @@ html[data-recede="dim"] .mail-caption {
   max-height: calc(3 * var(--leading-body));
   overflow: hidden;
   white-space: normal;
-  overflow-wrap: normal;
-  text-overflow: clip;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
   font-family: var(--font-pixel);
   font-size: var(--type-body);
   line-height: var(--leading-body);
@@ -7600,26 +7636,88 @@ html[data-recede="dim"] .mail-caption {
   }
 }
 
-/* A 640-tall room cannot hold three body lines on the desk. Meta stays on the 8px grid. */
+/* A short hall keeps the bust inside the tile. Two sheet lines end in an ellipsis. */
 @media (max-height: 700px) {
+  .desk-room-windows {
+    top: 4px;
+    height: 24px;
+    max-height: 24px;
+  }
+
+  .desk-room .agent-desk-wainscot {
+    top: 28px;
+    height: 12px;
+  }
+
+  .desk-room .desk-room-rail {
+    top: 26px;
+  }
+
+  .desk-floor-row,
+  .desk-grid[data-tiles="2"] .desk-floor-row {
+    top: 54px;
+  }
+
+  .pipeline-room {
+    min-height: 64px;
+    padding: 4px;
+  }
+
+  .agent-desk-plaque {
+    margin: 2px 4% 0;
+    padding: 2px 4px 0;
+  }
+
+  .desk-stamp {
+    margin-top: 0;
+    padding-top: 2px;
+    border-top-width: 2px;
+  }
+
   .overview-desk {
-    --desk-top-top: 28%;
-    --desk-top-h: 66%;
-    --seat-tail: 16px;
+    --seat-lane: 56px;
+    --seat-tail: 40px;
+    --desk-top-top: var(--seat-lane);
+    --desk-top-h: calc(100% - var(--seat-lane));
+    --paper-frac: 0;
+    --paper-bottom: 36%;
   }
 
   .overview-desk .desk-top .fitted-sheet[data-pose="desk"] {
-    top: 0;
-    bottom: 0;
+    top: 2px;
+    bottom: auto;
+    left: 40%;
+    right: 6%;
+    width: auto;
+    height: auto;
+    max-height: calc(2 * var(--leading-body) + 4px);
   }
 
   .overview-desk .overview-line {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     max-height: calc(2 * var(--leading-body));
   }
 
   .overview-desk .overview-paper {
-    max-height: 100%;
-    padding: 0 8px;
+    max-height: calc(2 * var(--leading-body));
+    padding: 0 6px;
+  }
+
+  .overview-desk .overview-state {
+    top: auto;
+    bottom: 0;
+    max-width: 78%;
+  }
+
+  .overview-desk .overview-state .status-chip {
+    padding: 1px 6px;
+    line-height: 16px;
+  }
+
+  .overview-desk .overview-state .status-glyph .sprite {
+    width: 16px !important;
+    height: 16px !important;
   }
 }
 
@@ -7721,13 +7819,41 @@ html[data-recede="dim"] .mail-caption {
   }
 
   .app[data-layout="portrait"] .overview-desk {
-    --desk-top-top: 46%;
-    --desk-top-h: 44%;
-    --seat-tail: 20px;
+    --seat-lane: 80px;
+    --seat-tail: 48px;
+    --desk-top-top: var(--seat-lane);
+    --desk-top-h: calc(100% - var(--seat-lane) - 32px);
+    --paper-frac: 0.02;
+    --paper-bottom: 6%;
   }
 
   .app[data-layout="portrait"] .overview-line {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     max-height: calc(2 * var(--leading-body));
+    text-overflow: ellipsis;
+  }
+
+  .app[data-layout="portrait"] .overview-paper {
+    max-height: calc(2 * var(--leading-body));
+    padding: 0 6px;
+  }
+
+  .app[data-layout="portrait"] .overview-desk .desk-top .fitted-sheet[data-pose="desk"] {
+    top: 2px;
+    bottom: auto;
+    height: auto;
+    max-height: calc(2 * var(--leading-body) + 4px);
+  }
+
+  .app[data-layout="portrait"] .overview-desk .overview-state {
+    top: auto;
+    bottom: 0;
+    max-width: 42%;
+  }
+
+  .app[data-layout="portrait"] .overview-desk .overview-state .status-chip {
+    padding: 2px 6px;
   }
 
   .app[data-layout="portrait"] .agent-desk-plaque {
@@ -7740,5 +7866,54 @@ html[data-recede="dim"] .mail-caption {
     margin-top: 2px;
     padding-top: 2px;
     gap: 0;
+  }
+}
+
+/* 1024-wide landscape: three desks share one row. A wrapped row is exactly one scrollport tall, so it does not peek. */
+@media (max-width: 1099px) and (orientation: landscape) {
+  .desk-grid[data-arrange="strip"] .desk-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scrollbar-color: var(--wood) var(--night);
+    scrollbar-width: thin;
+  }
+
+  .desk-grid[data-arrange="strip"] .desk-grid-list {
+    display: grid;
+    flex-wrap: unset;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(var(--tile-count, 3), minmax(0, 1fr));
+    grid-template-rows: 100%;
+    grid-auto-rows: 100%;
+    column-gap: 8px;
+    row-gap: 0;
+  }
+
+  .desk-grid[data-arrange="strip"] .desk-grid-list > li {
+    flex: none;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .desk-grid[data-arrange="strip"] .agent-desk-bay,
+  .desk-grid[data-arrange="strip"] .overview-desk {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    transform: none;
+  }
+
+  .desk-grid[data-arrange="strip"] .desk-grid-list > li .lamp-chain {
+    left: 6px;
   }
 }
