@@ -24,7 +24,7 @@ function luma(hex: string): number {
 }
 
 describe("overview desk scene", () => {
-  it("engraves a name plaque and parks the status token beside the lamp", async () => {
+  it("engraves a name plaque and parks the status token on the desk front", async () => {
     const user = userEvent.setup();
     const opened: string[] = [];
     render(<DeskGrid teamId="hale-design-lab" agents={agents} still expandingId={null} onOpen={(id) => opened.push(id)} />);
@@ -42,7 +42,7 @@ describe("overview desk scene", () => {
       const desk = screen.getByRole("button", { name: new RegExp(`${agent.name}.*${lamp.caption}`) });
       expect(desk).toHaveAttribute("data-status", agent.status);
       const row = desk.querySelector(".agent-desk-lamp-row");
-      const chip = row?.querySelector(".status-chip");
+      const chip = desk.querySelector(".overview-state .status-chip");
       expect(row?.querySelector(`[aria-label="${lamp.title}"]`)).toBeTruthy();
       expect(chip).toHaveTextContent(lamp.caption);
       expect(chip).toHaveAttribute("data-status", agent.status);

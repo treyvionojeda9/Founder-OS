@@ -63,8 +63,9 @@ export function DeskGrid({
   const layout = useFormFactor();
   const arrange = layout === "desktop" ? "tiles" : "strip";
   const tiles = useSyncExternalStore(subscribeDeskTiles, tileCount, () => 3 as TileCount);
-  const lampScale = tiles === 4 && arrange === "tiles" ? 2 : 3;
-  const seatScale = tiles === 4 && arrange === "tiles" ? 5 : 6;
+  // Same bust and lamp as the single desk room (scale 8 and 2). A smaller overview tile was hiding the employee.
+  const lampScale = 2;
+  const seatScale = 8;
   const poolScale = 2;
   const lampHeight = 35 * lampScale;
   const roomRef = useRef<HTMLDivElement>(null);
@@ -209,7 +210,7 @@ export function DeskGrid({
       data-lighting="ember"
       data-pipeline={showPipeline ? (pipeline ?? "all") : undefined}
       data-drawer={drawerId ?? "shut"}
-      style={arrange === "tiles" ? { ["--tile-count" as string]: String(tiles) } : undefined}
+      style={{ ["--tile-count" as string]: String(tiles) }}
     >
       <h1 className="overview-title" hidden={covered}>
         Overview
@@ -384,6 +385,8 @@ export function DeskGrid({
                           <span className="agent-desk-lamp">
                             <WorkingLamp status={agent.status} scale={lampScale} still={still || paused} />
                           </span>
+                        </span>
+                        <span className="overview-state">
                           <StatusFrame className="agent-desk-state" status={agent.status} still={still} />
                         </span>
                       </span>

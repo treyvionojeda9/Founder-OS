@@ -2763,12 +2763,9 @@ html:has(.room-portal-layer) body {
   overflow: auto;
 }
 
-.desk-grid[data-tiles="2"] .agent-desk-stage {
-  zoom: 0.9;
-}
-
+.desk-grid[data-tiles="2"] .agent-desk-stage,
 .app[data-layout="landscape"] .desk-grid[data-arrange="strip"] .agent-desk-stage {
-  zoom: 0.78;
+  zoom: 1;
 }
 
 .desk-grid[data-arrange="tiles"] .agent-desk-lamp-row {
@@ -2784,7 +2781,7 @@ html:has(.room-portal-layer) body {
 }
 
 .desk-grid[data-arrange="strip"] .agent-desk-bay {
-  width: min(420px, 100%);
+  width: min(720px, 100%);
   margin-inline: auto;
 }
 
@@ -7371,11 +7368,11 @@ html[data-recede="dim"] .mail-caption {
 
 .desk-grid[data-tiles="2"] .desk-grid-list {
   height: auto;
-  grid-auto-rows: minmax(300px, auto);
+  grid-auto-rows: minmax(460px, 1fr);
 }
 
 .desk-grid[data-tiles="2"] .agent-desk-stage {
-  min-height: 180px;
+  min-height: 280px;
 }
 
 .desk-grid[data-tiles="2"] .agent-desk-stage,
@@ -7384,12 +7381,12 @@ html[data-recede="dim"] .mail-caption {
 }
 
 .overview-desk {
-  --desk-top-top: 28%;
-  --desk-top-h: 40%;
-  --paper-frac: 0.1;
-  --desk-clip: 14%;
-  --seat-tail: 22px;
-  --paper-bottom: 34%;
+  --desk-top-top: 32%;
+  --desk-top-h: 42%;
+  --paper-frac: 0.08;
+  --desk-clip: 12%;
+  --seat-tail: 36px;
+  --paper-bottom: 8%;
   position: absolute;
   display: block;
   left: 0;
@@ -7398,7 +7395,7 @@ html[data-recede="dim"] .mail-caption {
   bottom: 0;
   width: auto;
   height: 100%;
-  max-height: 360px;
+  max-height: none;
   margin: 0;
   transform: none;
 }
@@ -7406,7 +7403,7 @@ html[data-recede="dim"] .mail-caption {
 .desk-grid[data-arrange="strip"] .overview-desk {
   left: 50%;
   right: auto;
-  width: min(100%, 560px);
+  width: min(100%, 720px);
   transform: translateX(-50%);
 }
 
@@ -7416,6 +7413,9 @@ html[data-recede="dim"] .mail-caption {
   right: auto;
   width: min(100%, 640px);
   transform: translateX(-50%);
+  --desk-top-top: 42%;
+  --desk-top-h: 44%;
+  --seat-tail: 24px;
 }
 
 .overview-desk .desk-front {
@@ -7442,23 +7442,50 @@ html[data-recede="dim"] .mail-caption {
   padding: 0;
 }
 
+.overview-desk .behind-cast {
+  left: 62%;
+}
+
 .overview-desk .desk-top .fitted-sheet[data-pose="desk"] {
-  left: 34%;
+  left: auto;
   right: 6%;
+  width: min(78%, 36ch);
+  top: 4%;
+  bottom: 6%;
+  height: auto;
+  max-height: none;
+  overflow: hidden;
+  font-size: var(--type-body);
 }
 
 .overview-desk .agent-desk-lamp-row {
   position: absolute;
-  left: 5%;
-  top: calc(var(--desk-top-top) + var(--paper-frac) * var(--desk-top-h) - var(--lamp-h, 72px) + 10px);
+  left: 3%;
+  top: calc(var(--desk-top-top) - var(--lamp-h, 70px) + 28px);
   z-index: 6;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 0;
   width: max-content;
   margin: 0;
   padding: 0;
+  zoom: 1;
+}
+
+.overview-desk .overview-state {
+  position: absolute;
+  left: 3%;
+  top: calc(var(--desk-top-top) + var(--desk-top-h) + 2%);
+  z-index: 8;
+  max-width: 72%;
+  margin: 0;
+  line-height: 0;
+}
+
+.overview-desk .overview-state .status-chip {
+  margin-top: 0;
+  max-width: 100%;
 }
 
 .overview-desk [data-light-pool="desk"] {
@@ -7472,19 +7499,29 @@ html[data-recede="dim"] .mail-caption {
 
 .overview-desk .overview-paper {
   min-width: 0;
-  padding: 4px 16px 2px 8px;
+  height: auto;
+  max-height: min(100%, calc(3 * var(--leading-body) + 16px));
+  min-height: 0;
+  padding: 2px 12px 2px 8px;
   cursor: pointer;
 }
 
 .overview-desk .overview-line {
   position: relative;
   z-index: 2;
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  flex: none;
   width: 100%;
+  max-width: 28ch;
   min-width: 0;
+  max-height: calc(3 * var(--leading-body));
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: normal;
+  text-overflow: clip;
   font-family: var(--font-pixel);
   font-size: var(--type-body);
   line-height: var(--leading-body);
@@ -7550,18 +7587,158 @@ html[data-recede="dim"] .mail-caption {
   }
 
   .overview-desk {
-    --desk-top-top: 18%;
-    --desk-top-h: 36%;
-    --seat-tail: 12px;
+    --desk-top-top: 46%;
+    --desk-top-h: 42%;
+    --seat-tail: 24px;
     --paper-frac: 0.08;
-    --paper-bottom: 24%;
+    --paper-bottom: 8%;
   }
 
-  .overview-desk .agent-figure {
-    zoom: 0.85;
-  }
-
+  .overview-desk .agent-figure,
   .overview-desk .agent-desk-lamp-row {
-    zoom: 0.62;
+    zoom: 1;
+  }
+}
+
+/* A 640-tall room cannot hold three body lines on the desk. Meta stays on the 8px grid. */
+@media (max-height: 700px) {
+  .overview-desk {
+    --desk-top-top: 28%;
+    --desk-top-h: 66%;
+    --seat-tail: 16px;
+  }
+
+  .overview-desk .desk-top .fitted-sheet[data-pose="desk"] {
+    top: 0;
+    bottom: 0;
+  }
+
+  .overview-desk .overview-line {
+    max-height: calc(2 * var(--leading-body));
+  }
+
+  .overview-desk .overview-paper {
+    max-height: 100%;
+    padding: 0 8px;
+  }
+}
+
+/* Tall tablet: share the hall across the stored tile count instead of one short desk under an empty wall. */
+@media (orientation: portrait) {
+  .app[data-layout="portrait"] .desk-room-windows {
+    top: 4px;
+    height: 36px;
+    max-height: 36px;
+  }
+
+  .app[data-layout="portrait"] .desk-room .agent-desk-wainscot {
+    top: 42px;
+    height: 22px;
+  }
+
+  .app[data-layout="portrait"] .desk-room .desk-room-rail {
+    top: 40px;
+  }
+
+  .app[data-layout="portrait"] .desk-floor-row,
+  .app[data-layout="portrait"] .desk-grid[data-tiles="2"] .desk-floor-row {
+    top: 68px;
+    bottom: 2px;
+    height: auto;
+    overflow: hidden;
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .desk-scroll {
+    overflow: hidden;
+    scroll-snap-type: none;
+    touch-action: auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .desk-grid-list {
+    display: grid;
+    flex: 1 1 auto;
+    flex-wrap: unset;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    align-items: stretch;
+    grid-auto-flow: row;
+    /* One column stacks the desks. Three towers were too narrow for a readable sheet. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"][style*="--tile-count: 2"] .desk-grid-list,
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"][style*="--tile-count: 4"] .desk-grid-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .desk-grid-list > li {
+    flex: none;
+    display: flex;
+    align-self: stretch;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .agent-desk,
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .agent-desk-bay,
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .agent-desk-stage {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .agent-desk-stage {
+    overflow: hidden;
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .agent-desk-bay,
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .overview-desk {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+  }
+
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"] .desk-grid-list > li .lamp-chain {
+    left: 6px;
+  }
+
+  .app[data-layout="portrait"] .overview-desk {
+    --desk-top-top: 46%;
+    --desk-top-h: 44%;
+    --seat-tail: 20px;
+  }
+
+  .app[data-layout="portrait"] .overview-line {
+    max-height: calc(2 * var(--leading-body));
+  }
+
+  .app[data-layout="portrait"] .agent-desk-plaque {
+    margin: 2px 6% 0;
+    padding: 4px 6px 2px;
+    min-height: 0;
+  }
+
+  .app[data-layout="portrait"] .desk-stamp {
+    margin-top: 2px;
+    padding-top: 2px;
+    gap: 0;
   }
 }
