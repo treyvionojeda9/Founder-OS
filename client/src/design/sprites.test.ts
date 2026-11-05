@@ -2,7 +2,18 @@ import { describe, expect, it } from "vitest";
 import { founderEmber, paletteByChar } from "./palette";
 import { grayscaleGrid } from "./spriteGrid";
 import { doorSpec } from "./sprites/doorFaces";
-import { contactShadow, deskLampFailed, deskLampOff, deskLampOn, doorFrame, doorLeaf, lightPoolA, spriteCatalog } from "./sprites";
+import {
+  assignmentKey,
+  closedBook,
+  contactShadow,
+  deskLampFailed,
+  deskLampOff,
+  deskLampOn,
+  doorFrame,
+  doorLeaf,
+  lightPoolA,
+  spriteCatalog,
+} from "./sprites";
 
 describe("sprite grids", () => {
   it("maps every character to the palette and keeps rows the same width", () => {
@@ -41,6 +52,22 @@ describe("sprite grids", () => {
       .filter((luma) => luma >= 0);
     expect(pool.length).toBeGreaterThan(0);
     expect(Math.max(...pool)).toBeGreaterThan(night + 40);
+  });
+
+  it("keeps the school book and key readable against the wood top", () => {
+    const wood = grayscaleGrid(["w"])[0][0];
+    const navy = grayscaleGrid(["v"])[0][0];
+    const sky = grayscaleGrid(["b"])[0][0];
+    const book = grayscaleGrid(closedBook)
+      .flat()
+      .filter((luma) => luma >= 0);
+    const key = grayscaleGrid(assignmentKey)
+      .flat()
+      .filter((luma) => luma >= 0);
+    expect(Math.abs(navy - wood)).toBeGreaterThanOrEqual(40);
+    expect(book.filter((luma) => luma === navy).length).toBeGreaterThan(book.filter((luma) => luma === sky).length);
+    expect(key.length).toBeGreaterThan(0);
+    for (const luma of key) expect(Math.abs(luma - wood)).toBeGreaterThanOrEqual(30);
   });
 
   it("cuts a hole in the frame and keeps the leaf inside that opening", () => {

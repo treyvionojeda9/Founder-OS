@@ -1,5 +1,28 @@
-import { founderEmber } from "../design/palette";
+import { founderEmber, schoolAccent } from "../design/palette";
 import type { AgentStatus } from "../team/chatStore";
+
+function channelLuma(hex: string): number {
+  const r = Number.parseInt(hex.slice(1, 3), 16);
+  const g = Number.parseInt(hex.slice(3, 5), 16);
+  const b = Number.parseInt(hex.slice(5, 7), 16);
+  return Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+}
+
+/**
+ * A lamp pool has to read lighter than the wood top once the colour is gone.
+ * School accent's brightest tone (sky) sits on the wood, so it cannot be the pool.
+ */
+export function schoolAccentFitsLampPool(minLift = 40): boolean {
+  const wood = channelLuma(founderEmber.wood);
+  const brightest = Math.max(...Object.values(schoolAccent).map((hex) => channelLuma(hex)));
+  return brightest - wood >= minLift;
+}
+
+/** Work rooms use ember. School uses a school pool only when that pool would still read as light. */
+export function lampPoolPalette(room: "work" | "school"): "ember" | "school" {
+  if (room === "school" && schoolAccentFitsLampPool()) return "school";
+  return "ember";
+}
 
 const BAYER = [
   [0, 8, 2, 10],
