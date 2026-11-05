@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { DoorButton } from "../components/DoorButton";
+import { Vignette } from "../components/HallLight";
+import { SectionToggle } from "../components/SectionToggle";
 import { Sprite } from "../design/Sprite";
 import { flame } from "../design/sprites";
-import { DoorButton } from "../components/DoorButton";
-import { SectionToggle } from "../components/SectionToggle";
 import { doors as fixtureDoors, type Door, type DoorSection } from "../fixtures/doors";
+import { useDoorOpen } from "../hall/DoorTransition";
+import { doorPath } from "../hall/doorMotion";
+import { doorPixelScale, doorPose, doorsForSearch } from "../hall/layout";
+import { useFormFactor } from "../hooks/useFormFactor";
 import { settingsRepo } from "../storage/services";
 
 type HomeProps = {
@@ -12,10 +17,13 @@ type HomeProps = {
 };
 
 export function Home({ doors = fixtureDoors }: HomeProps) {
-  const navigate = useNavigate();
+  const openDoor = useDoorOpen();
+  const layout = useFormFactor();
+  const [params] = useSearchParams();
+  const hallDoors = doorsForSearch(doors, params.toString());
   const [section, setSection] = useState<DoorSection>("work");
   const hydrated = useRef(false);
-  const showToggle = doors.length >= 2;
+  const showToggle = hallDoors.length >= 2;
 
   useEffect(() => {
     let live = true;
@@ -38,11 +46,13 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
     if (showToggle) void settingsRepo.setSection(next).catch(() => undefined);
   }
 
-  const visible = showToggle ? doors.filter((door) => door.section === section) : doors;
+  const visible = showToggle ? hallDoors.filter((door) => door.section === section) : hallDoors;
   const headingId = section === "work" ? "tab-work" : "tab-school";
+  const scale = doorPixelScale(layout, visible.length);
 
   return (
     <>
+      <Vignette />
       <div className="hall">
         <aside className="rail">
           <Sprite rows={flame} scale={4} title="Spark of Freedom flame" />
@@ -52,7 +62,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
             Settings
           </Link>
         </aside>
-        <main className="stage">
+        <main className="stage" data-hall="void">
           <header className="stage-head">
             <div className="compact-brand">
               <Sprite rows={flame} scale={4} title="Spark of Freedom flame" />
@@ -69,18 +79,28 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
             role={showToggle ? "tabpanel" : undefined}
             aria-labelledby={showToggle ? headingId : undefined}
           >
-            <ul className="door-grid">
-              {visible.map((door) => (
-                <li key={door.id}>
-                  <DoorButton
-                    door={door}
-                    onOpen={(chosen) => {
-                      const path = chosen.section === "work" ? `/team/${chosen.id}` : `/learn/${chosen.id}`;
-                      navigate(path);
-                    }}
-                  />
-                </li>
-              ))}
+            <ul className="door-grid" data-count={visible.length}>
+              {visible.map((door, index) => {
+                const pose = doorPose(index, visible.length);
+                return (
+                  <li
+                    key={door.id}
+                    className="door-slot"
+                    data-yaw={pose.yaw}
+                    data-z={pose.z}
+                    data-drop={pose.drop}
+                  >
+                    <DoorButton
+                      door={door}
+                      scale={scale}
+                      pose={pose}
+                      onOpen={(chosen) => {
+                        openDoor(doorPath(chosen));
+                      }}
+                    />
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </main>

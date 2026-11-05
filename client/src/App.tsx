@@ -1,5 +1,6 @@
 import { Outlet, Route, BrowserRouter, Routes } from "react-router-dom";
 import { OfflineIndicator } from "./components/OfflineIndicator";
+import { DoorTransition } from "./hall/DoorTransition";
 import { useFormFactor } from "./hooks/useFormFactor";
 import { DesignSystem } from "./routes/DesignSystem";
 import { Home } from "./routes/Home";
@@ -12,10 +13,14 @@ import { SessionProvider } from "./storage/session";
 function Frame() {
   const layout = useFormFactor();
   return (
-    <div className="app" data-layout={layout}>
-      <OfflineIndicator />
-      <Outlet />
-    </div>
+    <DoorTransition>
+      <div className="app" data-layout={layout}>
+        <OfflineIndicator />
+        <div className="route-content">
+          <Outlet />
+        </div>
+      </div>
+    </DoorTransition>
   );
 }
 

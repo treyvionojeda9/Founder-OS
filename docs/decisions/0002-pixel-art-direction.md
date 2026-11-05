@@ -16,7 +16,7 @@ The reference sheets are low-resolution pixel art: full-body figures, flat shadi
 - Founder Ember (`night`, `slate`, `paper`, `wood`, `darkwood`, `ember`, `flame`, `plum`) is the only UI palette, plus the school accent set for curriculum marks. Both live in `client/src/design/palette.ts`.
 - Each scene stays near eight colours. Shading is one base tone plus one or two darker tones.
 - The Spark of Freedom mark is that pixelized flame, used on the splash, the home header, and the desktop rail.
-- Motion is at most a two-frame swap (splash auto-continue, door open). `prefers-reduced-motion` skips both. Nothing loops.
+- Splash auto-continue is one beat. A door click is three beats and nothing loops: the leaf swings open, the doorway comes forward until its light fills the view, then the route rises out of that light. `prefers-reduced-motion` skips the motion and goes straight to the next page.
 - Headings use the OFL Press Start 2P font, bundled under `client/src/fonts` with its license. Body text uses a system sans.
 - Every state has to stay readable in grayscale. Lamp on, off, and failed differ in shape, which the grayscale grid test locks in.
 
