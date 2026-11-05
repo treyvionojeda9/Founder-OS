@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
-import { assignmentKey, closedBook } from "../design/sprites";
+import { assignmentKey, closedBook, logoQuill } from "../design/sprites";
 import { learningPathFor } from "../fixtures/learning";
 import { doors } from "../fixtures/doors";
 import { useDoorShut } from "../hall/doorApi";
@@ -30,6 +30,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
   const lampScale = layout === "portrait" ? 4 : 3;
   const bookScale = layout === "portrait" ? 5 : 4;
   const keyScale = layout === "portrait" ? 8 : 7;
+  const quillScale = layout === "portrait" ? 4 : 3;
   const [pose, setPose] = useState<PaperPose>("desk");
   const [draft, setDraft] = useState("");
   const [saved, setSaved] = useState<Note | null>(null);
@@ -147,6 +148,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
       className="study learn-room"
       data-room="learn"
       data-paper={pose}
+      data-focus={pose === "lifted" ? "sheet" : "room"}
       data-ready={ready ? "true" : "false"}
       data-assignment={path?.assignment ? "true" : "false"}
       data-preview={preview ? "true" : "false"}
@@ -187,8 +189,18 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
             </>
           }
           paper={
-            <div className="paper is-lit" onClick={onPaperClick} onKeyDown={onPaperKeyDown}>
+            <div
+              className="paper is-lit"
+              data-ink="ready"
+              onClick={onPaperClick}
+              onKeyDown={onPaperKeyDown}
+            >
+              <span className="ink-margin" aria-hidden="true" />
               <PaperWash status="working" />
+              {/* Visual ink rest only. Stylus stroke capture stays paused and is not stored. */}
+              <figure className="ink-rest" aria-hidden="true">
+                <Sprite rows={logoQuill} scale={quillScale} title="" />
+              </figure>
               {pose === "lifted" ? (
                 <button
                   type="button"

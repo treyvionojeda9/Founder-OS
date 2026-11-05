@@ -1960,21 +1960,16 @@ html:has(.room-portal-layer) body {
 
 .book-prop {
   position: absolute;
-  right: 6%;
-  top: 40%;
+  right: 9%;
+  top: 36%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  padding: 4px;
   background: transparent;
-  border-color: transparent;
+  border-width: 0;
   line-height: 0;
   pointer-events: auto;
-}
-
-.learn-room[data-paper="lifted"] .book-prop {
-  top: 16%;
-  right: 3%;
 }
 
 .key-prop {
@@ -1986,18 +1981,20 @@ html:has(.room-portal-layer) body {
 }
 
 .learn-room .paper-slot[data-pose="desk"] {
-  left: 28%;
-  width: 38%;
-  top: 36%;
-  height: 34%;
+  left: 22%;
+  width: 44%;
+  top: 33%;
+  height: 44%;
+  transform: none;
 }
 
 .app[data-layout="landscape"] .learn-room .paper-slot[data-pose="desk"],
 .app[data-layout="desktop"] .learn-room .paper-slot[data-pose="desk"] {
-  left: 28%;
-  width: 38%;
-  top: 36%;
-  height: 36%;
+  left: 26%;
+  width: 40%;
+  top: 32%;
+  height: 46%;
+  transform: none;
 }
 
 .learn-room .paper-wash {
@@ -2014,26 +2011,68 @@ html:has(.room-portal-layer) body {
   z-index: 3;
 }
 
-.learn-room .paper-slot[data-pose="desk"] .paper-log {
-  padding: 12px 16px 8px 14px;
+.learn-room .paper-log,
+.learn-room .paper-slot[data-pose="desk"] .paper-log,
+.learn-room .paper-slot[data-pose="lifted"] .paper-log {
+  padding: 24px 64px 48px 52px;
 }
 
-.learn-room .paper-slot[data-pose="lifted"] {
-  left: 3%;
-  right: auto;
-  width: 76%;
-  margin-inline: 0;
-  transform: none;
-}
-
+.learn-room .paper-slot[data-pose="lifted"],
 .app[data-layout="landscape"] .learn-room .paper-slot[data-pose="lifted"],
 .app[data-layout="desktop"] .learn-room .paper-slot[data-pose="lifted"] {
-  left: 3%;
-  right: auto;
-  width: min(820px, 72%);
-  margin-inline: 0;
-  top: 6%;
+  left: 0;
+  right: 0;
+  width: min(720px, 88%);
+  margin-inline: auto;
+  top: 16px;
+  bottom: 16px;
+  height: auto;
   transform: none;
+}
+
+/* Lifted ponder is the only focal surface. Room chrome drops out without a fade. */
+.learn-room[data-focus="sheet"] .study-world,
+.learn-room[data-focus="sheet"] .stage-overlay {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.learn-room .set-down {
+  margin-left: 48px;
+}
+
+.learn-room .ink-margin {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  bottom: 12px;
+  left: 28px;
+  width: 4px;
+  background: var(--ink);
+  pointer-events: none;
+}
+
+.learn-room .ink-rest {
+  position: absolute;
+  z-index: 2;
+  right: 14px;
+  bottom: 16px;
+  margin: 0;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.learn-room .floor-plane {
+  bottom: 0;
+  height: 46%;
+  filter: none;
+  box-shadow: none;
+}
+
+.learn-room .study-stage,
+.learn-room .study-world {
+  filter: none;
+  backdrop-filter: none;
 }
 
 .ponder-form {

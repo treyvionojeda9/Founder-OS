@@ -67,6 +67,8 @@ describe("sprite grids", () => {
       .filter((luma) => luma >= 0);
     expect(Math.abs(navy - wood)).toBeGreaterThanOrEqual(40);
     expect(book.filter((luma) => luma === navy).length).toBeGreaterThan(book.filter((luma) => luma === sky).length);
+    expect([...new Set(closedBook.join(""))].sort()).toEqual([".", "b", "d", "p", "v"]);
+    expect(closedBook.some((row) => row.includes("ppp"))).toBe(true);
     expect(key.length).toBeGreaterThan(0);
     for (const luma of key) expect(Math.abs(luma - wood)).toBeGreaterThanOrEqual(30);
   });

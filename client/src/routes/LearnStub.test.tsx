@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import ponderSource from "../study/ponderNote.ts?raw";
+import learnSource from "./LearnStub.tsx?raw";
 import { localDb, noteRepo, sessionSource } from "../storage/services";
 import { SessionProvider } from "../storage/session";
 import { LearnStub } from "./LearnStub";
@@ -56,6 +57,7 @@ describe("learning desk", () => {
     const room = await readyDesk();
     expect(room).toHaveAttribute("data-room", "learn");
     expect(room).toHaveAttribute("data-paper", "desk");
+    expect(room).toHaveAttribute("data-focus", "room");
     expect(room).toHaveAttribute("data-assignment", "true");
     expect(document.querySelector(".study-stage")).toHaveAttribute("data-variant", "school");
     expect(document.querySelector(".desk-top")).toBeTruthy();
@@ -72,6 +74,9 @@ describe("learning desk", () => {
     expect(screen.getByRole("button", { name: "Open the current path" })).toBeInTheDocument();
     expect(screen.getByText("A blank sheet. Lift it to write.")).toBeInTheDocument();
     expect(document.querySelector(".paper-slot")).toHaveAttribute("data-pose", "desk");
+    expect(document.querySelector(".paper")).toHaveAttribute("data-ink", "ready");
+    expect(document.querySelector(".ink-margin")).toBeTruthy();
+    expect(document.querySelector(".ink-rest")).toBeTruthy();
     expect(document.querySelector(".paper-glow")).toBeNull();
     expect(document.body.textContent).not.toMatch(/checker/i);
   });
@@ -91,9 +96,11 @@ describe("learning desk", () => {
 
     await user.click(screen.getByRole("heading", { name: "Ponder" }));
     expect(slot()).toHaveAttribute("data-pose", "lifted");
+    expect(document.querySelector(".learn-room")).toHaveAttribute("data-focus", "sheet");
     await user.type(screen.getByRole("textbox", { name: "Your note" }), "A line I have not kept.");
     await user.click(screen.getByRole("button", { name: "Set it down" }));
     expect(slot()).toHaveAttribute("data-pose", "desk");
+    expect(document.querySelector(".learn-room")).toHaveAttribute("data-focus", "room");
     expect(screen.getByText("A line I have not kept.")).toBeInTheDocument();
     expect(saveHuman).not.toHaveBeenCalled();
     await localDb.open();
@@ -183,10 +190,19 @@ describe("learning desk", () => {
     await user.click(screen.getByRole("heading", { name: "Ponder" }));
     expect(document.querySelector(".paper-slot")).toHaveAttribute("data-pose", "lifted");
     expect(document.querySelector(".paper-slot")).toHaveAttribute("data-still", "true");
+    expect(document.querySelector(".learn-room")).toHaveAttribute("data-focus", "sheet");
   });
 
   it("has no machine vault write in the ponder save path", () => {
     expect(ponderSource).not.toMatch(/saveMachineOutput|machineNotes/);
     expect(ponderSource).toMatch(/saveHumanEdit/);
+    expect(learnSource).not.toMatch(/saveMachineOutput|machineNotes/);
+  });
+
+  it("keeps the quill as a visual rest and does not store stylus ink", () => {
+    expect(learnSource).toMatch(/data-ink="ready"/);
+    expect(learnSource).toMatch(/logoQuill/);
+    expect(learnSource).not.toMatch(/strokes|isValidStroke|WP_STROKE|onPointerDown|pointerdown/);
+    expect(ponderSource).not.toMatch(/strokes|isValidStroke|WP_STROKE/);
   });
 });
