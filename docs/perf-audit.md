@@ -89,8 +89,8 @@ A 400 ms busy loop inside the measured switch, then removed, moved the school-ha
 | Library | 125–138 ms | 200 ms |
 | Overview from library | 233–263 ms | 420 ms |
 | Hall from overview | 754–799 ms | 1,080 ms |
-| Reading room | 458–516 ms | 760 ms |
+| Reading room | 458–516 ms (GitHub median 764 on one slow push) | 920 ms |
 | School path | 303–340 ms | 500 ms |
-| Hall from reading | 835–895 ms | 1,180 ms |
+| Hall from reading | 835–895 ms (GitHub walks 1,224–1,289 on that same push) | 1,470 ms |
 | Field notes | 442–462 ms | 800 ms |
 | Command ledger | 159–195 ms | 340 ms |

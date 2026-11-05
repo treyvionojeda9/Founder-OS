@@ -199,7 +199,7 @@ test("machine lines are stamped and the action chip does not execute", async ({ 
   await expect(page.getByText("Leave it on the paper.")).toBeVisible();
   await page.getByRole("button", { name: "Publish the forge note" }).click();
   await expect(page.getByRole("dialog", { name: "Approve this action?" })).toBeVisible();
-  await page.getByRole("button", { name: "Decline" }).click();
+  await page.getByRole("dialog", { name: "Approve this action?" }).getByRole("button", { name: "Decline" }).click();
   await expect(page.getByRole("status")).toHaveText("Declined. Nothing ran.");
   await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
 });

@@ -74,7 +74,8 @@ test.describe("deep links", () => {
     await expect(page.getByRole("button", { name: "Library" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Team" })).toBeVisible();
     await expect(page.locator(".pixel-bar")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Approve" })).toHaveCount(0);
+    await expect(page.locator("[data-approval='inline']")).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     const pin = page.getByRole("button", { name: "Copy link" });
     await expect(pin).toBeVisible();
     await expect(pin).toHaveAttribute("data-kind", "agent");
@@ -190,7 +191,8 @@ test.describe("deep links", () => {
     await page.goto("/work/overview?agent=atelier");
     await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Copy link" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Approve" })).toHaveCount(0);
+    await expect(page.locator("[data-approval='inline']")).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator(".study")).toHaveAttribute("data-deep-focus", "atelier");
   });
 });

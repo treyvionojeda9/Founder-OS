@@ -2686,6 +2686,11 @@ html:has(.room-portal-layer) body {
   color: var(--night);
 }
 
+.app[data-layout="portrait"] .approval-slip {
+  top: auto;
+  bottom: 16px;
+}
+
 .ran-nothing {
   align-self: flex-start;
   display: inline-block;
@@ -6761,6 +6766,490 @@ html[data-recede="dim"] .mail-caption {
   background: var(--night);
   border-color: var(--paper);
   box-shadow: 4px 0 0 var(--ember);
+}
+
+.copy-link,
+.copy-link .copy-corner,
+.copy-link .copy-pin {
+  animation: none;
+}
+
+/* Walk-up dolly. Duration matches DOLLY_MS. Reduced motion never sets data-still="false". */
+.study-stage[data-variant="work"][data-approach="far"] {
+  transform: scale(0.62);
+  transform-origin: 50% 70%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .study-stage[data-variant="work"][data-approach="near"][data-still="false"] {
+    transform-origin: 50% 70%;
+    animation: desk-dolly var(--dolly-ms, 280ms) steps(5, end) both;
+  }
+}
+
+@keyframes desk-dolly {
+  from {
+    transform: scale(0.62);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* Wide, low desk seen from slightly above. The top is a trapezoid; the front edge stays short.
+   --paper-frac is the wood shelf (lamp base) as a fraction of the desk top.
+   --desk-clip matches the top's clip-path inset at the back edge.
+   --seat-tail tucks the bust's empty rows, plus one row of the body, behind that edge. */
+.study-stage[data-variant="work"] {
+  --desk-top-top: 16%;
+  --desk-top-h: 62%;
+  --paper-frac: 0.22;
+  --desk-clip: 7%;
+  --seat-tail: 40px;
+}
+
+.study-stage[data-variant="work"] .desk-rig {
+  left: 50%;
+  right: auto;
+  width: 54vw;
+  height: 86%;
+  top: auto;
+  bottom: 1%;
+  transform: translateX(-50%);
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] {
+  --desk-top-top: 12%;
+  --desk-top-h: 76%;
+  --paper-frac: 0.2;
+  --paper-bottom: 8%;
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .desk-rig {
+  width: 96vw;
+  height: 70%;
+  bottom: 2%;
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .note-spot {
+  left: auto;
+  right: 6%;
+  top: 2%;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] {
+  --desk-top-top: 8%;
+  --desk-top-h: 82%;
+  --paper-frac: 0.05;
+}
+
+.app[data-layout="desktop"] .study-stage[data-variant="work"] {
+  --desk-top-top: 8%;
+  --desk-top-h: 80%;
+  --paper-frac: 0.05;
+}
+
+@media (max-height: 860px) {
+  .app[data-layout="desktop"] .study-stage[data-variant="work"] {
+    --desk-top-top: 4%;
+    --desk-top-h: 86%;
+  }
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-rig {
+  width: 60vw;
+  height: 90%;
+  bottom: 0;
+}
+
+.app[data-layout="desktop"] .study-stage[data-variant="work"] .desk-rig {
+  width: 56vw;
+  height: 86%;
+  bottom: 0;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"],
+.app[data-layout="desktop"] .study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
+  left: 20%;
+}
+
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .lamp-spot,
+.app[data-layout="desktop"] .study-stage[data-variant="work"] .lamp-spot {
+  left: 4%;
+  top: calc(var(--desk-top-top) + 0.22 * var(--desk-top-h) - var(--lamp-h, 160px));
+}
+
+.study-stage[data-variant="work"] .desk-shadow {
+  position: absolute;
+  left: 6%;
+  right: 10%;
+  bottom: 1%;
+  height: 10px;
+  background: var(--night);
+  box-shadow: 8px 0 0 var(--slate);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.study-stage[data-variant="work"] .desk-top {
+  left: 3%;
+  right: 6%;
+  top: var(--desk-top-top);
+  height: var(--desk-top-h);
+  overflow: visible;
+  transform: rotateX(8deg);
+  transform-origin: 50% 100%;
+  z-index: 3;
+  background-color: var(--wood);
+  background-image: var(--mat-desk);
+  border-width: 4px;
+  clip-path: polygon(var(--desk-clip) 0, calc(100% - var(--desk-clip)) 0, 100% 100%, 0 100%);
+  box-shadow: none;
+}
+
+.study-stage[data-variant="work"] .desk-top::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--wood);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.study-stage[data-variant="work"] .desk-top .space-wash,
+.study-stage[data-variant="work"] .desk-top .plank {
+  display: none;
+}
+
+.study-stage[data-variant="work"] .back-wall .space-wash {
+  inset: auto;
+  left: 28%;
+  bottom: 6%;
+  width: 44%;
+  height: 28%;
+  opacity: 0.34;
+}
+
+.study-stage[data-variant="work"] .desk-pool {
+  left: 3%;
+  top: 10%;
+  width: 88px !important;
+  height: 20px !important;
+  overflow: hidden;
+  opacity: 0.4;
+  z-index: 2;
+  clip-path: ellipse(48% 46% at 42% 70%);
+}
+
+.study-stage[data-variant="work"] .desk-side {
+  position: absolute;
+  right: 2%;
+  top: calc(var(--desk-top-top) + 0.42 * var(--desk-top-h));
+  width: 5%;
+  height: 20%;
+  background: var(--darkwood);
+  border: 4px solid var(--night);
+  box-shadow: inset 4px 0 0 var(--plum);
+  transform: skewY(-16deg);
+  transform-origin: left top;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.study-stage[data-variant="work"] .desk-front {
+  left: 1%;
+  right: 4%;
+  top: calc(var(--desk-top-top) + var(--desk-top-h));
+  height: 6%;
+  background: var(--darkwood);
+  z-index: 4;
+}
+
+.study-stage[data-variant="work"] .desk-leg {
+  top: calc(var(--desk-top-top) + var(--desk-top-h) + 6%);
+  height: 4%;
+  width: 16px;
+  z-index: 3;
+}
+
+.study-stage[data-variant="work"] .leg-left {
+  left: 10%;
+}
+
+.study-stage[data-variant="work"] .leg-right {
+  right: 14%;
+}
+
+.study-stage[data-variant="work"] .behind-cast {
+  left: 50%;
+  top: var(--desk-top-top);
+  bottom: auto;
+  z-index: 2;
+  /* Sit on the back edge of the top. The tail drops behind the wood (the top paints above). */
+  transform: translate(-50%, calc(-100% + var(--seat-tail)));
+}
+
+.study-stage[data-variant="work"] .ceo-seat {
+  flex-direction: column;
+  align-items: center;
+}
+
+.study-stage[data-variant="work"] .ceo-seat figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.study-stage[data-variant="work"] .ceo-seat .agent-figure {
+  position: relative;
+  line-height: 0;
+}
+
+.study-stage[data-variant="work"] .lamp-spot {
+  left: 5%;
+  top: calc(var(--desk-top-top) + var(--paper-frac) * var(--desk-top-h) - var(--lamp-h, 160px) - 4px);
+  z-index: 6;
+}
+
+.study-stage[data-variant="work"] .desk-nameplate {
+  position: absolute;
+  left: 8%;
+  top: calc(var(--desk-top-top) + var(--desk-top-h));
+  z-index: 7;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  background: var(--darkwood);
+  border: 4px solid var(--night);
+  box-shadow: 4px 4px 0 var(--night);
+}
+
+.study-stage[data-variant="work"] .note-spot {
+  left: 5%;
+  right: auto;
+  top: 42%;
+  transform: none;
+  z-index: 4;
+}
+
+.study-stage[data-variant="work"] .desk-top .paper-slot[data-pose="desk"] {
+  /* The painted top is the trapezoid, not the rectangular box that runs out to the front lip.
+     At the sheet's back edge the clip is still inset; stay inside it, and keep wood in front of the apron. */
+  --sheet-inset: calc(var(--desk-clip) * (1 - var(--paper-frac)) + 2px);
+  left: var(--sheet-inset);
+  right: var(--sheet-inset);
+  top: calc(var(--paper-frac) * 100%);
+  bottom: var(--paper-bottom, 3%);
+  width: auto;
+  height: auto;
+  transform: none;
+  z-index: 5;
+}
+
+.study-stage[data-variant="work"] .paper-wash {
+  display: none;
+}
+
+.study-stage[data-variant="work"] .paper-log h1,
+.study-stage[data-variant="work"] .paper-title {
+  position: static;
+  flex: none;
+  margin: 0 0 8px;
+  padding: 0;
+  background: var(--paper);
+  color: var(--night);
+}
+
+.study-stage[data-variant="work"] .paper-log {
+  padding: 2px 12px 0;
+}
+
+.study-stage[data-variant="work"] .machine-line,
+.study-stage[data-variant="work"] .founder-line {
+  margin: 0 0 4px;
+  padding-bottom: 4px;
+}
+
+.study-stage[data-variant="work"] .stamp {
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.study-stage[data-variant="work"] .paper-form {
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 2px 8px 4px;
+  gap: 8px;
+}
+
+.study-stage[data-variant="work"] .composer-label {
+  gap: 0;
+  font-size: 0;
+  line-height: 0;
+}
+
+.study-stage[data-variant="work"] .composer-label textarea {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.study-stage[data-variant="work"] .composer-label textarea {
+  min-height: 44px;
+  max-height: 44px;
+}
+
+.study-stage[data-variant="work"] .approval-card {
+  gap: 2px;
+  margin-top: 2px;
+  padding: 4px;
+}
+
+.study-stage[data-variant="work"] .approval-card .action-chip {
+  min-height: 52px;
+  margin-top: 0;
+  white-space: normal;
+  overflow: visible;
+  text-align: center;
+}
+
+.study-stage[data-variant="work"] .paper {
+  min-height: 0;
+}
+
+.study-stage[data-variant="work"] .paper h1,
+.study-stage[data-variant="work"] .machine-line > p:first-child,
+.study-stage[data-variant="work"] .founder-line .who,
+.study-stage[data-variant="work"] .founder-line > p:last-child,
+.study-stage[data-variant="work"] .approval-card-label,
+.study-stage[data-variant="work"] .approval-card-effect,
+.study-stage[data-variant="work"] .approval-wait,
+.study-stage[data-variant="work"] .composer-label,
+.study-stage[data-variant="work"] .composer-label textarea,
+.study-stage[data-variant="work"] .paper-form button,
+.study-stage[data-variant="work"] .approval-card button {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .paper-title,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .machine-line > p:first-child,
+.app[data-layout="portrait"] .study-stage[data-variant="work"] .founder-line > p:last-child,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .paper-title,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .machine-line > p:first-child,
+.app[data-layout="landscape"] .study-stage[data-variant="work"] .founder-line > p:last-child {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.study-stage[data-variant="work"] .composer-label {
+  font-size: 0;
+  line-height: 0;
+}
+
+.study-stage[data-variant="work"] .composer-label textarea {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  min-height: 44px;
+  max-height: 44px;
+}
+
+.study-stage[data-variant="work"] .composer-label textarea::placeholder {
+  color: var(--darkwood);
+  opacity: 1;
+}
+
+.approval-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 4px solid var(--darkwood);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--slate);
+}
+
+.approval-wait {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-pixel);
+  color: var(--night);
+}
+
+.approval-glyph {
+  display: block;
+  line-height: 0;
+}
+
+.approval-card-label,
+.approval-card-effect {
+  margin: 0;
+  color: var(--night);
+}
+
+.approval-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.approval-card-actions button {
+  flex: 1 1 8em;
+  min-width: 44px;
+  min-height: 48px;
+}
+
+.study-stage[data-variant="work"] .approval-card-actions {
+  flex-wrap: nowrap;
+}
+
+.study-stage[data-variant="work"] .approval-card button,
+.study-stage[data-variant="work"] .paper-form button {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  white-space: nowrap;
+  min-height: 52px;
+  padding: 4px 8px;
+}
+
+.study-stage[data-variant="work"] .approval-card .action-chip {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  white-space: normal;
+  overflow: visible;
+  text-align: center;
+  padding: 8px 10px;
+}
+
+.approval-card-actions .approve {
+  background: var(--ember);
+  color: var(--night);
+  border: 4px solid var(--night);
+}
+
+.approval-card-actions .decline {
+  background: var(--paper);
+  color: var(--night);
+  border: 4px dashed var(--darkwood);
+}
+
+.door-ghost-bay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  perspective-origin: 50% 42%;
+}
+
+.door-ghost {
+  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
 }
 
 .copy-link,

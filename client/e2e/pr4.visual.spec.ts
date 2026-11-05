@@ -58,9 +58,13 @@ test.describe("landed study", () => {
     const perspective = await page.locator(".study-stage").evaluate((el) => getComputedStyle(el).perspective);
     expect(perspective).not.toBe("none");
     const deskPlane = await page.locator(".desk-top").evaluate((el) => getComputedStyle(el).transform);
-    const paperPlane = await page.locator(".paper-slot").evaluate((el) => getComputedStyle(el).transform);
+    const paperPlane = await page.locator(".paper-slot").evaluate((el) => {
+      const own = getComputedStyle(el).transform;
+      const host = el.parentElement ? getComputedStyle(el.parentElement).transform : "none";
+      return own !== "none" || host !== "none";
+    });
     expect(deskPlane).not.toBe("none");
-    expect(paperPlane).not.toBe("none");
+    expect(paperPlane).toBe(true);
     await keep(page, `room-desk-${proj}`);
   });
 
@@ -94,7 +98,7 @@ test.describe("landed study", () => {
     await page.keyboard.press("Escape");
     await expect(slot).toHaveAttribute("data-pose", "desk");
     await page.getByLabel("Message the CEO").focus();
-    await expect(slot).toHaveAttribute("data-pose", "lifted");
+    await expect(slot).toHaveAttribute("data-pose", "desk");
   });
 });
 

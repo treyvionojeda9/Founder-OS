@@ -126,7 +126,7 @@ test.describe("milestone 1 live path", () => {
         const room = page.locator(".route-content .study");
         await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
         await expect(room).toHaveAttribute("data-lamp", "working");
-        await expect(room.locator(".lamp-spot .status-chip")).toHaveText("Working");
+        await expect(room.locator(".desk-nameplate .status-chip")).toHaveText("Working");
         await expect(page.locator(".machine-line").first()).toContainText("generated · not verified");
         await shot(page, pass, proj, "05-ceo-chat");
         await assertQuiet(page, guard);
@@ -308,7 +308,7 @@ test.describe("milestone 1 live path", () => {
         await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
         await page.getByLabel("Message the CEO").fill("Approve");
         await page.getByRole("button", { name: "Send" }).click();
-        await expect(page.getByText("Approve", { exact: true })).toBeVisible();
+        await expect(page.locator(".founder-line", { hasText: "Approve" })).toBeVisible();
         await expect(page.getByRole("dialog")).toHaveCount(0);
         await expect(page.locator(".ran-nothing")).toHaveCount(0);
 
@@ -316,8 +316,8 @@ test.describe("milestone 1 live path", () => {
         const dialog = page.getByRole("dialog", { name: "Approve this action?" });
         await expect(dialog).toBeVisible();
         await expect(dialog.locator("button")).toHaveText(["Decline", "Approve"]);
-        await expect(page.getByRole("button", { name: "Approve" })).toHaveCount(1);
-        await expect(page.getByRole("button", { name: "Decline" })).toBeFocused();
+        await expect(dialog.getByRole("button", { name: "Approve" })).toHaveCount(1);
+        await expect(dialog.getByRole("button", { name: "Decline" })).toBeFocused();
         await shot(page, pass, proj, "16-approval-overlay");
         await page.keyboard.press("Escape");
         await expect(dialog).toHaveCount(0);
@@ -326,7 +326,7 @@ test.describe("milestone 1 live path", () => {
 
         await page.getByRole("button", { name: "Publish the forge note" }).click();
         await expect(dialog).toBeVisible();
-        await page.getByRole("button", { name: "Approve" }).click();
+        await dialog.getByRole("button", { name: "Approve" }).click();
         await expect(dialog).toHaveCount(0);
         await expect(page.getByRole("status")).toHaveText("Approved. Nothing ran.");
         await expect(page).toHaveURL(/\/team\/hale-design-lab$/);

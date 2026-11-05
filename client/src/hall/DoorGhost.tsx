@@ -9,17 +9,21 @@ export function DoorGhost({ frame }: { frame: DoorFrame }) {
   const px = (cells: number) => Math.round(cells * scale);
   const openingCenterX = (doorSpec.openingX + doorSpec.openingW / 2) * scale;
   const openingCenterY = (doorSpec.openingY + doorSpec.openingH / 2) * scale;
+  const posed = frame.yaw !== 0 || frame.z !== 0 || frame.drop !== 0;
   const style = {
     left: Math.round(frame.ox - openingCenterX),
     top: Math.round(frame.oy - openingCenterY),
     width: px(doorSpec.frameW),
     height: px(doorSpec.frameH),
+    ...(posed
+      ? { transform: `translate3d(0, ${frame.drop}px, ${frame.z}px) rotateY(${frame.yaw}deg)` }
+      : {}),
     "--edge": `${px(doorSpec.depth)}px`,
     "--shut-ms": `${SHUT_MS}ms`,
   } as CSSProperties;
 
-  return (
-    <div className="door-ghost is-shut" style={style}>
+  const ghost = (
+      <div className="door-ghost is-shut" style={style}>
       <div className="door-rig" style={{ width: style.width, height: style.height }}>
         <span
           className="ghost-lintel"
@@ -53,6 +57,12 @@ export function DoorGhost({ frame }: { frame: DoorFrame }) {
           </span>
         </span>
       </div>
+      </div>
+  );
+  if (!posed) return ghost;
+  return (
+    <div className="door-ghost-bay" style={{ perspective: `${frame.perspective}px` }}>
+      {ghost}
     </div>
   );
 }

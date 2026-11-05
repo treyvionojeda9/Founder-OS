@@ -215,7 +215,7 @@ test("approval dialog sits on the paper", async ({ page }, info) => {
   await page.getByRole("button", { name: "Publish the forge note" }).click();
   await expect(page.getByRole("dialog", { name: "Approve this action?" })).toBeVisible();
   await keep(page, "approval-dialog-tablet-portrait");
-  await page.getByRole("button", { name: "Decline" }).click();
+  await page.getByRole("dialog", { name: "Approve this action?" }).getByRole("button", { name: "Decline" }).click();
   await expect(page.getByRole("status")).toHaveText("Declined. Nothing ran.");
   await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
 });
