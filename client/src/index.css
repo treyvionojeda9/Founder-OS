@@ -1045,6 +1045,7 @@ html:has(.room-portal-layer) body {
   background: var(--night);
   color: var(--paper);
   overflow: hidden;
+  position: relative;
 }
 
 .study-bar,
@@ -1189,6 +1190,20 @@ html:has(.room-portal-layer) body {
   color: var(--paper);
   border-color: transparent;
   box-shadow: none;
+}
+
+.agent-desk:hover .agent-desk-plaque {
+  border-color: var(--flame);
+}
+
+.agent-desk:active .agent-desk-plaque {
+  background: var(--plum);
+  border-color: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--night);
+}
+
+.agent-desk:active .agent-desk-name {
+  color: var(--paper);
 }
 
 .agent-desk[data-expanding="true"] {
@@ -1533,6 +1548,77 @@ html:has(.room-portal-layer) body {
   z-index: 4;
 }
 
+.lamp-flame {
+  display: grid;
+  line-height: 0;
+}
+
+.lamp-frame {
+  grid-area: 1 / 1;
+}
+
+.lamp-flame[data-flicker="on"] .lamp-frame {
+  opacity: 0;
+}
+
+.lamp-flame[data-flicker="on"] .lamp-frame[data-frame="0"] {
+  opacity: 1;
+  animation: lamp-frame-0 1100ms linear infinite;
+}
+
+.lamp-flame[data-flicker="on"] .lamp-frame[data-frame="1"] {
+  animation: lamp-frame-1 1100ms linear infinite;
+}
+
+.lamp-flame[data-flicker="on"] .lamp-frame[data-frame="2"] {
+  animation: lamp-frame-2 1100ms linear infinite;
+}
+
+@keyframes lamp-frame-0 {
+  0%,
+  39% {
+    opacity: 1;
+  }
+  40%,
+  59% {
+    opacity: 0;
+  }
+  60%,
+  79% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes lamp-frame-1 {
+  0%,
+  39% {
+    opacity: 0;
+  }
+  40%,
+  59% {
+    opacity: 1;
+  }
+  60%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes lamp-frame-2 {
+  0%,
+  79% {
+    opacity: 0;
+  }
+  80%,
+  100% {
+    opacity: 1;
+  }
+}
+
 .note-spot {
   position: absolute;
   left: 22%;
@@ -1580,6 +1666,41 @@ html:has(.room-portal-layer) body {
 
 .paper-slot[data-still="true"] {
   transition: none;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .paper-slot[data-settle="lift"]:not([data-still="true"]) {
+    animation: paper-lift-settle 240ms steps(3, end);
+  }
+
+  .paper-slot[data-settle="set"]:not([data-still="true"]) {
+    animation: paper-set-settle 240ms steps(3, end);
+  }
+}
+
+@keyframes paper-lift-settle {
+  0% {
+    translate: 0 6px;
+  }
+  50% {
+    translate: 0 -2px;
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+
+@keyframes paper-set-settle {
+  0% {
+    translate: 0 -4px;
+  }
+  50% {
+    translate: 0 3px;
+  }
+  100% {
+    translate: 0 0;
+  }
 }
 
 .paper-slot[data-pose="desk"] {
@@ -1719,14 +1840,14 @@ html:has(.room-portal-layer) body {
 .machine-line p,
 .founder-line p,
 .placeholder-copy,
-.approval p,
+.approval-slip p,
 .ran-nothing {
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
   color: var(--night);
 }
 
-.approval p,
+.approval-slip p,
 .ran-nothing {
   font-size: var(--type-body);
   line-height: var(--leading-body);
@@ -1798,29 +1919,70 @@ html:has(.room-portal-layer) body {
   margin-top: 12px;
 }
 
-.approval {
+.approval-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+}
+
+.approval-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%231B1A24'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%231B1A24'/%3E%3C/svg%3E");
+  background-size: 4px 4px;
+  image-rendering: pixelated;
+}
+
+.approval-slip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  width: min(460px, calc(100% - 40px));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 16px 18px;
   background: var(--paper);
   color: var(--night);
   border: 4px solid var(--darkwood);
-  padding: 20px;
-  max-width: min(480px, calc(100vw - 32px));
+  box-shadow: 8px 8px 0 var(--night);
 }
 
-.approval::backdrop {
-  background: rgba(27, 26, 36, 0.82);
+.approval-seal {
+  margin: 0;
+  align-self: center;
 }
 
-.approval h2 {
-  margin-bottom: 12px;
+.approval-slip h2 {
+  margin: 0;
 }
 
 .approval-actions {
-  margin-top: 16px;
+  margin-top: 4px;
 }
 
 .approval-actions .approve {
   background: var(--ember);
   color: var(--night);
+}
+
+.ran-nothing {
+  align-self: flex-start;
+  display: inline-block;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--ember);
+  box-shadow: 4px 4px 0 var(--darkwood);
+}
+
+.ran-nothing[data-stamp="decline"] {
+  border-color: var(--plum);
 }
 
 .app[data-layout="landscape"] .study {
@@ -1911,6 +2073,19 @@ html:has(.room-portal-layer) body {
   .plaque {
     transition: none;
   }
+
+  .paper-slot,
+  .lamp-frame {
+    animation: none;
+  }
+
+  .lamp-frame {
+    opacity: 0;
+  }
+
+  .lamp-frame[data-frame="0"] {
+    opacity: 1;
+  }
 }
 
 @media (update: slow) {
@@ -1928,6 +2103,19 @@ html:has(.room-portal-layer) body {
   .library-paper,
   .plaque {
     transition: none;
+  }
+
+  .paper-slot,
+  .lamp-frame {
+    animation: none;
+  }
+
+  .lamp-frame {
+    opacity: 0;
+  }
+
+  .lamp-frame[data-frame="0"] {
+    opacity: 1;
   }
 }
 
@@ -1970,6 +2158,16 @@ html:has(.room-portal-layer) body {
   border-width: 0;
   line-height: 0;
   pointer-events: auto;
+}
+
+.book-prop:hover,
+.book-prop:active {
+  background: transparent;
+  border-color: transparent;
+}
+
+.book-prop:active {
+  translate: 0 2px;
 }
 
 .key-prop {
@@ -2302,6 +2500,22 @@ html:has(.room-portal-layer) body {
 .spine:focus-visible {
   border-color: var(--flame);
   outline: none;
+}
+
+.spine:hover .spine-body {
+  outline: 3px solid var(--flame);
+  outline-offset: 0;
+}
+
+.spine:active {
+  background: transparent;
+  border-color: transparent;
+}
+
+.spine:active .spine-body {
+  translate: 0 3px;
+  outline: 3px solid var(--plum);
+  outline-offset: 0;
 }
 
 .spine-body {
@@ -2682,11 +2896,17 @@ html:has(.room-portal-layer) body {
   line-height: 0;
 }
 
-.plaque:hover,
-.plaque:active {
+.plaque:hover {
   background: var(--wood);
   color: var(--paper);
+  border-color: var(--flame);
+}
+
+.plaque:active {
+  background: var(--plum);
+  color: var(--paper);
   border-color: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--night);
 }
 
 .plaque-plate {
@@ -2757,6 +2977,14 @@ html:has(.room-portal-layer) body {
   color: var(--night);
 }
 
+.stapler:active,
+.stapler[aria-expanded="true"]:active {
+  background: var(--plum);
+  color: var(--paper);
+  border-color: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--night);
+}
+
 .stapler-label {
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
@@ -2782,6 +3010,12 @@ html:has(.room-portal-layer) body {
   color: var(--night);
   border-color: var(--darkwood);
   text-align: left;
+}
+
+.tool-slip [role="menuitem"]:active {
+  background: var(--plum);
+  color: var(--paper);
+  border-color: var(--darkwood);
 }
 
 .tool-blank,
@@ -2811,7 +3045,7 @@ html:has(.room-portal-layer) body {
   padding-bottom: 12px;
 }
 
-/* Darkwood pixel chrome. Active is ember. Hover and press stay in Founder Ember. */
+/* Pixel chrome. Selected is ember. Hover picks up flame. Press is plum. */
 .pixel-bar {
   background: var(--darkwood);
   color: var(--paper);
@@ -2864,6 +3098,7 @@ html:has(.room-portal-layer) body {
 a.text-link:hover,
 .set-down:hover,
 .paper-form button:hover,
+.action-chip:hover,
 .approval-actions button:hover,
 .sheet-close:hover,
 .keep-note:hover {
@@ -2966,6 +3201,16 @@ a.text-link:active,
   background: var(--flame);
   color: var(--night);
   border-color: var(--darkwood);
+}
+
+.place-sheet:active,
+.stapler:active,
+.stapler[aria-expanded="true"]:active,
+.tool-slip [role="menuitem"]:active {
+  background: var(--plum);
+  color: var(--paper);
+  border-color: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--night);
 }
 
 button:disabled {

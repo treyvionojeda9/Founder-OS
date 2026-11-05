@@ -1,7 +1,7 @@
-import { Sprite } from "../design/Sprite";
 import { useFormFactor } from "../hooks/useFormFactor";
 import type { TeamAgent } from "../team/chatStore";
 import { lampArt } from "./lampArt";
+import { WorkingLamp } from "./WorkingLamp";
 
 type DeskGridProps = {
   agents: readonly TeamAgent[];
@@ -56,7 +56,7 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
                     </span>
                     <span className="agent-desk-lamp-row">
                       <span className="agent-desk-lamp">
-                        <Sprite rows={lamp.rows} scale={lampScale} title={lamp.title} />
+                        <WorkingLamp status={agent.status} scale={lampScale} still={still} />
                       </span>
                       <span className="agent-desk-state status-chip" data-status={agent.status}>
                         {lamp.caption}

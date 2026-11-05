@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
-import { agent, forgeNote } from "../design/sprites";
+import { agent, forgeNote, founderSeal } from "../design/sprites";
 import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
@@ -57,7 +57,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const [notice, setNotice] = useState<string | null>(null);
   const [pose, setPose] = useState<PaperPose>("desk");
   const composerRef = useRef<HTMLTextAreaElement>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const expandTimer = useRef<number | null>(null);
   const knownAgent =
     !!team && tab !== "overview" && team.agents.some((item) => item.id === tab) ? tab : "ceo";
@@ -68,17 +68,31 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   );
 
   useEffect(() => {
-    const node = dialogRef.current;
-    if (!node || !pending) return;
-    try {
-      if (!node.open) node.showModal();
-    } catch {
-      node.setAttribute("open", "");
-    }
-    return () => {
-      if (node.open && typeof node.close === "function") node.close();
-      node.removeAttribute("open");
+    if (!pending) return;
+    const root = overlayRef.current;
+    root?.querySelector<HTMLButtonElement>("[data-choice='decline']")?.focus();
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setPending(null);
+        setNotice("Declined. Nothing ran.");
+        return;
+      }
+      if (event.key !== "Tab" || !root) return;
+      const buttons = [...root.querySelectorAll<HTMLButtonElement>("button")];
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [pending]);
 
   useEffect(() => {
@@ -430,19 +444,32 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
         )}
       </div>
       {!preview && pending ? (
-        <dialog ref={dialogRef} className="approval" aria-labelledby="approval-title" aria-modal="true">
-          <h2 id="approval-title">Approve this action?</h2>
-          <p>{pending.label}</p>
-          <p>This would {pending.kind}. Approve and Decline stay on this sheet. Nothing is sent.</p>
-          <div className="approval-actions">
-            <button type="button" onClick={() => settle("decline")}>
-              Decline
-            </button>
-            <button type="button" className="approve" onClick={() => settle("approve")}>
-              Approve
-            </button>
+        <div
+          ref={overlayRef}
+          className="approval-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="approval-title"
+          data-approval="overlay"
+        >
+          <div className="approval-scrim" aria-hidden="true" />
+          <div className="approval-slip" data-material="paper">
+            <figure className="approval-seal" aria-hidden="true">
+              <Sprite rows={founderSeal} scale={layout === "portrait" ? 6 : 4} title="" />
+            </figure>
+            <h2 id="approval-title">Approve this action?</h2>
+            <p className="approval-label">{pending.label}</p>
+            <p>This would {pending.kind}. Approve and Decline stay on this sheet. Nothing is sent.</p>
+            <div className="approval-actions">
+              <button type="button" data-choice="decline" onClick={() => settle("decline")}>
+                Decline
+              </button>
+              <button type="button" className="approve" data-choice="approve" onClick={() => settle("approve")}>
+                Approve
+              </button>
+            </div>
           </div>
-        </dialog>
+        </div>
       ) : null}
     </main>
   );
@@ -489,7 +516,11 @@ function ChatSheet({
         ),
       )}
       {notice ? (
-        <p className="ran-nothing" role="status">
+        <p
+          className="ran-nothing"
+          role="status"
+          data-stamp={notice.startsWith("Approved") ? "approve" : "decline"}
+        >
           {notice}
         </p>
       ) : null}

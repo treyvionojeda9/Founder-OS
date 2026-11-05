@@ -2,7 +2,8 @@ import type { SpriteGrid } from "./types";
 import { flame } from "./flame";
 import { splashFlameCore, splashFlameLift, splashFlameSettle } from "./splashFlame";
 import { archDoorClosed, archDoorOpen } from "./archDoor";
-import { deskLampFailed, deskLampOff, deskLampOn } from "./deskLamp";
+import { deskLampFailed, deskLampFlickerDip, deskLampFlickerLift, deskLampOff, deskLampOn } from "./deskLamp";
+import { founderSeal } from "./founderSeal";
 import { agent } from "./agent";
 import { logoBook, logoCloud, logoHale, logoLocal, logoQuill } from "./logos";
 import { offlineCloud } from "./offlineCloud";
@@ -15,7 +16,8 @@ export type { SpriteGrid } from "./types";
 export { flame } from "./flame";
 export { splashFlameCore, splashFlameLift, splashFlameSettle } from "./splashFlame";
 export { archDoorClosed, archDoorOpen, closedLogoSlot, openLogoSlot } from "./archDoor";
-export { deskLampOff, deskLampOn, deskLampFailed } from "./deskLamp";
+export { deskLampOff, deskLampOn, deskLampFlickerLift, deskLampFlickerDip, deskLampFailed } from "./deskLamp";
+export { founderSeal } from "./founderSeal";
 export { agent } from "./agent";
 export { logoHale, logoCloud, logoLocal, logoBook, logoQuill } from "./logos";
 export { offlineCloud } from "./offlineCloud";
@@ -44,7 +46,10 @@ export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "arch door open", rows: archDoorOpen },
   { name: "desk lamp off", rows: deskLampOff },
   { name: "desk lamp on", rows: deskLampOn },
+  { name: "desk lamp flicker lift", rows: deskLampFlickerLift },
+  { name: "desk lamp flicker dip", rows: deskLampFlickerDip },
   { name: "desk lamp failed", rows: deskLampFailed },
+  { name: "founder seal", rows: founderSeal },
   { name: "agent", rows: agent },
   { name: "logo hale", rows: logoHale },
   { name: "logo cloud", rows: logoCloud },
