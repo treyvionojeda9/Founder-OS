@@ -5095,11 +5095,6 @@ input {
   flex: none;
 }
 
-.mail-count {
-  min-width: 12px;
-  color: var(--paper);
-}
-
 .mail-caption {
   color: var(--paper);
 }
