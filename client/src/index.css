@@ -4816,3 +4816,136 @@ input {
     animation: none;
   }
 }
+
+/* Paper command ledger. Night ink on paper, a mark for the active row. Founder Ember only. */
+.command-ledger {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8vh 16px 16px;
+  background: rgba(27, 26, 36, 0.72);
+}
+
+.ledger-sheet {
+  width: min(520px, 100%);
+  max-height: min(640px, 84vh);
+  overflow: auto;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  box-shadow: 8px 8px 0 var(--night);
+  padding: 16px 14px 12px;
+}
+
+.ledger-title {
+  margin: 0 0 8px;
+  color: var(--night);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.ledger-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ledger-list:focus {
+  outline: none;
+}
+
+.ledger-list:focus-visible {
+  outline: 3px solid var(--flame);
+  outline-offset: 2px;
+}
+
+.ledger-group {
+  margin: 10px 0 4px;
+  color: var(--darkwood);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.ledger-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 10px 8px 16px;
+  background: var(--paper);
+  color: var(--night);
+  border-bottom: 2px solid var(--wood);
+  cursor: pointer;
+}
+
+.ledger-option[data-pattern="mark"] {
+  box-shadow: inset 0 0 0 3px var(--night);
+}
+
+.ledger-option[data-pattern="mark"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 8px;
+  background: var(--night);
+}
+
+.ledger-label,
+.ledger-hint {
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  overflow-wrap: anywhere;
+}
+
+.ledger-label {
+  color: var(--night);
+}
+
+.ledger-hint {
+  color: var(--darkwood);
+}
+
+.spark-flame {
+  display: inline-flex;
+  line-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  vertical-align: top;
+  touch-action: none;
+}
+
+.splash-flame.spark-flame {
+  display: block;
+}
+
+.command-ledger[data-still="true"] .ledger-sheet {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .command-ledger[data-still="false"] .ledger-sheet {
+    animation: ledger-drop 160ms steps(4, end);
+  }
+}
+
+@keyframes ledger-drop {
+  from { transform: translateY(-12px); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .command-ledger .ledger-sheet {
+    animation: none;
+  }
+}

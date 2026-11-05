@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useLocation, useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { agent, forgeNote, founderSeal } from "../design/sprites";
 import { raisedHand } from "../design/sprites/seatedAgent";
@@ -12,6 +12,7 @@ import type { MailItem } from "../study/mailSlot";
 import { isWorkPaused, pauseSnapshot, subscribeWorkPause } from "../study/deskPause";
 import { OverviewSheet } from "../study/OverviewSheet";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
+import { publishRoom, readRoomGoto, rememberTeam } from "../nav/room";
 import { TeamBoard } from "../team/TeamBoard";
 import {
   appendFounderLine,
@@ -43,20 +44,25 @@ function clearTimer(timer: { current: number | null }) {
 
 export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps) {
   const params = useParams();
+  const location = useLocation();
   const teamId = teamIdProp ?? params.id ?? "";
   const team = teamById(teamId);
+  const surface = preview ? null : readRoomGoto(location.state);
   const shut = useDoorShut();
   const layout = useFormFactor();
   const still = useStillFrame();
   const agentScale = layout === "portrait" ? 3 : 2;
   const lampScale = layout === "portrait" ? 4 : 3;
-  const [tab, setTab] = useState<TabKey>("ceo");
+  const [tab, setTab] = useState<TabKey>(surface?.place === "overview" ? "overview" : "ceo");
   const [fromDesks, setFromDesks] = useState(false);
   const [fromBoard, setFromBoard] = useState(false);
   const [boardReturn, setBoardReturn] = useState<TabKey>("ceo");
   const [expanding, setExpanding] = useState<string | null>(null);
   const [sheetId, setSheetId] = useState<string | null>(null);
-  const [drawer, setDrawer] = useState<Drawer>(null);
+  const [drawer, setDrawer] = useState<Drawer>(
+    surface?.place === "library" || surface?.place === "team" ? surface.place : null,
+  );
+  const seenGoto = useRef(surface?.seq ?? 0);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<MachineLine["action"] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -137,6 +143,40 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       if (expandTimer.current !== null) window.clearTimeout(expandTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (preview) return;
+    const goto = readRoomGoto(location.state);
+    if (!goto || goto.seq === seenGoto.current) return;
+    seenGoto.current = goto.seq;
+    clearTimer(expandTimer);
+    setExpanding(null);
+    setSheetId(null);
+    setPose("desk");
+    setPending(null);
+    setNotice(null);
+    setFromDesks(false);
+    setFromBoard(false);
+    setDraft("");
+    if (goto.place === "overview") {
+      setDrawer(null);
+      setTab("overview");
+      return;
+    }
+    if (goto.place === "library") {
+      setDrawer("library");
+      return;
+    }
+    setDrawer("team");
+  }, [location.state, preview]);
+
+  useLayoutEffect(() => {
+    if (preview || !team) return;
+    rememberTeam(team.id);
+    const room =
+      drawer === "library" ? "library" : drawer === "team" ? "team" : tab === "overview" ? "overview" : "chat";
+    publishRoom({ room, teamId: team.id, learnId: null });
+  }, [preview, team, drawer, tab]);
 
   useEffect(() => {
     if (pose !== "lifted") return;
@@ -341,6 +381,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     <main
       className="study"
       data-room={drawer === "library" ? "library" : drawer === "team" ? "board" : "team"}
+      data-place={drawer === "library" ? "library" : drawer === "team" ? "team" : selected === "overview" ? "overview" : "chat"}
       data-lamp={lampStatus}
       data-paper={pose}
       data-preview={preview ? "true" : "false"}

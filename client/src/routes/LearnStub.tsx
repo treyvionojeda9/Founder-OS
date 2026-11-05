@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { assignmentKey, readingBook, readingQuill } from "../design/sprites";
@@ -8,6 +8,7 @@ import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
+import { publishRoom } from "../nav/room";
 import { keepPonderNote, loadPonderNote } from "../study/ponderNote";
 import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
@@ -88,6 +89,11 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     bookRef.current?.focus();
   };
 
+  useLayoutEffect(() => {
+    if (preview) return;
+    publishRoom({ room: "learn", teamId: null, learnId: id });
+  }, [preview, id]);
+
   useEffect(() => {
     if (pose !== "lifted" && !pathOpen) return;
     const onKey = (event: globalThis.KeyboardEvent) => {
@@ -151,6 +157,7 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
     <main
       className="study learn-room"
       data-room="learn"
+      data-place="learn"
       data-paper={pose}
       data-focus={pose === "lifted" ? "sheet" : "room"}
       data-ready={ready ? "true" : "false"}

@@ -9,6 +9,7 @@ import { SettingsPage } from "./routes/SettingsPage";
 import { Splash } from "./routes/Splash";
 import { StatusFrameDemo } from "./routes/StatusFrameDemo";
 import { TeamRoom } from "./routes/TeamRoom";
+import { GotoChrome } from "./nav/GotoChrome";
 import { SessionProvider } from "./storage/session";
 
 function Frame() {
@@ -20,6 +21,7 @@ function Frame() {
         <div className="route-content">
           <Outlet />
         </div>
+        <GotoChrome />
       </div>
     </DoorTransition>
   );
