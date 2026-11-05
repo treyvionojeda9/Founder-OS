@@ -38,12 +38,16 @@ export type TeamAgent = {
   id: string;
   name: string;
   status: AgentStatus;
+  /** Plaque line. Omitted when the fixture has no role. */
+  title?: string;
 };
 
 export type TeamRecord = {
   id: string;
   name: string;
   agents: TeamAgent[];
+  /** Local stapler labels. They never leave the board. */
+  tools: readonly string[];
   transcript: ChatLine[];
 };
 
@@ -80,6 +84,16 @@ type RawLine = {
   action?: { id: string; kind: string; label: string };
 };
 
+function asTitle(value: string | undefined): string | undefined {
+  const title = value?.trim() ?? "";
+  return title.length > 0 ? title : undefined;
+}
+
+function asTools(values: readonly string[] | undefined): string[] {
+  if (!values) return [];
+  return values.map((item) => item.trim()).filter((item) => item.length > 0);
+}
+
 function asTeam(raw: (typeof teamsJson.teams)[number]): TeamRecord {
   return {
     id: raw.id,
@@ -88,7 +102,9 @@ function asTeam(raw: (typeof teamsJson.teams)[number]): TeamRecord {
       id: agent.id,
       name: agent.name,
       status: asStatus(agent.status),
+      title: asTitle(agent.title),
     })),
+    tools: asTools(raw.tools),
     transcript: raw.transcript.map((line) => asLine(raw.id, line as RawLine)),
   };
 }

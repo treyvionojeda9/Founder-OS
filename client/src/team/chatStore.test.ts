@@ -39,6 +39,12 @@ describe("team chat store", () => {
     }
     const hale = teamById("hale-design-lab");
     expect(hale?.agents.map((agent) => agent.status)).toEqual(["working", "idle", "failed"]);
+    expect(hale?.agents.map((agent) => agent.title)).toEqual(["Founder", "Swatch keeper", "Errand runner"]);
+    expect(hale?.tools).toEqual(["Swatch sheet", "Forge stamp", "Errand slip"]);
+    for (const team of listTeams()) {
+      expect(team.tools.length).toBeGreaterThan(0);
+      for (const tool of team.tools) expect(tool).not.toMatch(/https?:|\/api\//);
+    }
     expect(transcriptFor("hale-design-lab").some((line) => isMachineLine(line) && line.action)).toBe(true);
   });
 

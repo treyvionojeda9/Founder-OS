@@ -4,10 +4,11 @@
       "id": "hale-design-lab",
       "name": "Hale Design Lab",
       "agents": [
-        { "id": "ceo", "name": "CEO", "status": "working" },
-        { "id": "atelier", "name": "Atelier", "status": "idle" },
-        { "id": "courier", "name": "Courier", "status": "failed" }
+        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "working" },
+        { "id": "atelier", "name": "Atelier", "title": "Swatch keeper", "status": "idle" },
+        { "id": "courier", "name": "Courier", "title": "Errand runner", "status": "failed" }
       ],
+      "tools": ["Swatch sheet", "Forge stamp", "Errand slip"],
       "transcript": [
         {
           "id": "hale-m1",
@@ -67,9 +68,10 @@
       "id": "cloud-agent-team",
       "name": "Cloud Agent Team",
       "agents": [
-        { "id": "ceo", "name": "CEO", "status": "working" },
-        { "id": "relay", "name": "Relay", "status": "idle" }
+        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "working" },
+        { "id": "relay", "name": "Relay", "title": "Packet clerk", "status": "idle" }
       ],
+      "tools": ["Status line", "Channel slip"],
       "transcript": [
         {
           "id": "cloud-m1",
@@ -109,9 +111,10 @@
       "id": "local-agent-team",
       "name": "Local Agent Team",
       "agents": [
-        { "id": "ceo", "name": "CEO", "status": "idle" },
-        { "id": "bench", "name": "Bench", "status": "working" }
+        { "id": "ceo", "name": "CEO", "title": "Founder", "status": "idle" },
+        { "id": "bench", "name": "Bench", "title": "Bench hand", "status": "working" }
       ],
+      "tools": ["Handoff slip", "Bench clamp"],
       "transcript": [
         {
           "id": "local-m1",

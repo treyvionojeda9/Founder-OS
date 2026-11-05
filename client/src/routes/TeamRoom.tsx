@@ -8,6 +8,7 @@ import { useStillFrame } from "../hooks/useStillFrame";
 import { LibraryShelf } from "../library/LibraryShelf";
 import { DeskGrid } from "../study/DeskGrid";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
+import { TeamBoard } from "../team/TeamBoard";
 import {
   appendFounderLine,
   formatMachineTime,
@@ -30,6 +31,12 @@ type TabKey = string;
 
 const STAMP = "generated · not verified";
 
+function clearTimer(timer: { current: number | null }) {
+  if (timer.current === null) return;
+  window.clearTimeout(timer.current);
+  timer.current = null;
+}
+
 export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps) {
   const params = useParams();
   const teamId = teamIdProp ?? params.id ?? "";
@@ -41,6 +48,8 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const lampScale = layout === "portrait" ? 4 : 3;
   const [tab, setTab] = useState<TabKey>("ceo");
   const [fromDesks, setFromDesks] = useState(false);
+  const [fromBoard, setFromBoard] = useState(false);
+  const [boardReturn, setBoardReturn] = useState<TabKey>("ceo");
   const [expanding, setExpanding] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<Drawer>(null);
   const [draft, setDraft] = useState("");
@@ -111,13 +120,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const onChat = !drawer && selected !== "overview";
   const showGrid = selected === "overview" && !drawer;
   const figureName = selected === "ceo" || selected === "overview" ? "CEO" : agentName;
-  const panelTitle = drawer
-    ? drawer === "library"
-      ? "Library"
-      : "Team"
-    : selected === "overview"
-      ? "Overview"
-      : `${agentName} chat`;
+  const panelTitle = selected === "overview" ? "Overview" : `${agentName} chat`;
   const composerLabel = selected === "ceo" ? "Message the CEO" : `Message ${agentName}`;
   const composerId = preview || !onChat ? undefined : selected === "ceo" ? "ceo-composer" : `composer-${selected}`;
 
@@ -136,12 +139,10 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
 
   const openDesk = (agentId: string) => {
     const land = () => {
-      if (expandTimer.current !== null) {
-        window.clearTimeout(expandTimer.current);
-        expandTimer.current = null;
-      }
+      clearTimer(expandTimer);
       setExpanding(null);
       setFromDesks(true);
+      setFromBoard(false);
       setTab(agentId);
       setDrawer(null);
       setPose("desk");
@@ -156,17 +157,74 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     expandTimer.current = window.setTimeout(land, 280);
   };
 
+  const openTeam = () => {
+    clearTimer(expandTimer);
+    setExpanding(null);
+    if (fromBoard) {
+      setFromBoard(false);
+      setTab(boardReturn);
+    } else {
+      setBoardReturn(selected);
+    }
+    setDrawer("team");
+    setPose("desk");
+    setPending(null);
+    setNotice(null);
+  };
+
+  const openPlaque = (agentId: string) => {
+    const land = () => {
+      clearTimer(expandTimer);
+      setExpanding(null);
+      setFromBoard(true);
+      setTab(agentId);
+      setDrawer(null);
+      setPose("desk");
+      setNotice(null);
+    };
+    if (still) {
+      land();
+      return;
+    }
+    setExpanding(agentId);
+    clearTimer(expandTimer);
+    expandTimer.current = window.setTimeout(land, 280);
+  };
+
+  const leaveBoard = () => {
+    clearTimer(expandTimer);
+    setExpanding(null);
+    setFromBoard(false);
+    setDrawer(null);
+    setTab(boardReturn);
+    setPose("desk");
+    setPending(null);
+    setNotice(null);
+  };
+
   const leave = () => {
     if (drawer === "library") {
       setDrawer(null);
       setPose("desk");
       return;
     }
+    if (drawer === "team") {
+      leaveBoard();
+      return;
+    }
+    if (fromBoard) {
+      setDrawer("team");
+      setFromBoard(false);
+      setTab(boardReturn);
+      setPose("desk");
+      setPending(null);
+      setNotice(null);
+      clearTimer(expandTimer);
+      setExpanding(null);
+      return;
+    }
     if (fromDesks && selected !== "overview") {
-      if (expandTimer.current !== null) {
-        window.clearTimeout(expandTimer.current);
-        expandTimer.current = null;
-      }
+      clearTimer(expandTimer);
       setExpanding(null);
       setFromDesks(false);
       setTab("overview");
@@ -205,7 +263,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   return (
     <main
       className="study"
-      data-room={drawer === "library" ? "library" : "team"}
+      data-room={drawer === "library" ? "library" : drawer === "team" ? "board" : "team"}
       data-lamp={lampStatus}
       data-paper={pose}
       data-preview={preview ? "true" : "false"}
@@ -219,7 +277,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
           <button type="button" aria-pressed={drawer === "library"} onClick={() => setDrawer("library")}>
             Library
           </button>
-          <button type="button" aria-pressed={drawer === "team"} onClick={() => setDrawer("team")}>
+          <button type="button" aria-pressed={drawer === "team"} onClick={openTeam}>
             Team
           </button>
         </nav>
@@ -244,6 +302,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
           setTab(tabs[next].id);
           setDrawer(null);
           setFromDesks(false);
+          setFromBoard(false);
           setPose("desk");
           setExpanding(null);
           const control = preview ? null : document.getElementById(`team-tab-${tabs[next].id}`);
@@ -265,6 +324,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
                 setTab(item.id);
                 setDrawer(null);
                 setFromDesks(false);
+                setFromBoard(false);
                 setPose("desk");
                 setExpanding(null);
               }}
@@ -277,6 +337,8 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       <div className="study-scene">
         {drawer === "library" ? (
           <LibraryShelf teamId={team.id} preview={preview} />
+        ) : drawer === "team" ? (
+          <TeamBoard team={team} still={still} expandingId={expanding} onOpen={openPlaque} />
         ) : showGrid ? (
           <DeskGrid
             agents={team.agents}
@@ -333,23 +395,14 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
                 aria-label="Paper chat"
               >
                 <h1>{panelTitle}</h1>
-                {drawer ? (
-                  <p className="placeholder-copy">{drawerCopy(drawer)}</p>
-                ) : (
-                  <ChatSheet
-                    lines={lines}
-                    notice={notice}
-                    onReview={(action) => {
-                      setNotice(null);
-                      setPending(action);
-                    }}
-                  />
-                )}
-                {drawer ? (
-                  <button type="button" className="text-link sheet-close" onClick={() => setDrawer(null)}>
-                    Close
-                  </button>
-                ) : null}
+                <ChatSheet
+                  lines={lines}
+                  notice={notice}
+                  onReview={(action) => {
+                    setNotice(null);
+                    setPending(action);
+                  }}
+                />
               </div>
               {onChat ? (
                 <form className="paper-form" onSubmit={send} onClick={(event) => event.stopPropagation()}>
@@ -389,11 +442,6 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       ) : null}
     </main>
   );
-}
-
-function drawerCopy(drawer: Exclude<Drawer, null>): string {
-  if (drawer === "library") return "Human notes for this team.";
-  return "Team is a stub. The roster beyond this chat comes later.";
 }
 
 function ChatSheet({

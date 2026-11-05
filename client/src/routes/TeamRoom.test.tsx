@@ -1,11 +1,13 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { lampArt } from "../study/lampArt";
 import { localDb, noteRepo, sessionSource } from "../storage/services";
 import { SessionProvider } from "../storage/session";
 import { listTeams, resetChatForTests } from "../team/chatStore";
+import { TeamBoard } from "../team/TeamBoard";
+import boardSource from "../team/TeamBoard.tsx?raw";
 import { TeamRoom } from "./TeamRoom";
 
 const originalMatchMedia = window.matchMedia.bind(window);
@@ -39,6 +41,22 @@ function renderRoom(id = "hale-design-lab") {
     <SessionProvider>
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <TeamRoom teamId={id} />
+      </MemoryRouter>
+    </SessionProvider>,
+  );
+}
+
+function renderRouted(id = "hale-design-lab") {
+  return render(
+    <SessionProvider>
+      <MemoryRouter
+        initialEntries={[`/team/${id}`]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
+          <Route path="/team/:id" element={<TeamRoom />} />
+          <Route path="/home" element={<h1>Hall</h1>} />
+        </Routes>
       </MemoryRouter>
     </SessionProvider>,
   );
@@ -91,13 +109,15 @@ describe("CEO paper chat", () => {
     expect(await localDb.humanNotes.count()).toBe(0);
   });
 
-  it("keeps Team as a stub", async () => {
+  it("opens the team board instead of a stub", async () => {
+    preferStillFrames();
     const user = userEvent.setup();
     renderRoom();
     await user.click(screen.getByRole("button", { name: "Team" }));
-    expect(screen.getByText(/Team is a stub/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Close" }));
-    expect(screen.getByRole("heading", { name: "CEO chat" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
+    expect(screen.queryByText(/Team is a stub/)).not.toBeInTheDocument();
+    expect(document.querySelector(".team-board")).toHaveAttribute("data-count", "3");
+    expect(document.querySelector(".team-board")).toHaveAttribute("data-still", "true");
   });
 
   it("lifts the desk paper and sets it back down", async () => {
@@ -199,6 +219,170 @@ describe("team overview desks", () => {
     expect(screen.getByText(/lamp is out/)).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Desk lamp, failed" })).toBeInTheDocument();
     expect(document.querySelector(".agent-desk")).not.toBeInTheDocument();
+  });
+});
+
+describe("team board", () => {
+  it("shows a plaque, a title, and a lamp for every agent", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    for (const team of listTeams()) {
+      cleanup();
+      renderRoom(team.id);
+      await user.click(screen.getByRole("button", { name: "Team" }));
+      expect(document.querySelector(".team-board")).toHaveAttribute("data-count", String(team.agents.length));
+      expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
+      expect(document.querySelector(".board-team")).toHaveTextContent(team.name);
+      expect(screen.queryByText(/Team is a stub/)).not.toBeInTheDocument();
+      for (const agent of team.agents) {
+        const lamp = lampArt(agent.status);
+        const plaque = screen.getByRole("button", { name: new RegExp(agent.name) });
+        expect(plaque).toHaveAttribute("data-status", agent.status);
+        expect(plaque).toHaveTextContent(lamp.caption);
+        if (agent.title) expect(plaque).toHaveTextContent(agent.title);
+        expect(plaque.querySelector(`[aria-label="${lamp.title}"]`)).toBeTruthy();
+      }
+    }
+  });
+
+  it("opens an agent paper chat and Back returns to the board, then the CEO study", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    await localDb.open();
+    renderRouted();
+
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    await user.click(screen.getByRole("button", { name: /Atelier/ }));
+    expect(screen.getByRole("heading", { name: "Atelier chat" })).toBeInTheDocument();
+    expect(screen.getByText(/swatch sheet is waiting/)).toBeInTheDocument();
+    expect(screen.getByText("generated · not verified")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Desk lamp, dark" })).toBeInTheDocument();
+    expect(document.querySelector(".team-board")).not.toBeInTheDocument();
+
+    await user.type(screen.getByRole("textbox", { name: "Message Atelier" }), "Pin the swatch.");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    expect(screen.getByText("Pin the swatch.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "File the swatch" }));
+    await user.click(screen.getByRole("button", { name: "Approve" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Approved. Nothing ran.");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
+    expect(document.querySelector(".team-board")).toHaveAttribute("data-count", "3");
+    expect(screen.queryByRole("heading", { name: "Hall" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "CEO chat" })).toBeInTheDocument();
+    expect(document.querySelector(".team-board")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Hall" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Pin the swatch.")).not.toBeInTheDocument();
+  });
+
+  it("returns to the open desk chat, then Overview, without shutting the door", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    renderRouted();
+    await user.click(screen.getByRole("tab", { name: "Overview" }));
+    await user.click(screen.getByRole("button", { name: /Atelier/ }));
+    expect(screen.getByRole("heading", { name: "Atelier chat" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Atelier chat" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Hall" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
+    expect(document.querySelector(".desk-grid")).toHaveAttribute("data-count", "3");
+  });
+
+  it("returns to Overview when the board was opened from the desks", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    renderRouted();
+    await user.click(screen.getByRole("tab", { name: "Overview" }));
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
+    expect(document.querySelector(".desk-grid")).toHaveAttribute("data-count", "3");
+    expect(document.querySelector(".team-board")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Hall" })).not.toBeInTheDocument();
+  });
+
+  it("lists fixture tools on the stapler slip and does not call out", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    renderRoom();
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    await user.click(screen.getByRole("button", { name: "Stapler" }));
+    expect(screen.getByRole("menu", { name: "Fixture tools" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Swatch sheet" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Forge stamp" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Errand slip" })).toBeInTheDocument();
+    await user.click(screen.getByRole("menuitem", { name: "Swatch sheet" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Label only. Nothing left this board.");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("menu", { name: "Fixture tools" })).not.toBeInTheDocument();
+  });
+
+  it("hides a missing title and shows a blank slip when the fixture has no tools", async () => {
+    const user = userEvent.setup();
+    render(
+      <TeamBoard
+        team={{
+          id: "bare",
+          name: "Bare Team",
+          tools: [],
+          transcript: [],
+          agents: [{ id: "ceo", name: "CEO", status: "idle" }],
+        }}
+        still
+        expandingId={null}
+        onOpen={() => {}}
+      />,
+    );
+    const plaque = screen.getByRole("button", { name: /CEO/ });
+    expect(plaque).toHaveTextContent("Idle");
+    expect(plaque.querySelector(".plaque-title")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Stapler" }));
+    expect(screen.getByText("This slip is blank.")).toBeInTheDocument();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("keeps the board off the human vault", () => {
+    expect(boardSource).not.toMatch(/humanNotes|humanRevisions|saveHumanEdit|fetch\(/);
+  });
+
+  it("swaps a plaque into chat in one frame when motion is reduced", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    renderRoom();
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    expect(document.querySelector(".team-board")).toHaveAttribute("data-still", "true");
+    await user.click(screen.getByRole("button", { name: /Courier/ }));
+    expect(screen.getByRole("heading", { name: "Courier chat" })).toBeInTheDocument();
+    expect(screen.getByText(/lamp is out/)).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Desk lamp, failed" })).toBeInTheDocument();
+    expect(document.querySelector(".plaque")).not.toBeInTheDocument();
+  });
+
+  it("swells a plaque before the chat when motion is allowed", async () => {
+    const user = userEvent.setup();
+    renderRoom();
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    await user.click(screen.getByRole("button", { name: /Courier/ }));
+    expect(document.querySelector('.plaque[data-expanding="true"]')).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Courier chat" })).toBeInTheDocument();
+    expect(document.querySelector(".plaque")).not.toBeInTheDocument();
   });
 });
 
