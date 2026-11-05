@@ -8,6 +8,7 @@ import { linesForAgent, type TeamAgent } from "../team/chatStore";
 import { pauseSnapshot, subscribeWorkPause, toggleWorkPause } from "./deskPause";
 import { deskStampFor } from "./deskStamp";
 import { setTileCount, subscribeDeskTiles, TILE_COUNTS, TILE_TAP_MS, tileCount, type TileCount } from "./deskTiles";
+import { SpaceWash } from "../hall/SpaceWash";
 import { EmptyDesk } from "./EmptyDesk";
 import { MailTray } from "./MailTray";
 import type { MailItem } from "./mailSlot";
@@ -125,6 +126,8 @@ export function DeskGrid({
       data-arrange={arrange}
       data-tiles={arrange === "tiles" ? String(tiles) : undefined}
       data-focus={focusedId ?? "none"}
+      data-space="work"
+      data-lighting="ember"
       style={arrange === "tiles" ? { ["--tile-count" as string]: String(tiles) } : undefined}
     >
       <h1 className="overview-title" hidden={covered}>
@@ -139,7 +142,9 @@ export function DeskGrid({
         ref={roomRef}
         aria-hidden={covered ? true : undefined}
       >
-        <span className="agent-desk-wall" data-material="plaster" aria-hidden="true" />
+        <span className="agent-desk-wall" data-material="plaster" aria-hidden="true">
+          <SpaceWash space="work" part="wall" />
+        </span>
         <span className="desk-room-windows" aria-hidden="true">
           {(agents.length > 0 ? agents : [{ id: "vacant" }]).map((agent) => (
             <span key={agent.id} className="desk-room-window">
@@ -248,6 +253,7 @@ export function DeskGrid({
                       </span>
                       <span className="agent-desk-volume">
                         <span className="agent-desk-top" data-material="desk" aria-hidden="true">
+                          <SpaceWash space="work" part="desk" />
                           <span className="desk-plank desk-plank-a" />
                           <span className="desk-plank desk-plank-b" />
                           {lit ? (

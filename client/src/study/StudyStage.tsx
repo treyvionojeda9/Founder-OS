@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { StatusFrame } from "../design/StatusFrame";
 import type { AgentStatus } from "../team/chatStore";
+import { SpaceWash } from "../hall/SpaceWash";
 import { lampPoolPalette, paintDeskPool, paintPaperWash } from "./lightPool";
 import { usePaperSettle } from "./paperSettle";
 import { WorkingLamp } from "./WorkingLamp";
@@ -41,9 +42,15 @@ export function StudyStage({
   const poolPalette = lampPoolPalette(variant);
   const settle = usePaperSettle(pose, still);
   return (
-    <div className="study-stage" data-variant={variant}>
+    <div
+      className="study-stage"
+      data-variant={variant}
+      data-space={variant}
+      data-lighting={variant === "school" ? "school" : "ember"}
+    >
       <div className="study-world">
         <div className="back-wall" data-material="plaster" aria-hidden="true">
+          <SpaceWash space={variant} part="wall" />
           {variant === "school" ? <ReadingWindow /> : null}
         </div>
         <div className="wainscot" data-material="wainscot" aria-hidden="true">
@@ -56,6 +63,7 @@ export function StudyStage({
         {behind ? <div className="behind-cast">{behind}</div> : null}
         <div className="desk-rig">
           <div className="desk-top" data-material="desk">
+            <SpaceWash space={variant} part="desk" />
             <span className="plank plank-a" aria-hidden="true" />
             <span className="plank plank-b" aria-hidden="true" />
             <span className="plank plank-c" aria-hidden="true" />

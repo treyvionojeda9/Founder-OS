@@ -6,7 +6,11 @@ import { doors as fixtureDoors, type Door, type DoorSection } from "../fixtures/
 import { useDoorArm, useDoorOpen, type HallLocationState } from "../hall/doorApi";
 import { doorPath } from "../hall/doorMotion";
 import { doorPixelScale, doorPose, doorsForSearch } from "../hall/layout";
+import { SpaceBackdrop } from "../hall/SpaceBackdrop";
+import { spaceSwapFrames } from "../hall/spaceSkin";
+import { SpaceSoundToggle } from "../hall/SpaceSoundToggle";
 import { useFormFactor } from "../hooks/useFormFactor";
+import { useStillFrame } from "../hooks/useStillFrame";
 import { SparkFlame } from "../nav/FlamePress";
 import { publishRoom, readHallGoto } from "../nav/room";
 import { settingsRepo } from "../storage/services";
@@ -26,9 +30,13 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
   const hallDoors = doorsForSearch(doors, params.toString());
   const hallGoto = readHallGoto(location.state);
   const [section, setSection] = useState<DoorSection>(hallGoto?.section ?? "work");
+  const [spaceTick, setSpaceTick] = useState(0);
+  const sectionNow = useRef(section);
   const hydrated = useRef(hallGoto !== null);
   const appliedGoto = useRef(hallGoto?.seq ?? 0);
+  const still = useStillFrame();
   const showToggle = hallDoors.length >= 2;
+  sectionNow.current = section;
 
   useEffect(() => {
     let live = true;
@@ -47,6 +55,8 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
 
   function onSection(next: DoorSection) {
     hydrated.current = true;
+    if (sectionNow.current !== next) setSpaceTick((tick) => tick + 1);
+    sectionNow.current = next;
     setSection(next);
     if (showToggle) void settingsRepo.setSection(next).catch(() => undefined);
   }
@@ -81,7 +91,15 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
 
   return (
     <>
-      <div className="hall" data-place={section === "school" ? "school" : "work"}>
+      <div
+        className="hall"
+        data-place={section === "school" ? "school" : "work"}
+        data-space={section === "school" ? "school" : "work"}
+        data-lighting={section === "school" ? "school" : "ember"}
+        data-motion={still ? "cut" : "crossfade"}
+        data-frames={spaceSwapFrames(still)}
+        data-space-tick={spaceTick}
+      >
         <aside className="rail">
           <SparkFlame scale={4} enabled={layout !== "desktop"} />
           <h1 className="wordmark">Spark of Freedom</h1>
@@ -91,6 +109,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
           </Link>
         </aside>
         <main className="stage" data-hall="void">
+          <SpaceBackdrop space={section === "school" ? "school" : "work"} still={still} />
           <header className="pixel-bar stage-head">
             <div className="compact-brand">
               <SparkFlame scale={4} enabled={layout !== "desktop"} />
@@ -139,6 +158,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
       {showToggle ? (
         <div className="toggle-dock">
           <SectionToggle section={section} onChange={onSection} />
+          <SpaceSoundToggle />
         </div>
       ) : null}
     </>
