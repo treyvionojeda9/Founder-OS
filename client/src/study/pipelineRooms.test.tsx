@@ -133,7 +133,9 @@ describe("pipeline rooms", () => {
     await localDb.open();
     const opened = renderFloor(true);
 
-    const rooms = document.querySelector(".pipeline-rooms");
+    const rooms = document.querySelector(".desk-room .pipeline-rooms");
+    expect(document.querySelector(".desk-room > .desk-hall .pipeline-rooms")).toBeNull();
+    expect(rooms?.parentElement).toBe(document.querySelector(".desk-room"));
     expect(rooms).toHaveAttribute("data-lighting", "ember");
     expect(rooms).toHaveAttribute("data-reach", "local");
     expect(rooms).toHaveAttribute("data-still", "true");
