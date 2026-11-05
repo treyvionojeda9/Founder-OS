@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { founderEmber } from "../design/palette";
 import { grayscaleGrid } from "../design/spriteGrid";
+import { deskLightPool, faceWashByMark, paperLightPool, seatedByMark, seatMarks } from "../design/sprites/seatedAgent";
 import { statusChip } from "../design/type";
 import type { TeamAgent } from "../team/chatStore";
 import { DeskGrid } from "./DeskGrid";
@@ -56,6 +57,45 @@ describe("overview desk scene", () => {
 
     await user.click(screen.getByRole("button", { name: /Atelier/ }));
     expect(opened).toEqual(["atelier"]);
+  });
+
+  it("seats one figure per desk and pools lamp light only while working", () => {
+    render(<DeskGrid agents={agents} still expandingId={null} onOpen={() => {}} />);
+
+    const seats = document.querySelectorAll(".agent-seat");
+    expect(seats).toHaveLength(agents.length);
+    expect([...seats].map((seat) => seat.getAttribute("data-seat"))).toEqual(["hair", "hood", "collar"]);
+    expect(document.querySelectorAll(".window-sill")).toHaveLength(agents.length);
+    expect(document.querySelectorAll(".window-star").length).toBeGreaterThanOrEqual(agents.length * 2);
+    expect(document.querySelectorAll(".floor-board").length).toBeGreaterThan(4);
+    expect(document.querySelectorAll(".agent-desk-front")).toHaveLength(agents.length);
+    expect(document.querySelectorAll(".agent-desk-leg")).toHaveLength(agents.length * 2);
+
+    expect(document.querySelectorAll(".agent-desk[data-status='working'] [data-light-pool]")).toHaveLength(3);
+    expect(document.querySelectorAll(".agent-desk[data-status='idle'] [data-light-pool]")).toHaveLength(0);
+    expect(document.querySelectorAll(".agent-desk[data-status='failed'] [data-light-pool]")).toHaveLength(0);
+    expect(document.querySelector(".agent-desk[data-status='failed'] [aria-label='Desk lamp, failed']")).toBeTruthy();
+
+    const ember = new Set([".", "n", "s", "p", "w", "d", "e", "f", "m"]);
+    for (const mark of seatMarks) {
+      expect(seatedByMark[mark]).toHaveLength(faceWashByMark[mark].length);
+      for (const grid of [seatedByMark[mark], faceWashByMark[mark]]) {
+        for (const row of grid) {
+          for (const ch of row) expect(ember.has(ch)).toBe(true);
+        }
+      }
+    }
+    for (const row of [...deskLightPool, ...paperLightPool]) {
+      for (const ch of row) expect(ember.has(ch)).toBe(true);
+    }
+    const wood = grayscaleGrid(["w"])[0][0];
+    const pool = grayscaleGrid(deskLightPool)
+      .flat()
+      .filter((luma) => luma >= 0);
+    expect(Math.max(...pool)).toBeGreaterThan(wood + 40);
+    expect(grayscaleGrid(seatedByMark.hair)).not.toEqual(grayscaleGrid(seatedByMark.hood));
+    expect(grayscaleGrid(seatedByMark.hair)).not.toEqual(grayscaleGrid(seatedByMark.collar));
+    expect(grayscaleGrid(seatedByMark.hood)).not.toEqual(grayscaleGrid(seatedByMark.collar));
   });
 
   it("keeps the overview floor and the status tokens inside Founder Ember", () => {

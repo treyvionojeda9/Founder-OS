@@ -59,6 +59,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const expandTimer = useRef<number | null>(null);
+  const deskFocus = useRef<string | null>(null);
   const knownAgent =
     !!team && tab !== "overview" && team.agents.some((item) => item.id === tab) ? tab : "ceo";
   const lines = useSyncExternalStore(
@@ -94,6 +95,14 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [pending]);
+
+  useEffect(() => {
+    const id = deskFocus.current;
+    if (!id || tab !== "overview" || drawer) return;
+    deskFocus.current = null;
+    const node = document.querySelector<HTMLButtonElement>(`.agent-desk[data-agent="${CSS.escape(id)}"]`);
+    node?.focus({ preventScroll: true });
+  }, [tab, drawer]);
 
   useEffect(() => {
     return () => {
@@ -243,6 +252,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       clearTimer(expandTimer);
       setExpanding(null);
       setFromDesks(false);
+      deskFocus.current = selected;
       setTab("overview");
       setDrawer(null);
       setPose("desk");

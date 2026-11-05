@@ -301,6 +301,7 @@ describe("team overview desks", () => {
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
     expect(document.querySelector(".desk-grid")).toHaveAttribute("data-count", "3");
+    expect(screen.getByRole("button", { name: /Atelier/ })).toHaveFocus();
 
     await user.click(screen.getByRole("tab", { name: "CEO" }));
     expect(screen.getByRole("heading", { name: "CEO chat" })).toBeInTheDocument();

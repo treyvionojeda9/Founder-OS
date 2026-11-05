@@ -1289,12 +1289,15 @@ html:has(.room-portal-layer) body {
 
 /* One shared study hall. Desks sit on the floor in a single row. */
 .desk-room {
+  --floor-rise: 46%;
+  --wainscot-rise: 24%;
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
   border: 4px solid var(--darkwood);
   background: var(--night);
+  image-rendering: pixelated;
 }
 
 .desk-grid-list {
@@ -1378,7 +1381,7 @@ html:has(.room-portal-layer) body {
   left: 0;
   right: 0;
   top: 0;
-  bottom: clamp(200px, 36%, 300px);
+  bottom: var(--floor-rise);
   z-index: 0;
 }
 
@@ -1386,8 +1389,10 @@ html:has(.room-portal-layer) body {
   position: absolute;
   left: 12px;
   right: 12px;
-  top: 20px;
-  height: 104px;
+  top: 12px;
+  height: calc(100% - var(--floor-rise) - var(--wainscot-rise) - 28px);
+  min-height: 64px;
+  max-height: 128px;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
@@ -1398,19 +1403,69 @@ html:has(.room-portal-layer) body {
 
 .desk-room-window {
   position: relative;
-  border: 4px solid var(--wood);
-  background: var(--night);
-  box-shadow: inset 0 0 0 4px var(--slate);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 4px solid var(--darkwood);
+  background: var(--wood);
+  padding: 4px 4px 0;
+  box-shadow: 4px 4px 0 var(--night);
 }
 
-.desk-room-window::before,
-.desk-room-window::after {
-  content: "";
+.window-reveal {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  background: var(--darkwood);
+  padding: 4px;
+}
+
+.window-glass {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 20px;
+  background: var(--night);
+  box-shadow: inset 4px 4px 0 var(--slate);
+}
+
+.window-star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--slate);
+}
+
+.desk-room-window:nth-child(3n + 1) .window-star:nth-child(1) { left: 8px; top: 6px; }
+.desk-room-window:nth-child(3n + 1) .window-star:nth-child(2) {
+  left: 18px;
+  top: 16px;
+  background: var(--ember);
+}
+.desk-room-window:nth-child(3n + 1) .window-star:nth-child(3) { right: 8px; top: 8px; }
+
+.desk-room-window:nth-child(3n + 2) .window-star:nth-child(1) { left: 14px; top: 10px; }
+.desk-room-window:nth-child(3n + 2) .window-star:nth-child(2) {
+  right: 12px;
+  top: 6px;
+  background: var(--ember);
+}
+.desk-room-window:nth-child(3n + 2) .window-star:nth-child(3) { left: 8px; bottom: 8px; }
+
+.desk-room-window:nth-child(3n + 3) .window-star:nth-child(1) { right: 8px; top: 14px; }
+.desk-room-window:nth-child(3n + 3) .window-star:nth-child(2) {
+  left: 10px;
+  top: 8px;
+  background: var(--ember);
+}
+.desk-room-window:nth-child(3n + 3) .window-star:nth-child(3) { right: 16px; bottom: 10px; }
+
+.window-mullion {
   position: absolute;
   background: var(--darkwood);
+  pointer-events: none;
 }
 
-.desk-room-window::before {
+.window-mullion-v {
   left: 50%;
   top: 4px;
   bottom: 4px;
@@ -1418,7 +1473,7 @@ html:has(.room-portal-layer) body {
   margin-left: -2px;
 }
 
-.desk-room-window::after {
+.window-mullion-h {
   top: 50%;
   left: 4px;
   right: 4px;
@@ -1426,15 +1481,96 @@ html:has(.room-portal-layer) body {
   margin-top: -2px;
 }
 
+.window-sill {
+  flex: none;
+  height: 8px;
+  margin: 4px -4px 0;
+  background: var(--wood);
+  box-shadow: 0 4px 0 var(--darkwood);
+}
+
 .agent-desk-wainscot {
   position: absolute;
   left: 0;
   right: 0;
   top: auto;
-  height: min(220px, 30%);
-  bottom: clamp(200px, 36%, 300px);
+  height: var(--wainscot-rise);
+  bottom: var(--floor-rise);
   z-index: 0;
   pointer-events: none;
+}
+
+.desk-room .agent-desk-wainscot {
+  background-image: none;
+  background-color: var(--darkwood);
+}
+
+.wall-bays {
+  position: absolute;
+  inset: 8px 12px 12px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.wall-bay {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 4px solid var(--wood);
+  background: var(--darkwood);
+  box-shadow: inset -4px -4px 0 var(--night);
+}
+
+.wall-cubby {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 12px;
+  background: var(--slate);
+  box-shadow: inset 8px 8px 0 var(--night);
+}
+
+.wall-shelf {
+  flex: none;
+  height: 6px;
+  background: var(--wood);
+  box-shadow: 0 4px 0 var(--darkwood);
+}
+
+.wall-bay:nth-child(3n + 1) .wall-cubby:first-child::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  bottom: 6px;
+  width: 18px;
+  height: 26px;
+  background: var(--paper);
+  box-shadow:
+    inset 4px 0 0 var(--darkwood),
+    4px 4px 0 var(--night);
+}
+
+.wall-bay:nth-child(3n + 2) .wall-cubby:last-child::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  bottom: 6px;
+  width: 22px;
+  height: 8px;
+  background: var(--wood);
+  box-shadow: 0 4px 0 var(--darkwood);
+}
+
+.wall-bay:nth-child(3n + 3) .wall-cubby:first-child::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  width: 16px;
+  height: 16px;
+  background: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--wood);
 }
 
 .desk-room-rail {
@@ -1442,11 +1578,11 @@ html:has(.room-portal-layer) body {
   left: 0;
   right: 0;
   top: auto;
-  bottom: calc(clamp(200px, 36%, 300px) + min(220px, 30%));
+  bottom: calc(var(--floor-rise) + var(--wainscot-rise));
   height: 8px;
   background: var(--wood);
   box-shadow: 0 4px 0 var(--darkwood);
-  z-index: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -1455,21 +1591,118 @@ html:has(.room-portal-layer) body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: clamp(200px, 36%, 300px);
+  height: var(--floor-rise);
   z-index: 1;
+  overflow: hidden;
   border-top: 4px solid var(--darkwood);
+}
+
+.floor-steps {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background: var(--night);
+  pointer-events: none;
+}
+
+.floor-board {
+  flex: none;
+  align-self: center;
+  box-sizing: border-box;
+  border-bottom: 4px solid var(--darkwood);
+  image-rendering: pixelated;
+}
+
+.floor-board[data-depth="7"] {
+  width: 74%;
+  height: 8px;
+  background: var(--slate);
+  border-bottom-color: var(--night);
+}
+
+.floor-board[data-depth="6"] {
+  width: 80%;
+  height: 12px;
+  background: var(--darkwood);
+}
+
+.floor-board[data-depth="5"] {
+  width: 86%;
+  height: 14px;
+  background: var(--darkwood);
+}
+
+.floor-board[data-depth="4"] {
+  width: 92%;
+  height: 18px;
+  background: var(--darkwood);
+}
+
+.floor-board[data-depth="3"] {
+  width: 96%;
+  height: 24px;
+  background: var(--wood);
+}
+
+.floor-board[data-depth="2"],
+.floor-board[data-depth="1"],
+.floor-board[data-depth="0"] {
+  width: 100%;
+  background: var(--wood);
+}
+
+.floor-board[data-depth="2"] { height: 32px; }
+.floor-board[data-depth="1"] { height: 44px; }
+
+.floor-board[data-depth="0"] {
+  flex: 1 1 auto;
+  min-height: 20px;
+}
+
+.agent-desk-stage {
+  order: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.agent-seat {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 52px;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding-left: 28px;
+  pointer-events: none;
+}
+
+.agent-figure {
+  position: relative;
+  line-height: 0;
+}
+
+.face-pool {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 0;
+  pointer-events: none;
 }
 
 .agent-desk-lamp-row {
   order: 1;
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 8px;
   min-width: 0;
-  padding: 0 4% 0 6%;
-  margin-bottom: -14px;
+  padding: 0 8px 0 10px;
+  margin-bottom: -18px;
   position: relative;
-  z-index: 2;
+  z-index: 4;
 }
 
 .agent-desk-lamp {
@@ -1477,42 +1710,110 @@ html:has(.room-portal-layer) body {
   line-height: 0;
 }
 
-.agent-desk-top {
-  order: 2;
+.agent-desk-volume {
+  display: block;
   position: relative;
-  height: 36px;
-  margin: 0 4%;
+  z-index: 3;
+  margin: 0 8%;
+}
+
+.agent-desk-top {
+  display: block;
+  position: relative;
+  height: 32px;
   border: 4px solid var(--darkwood);
-  box-shadow: inset 0 -4px 0 var(--darkwood);
+  border-bottom: 0;
+  box-shadow: inset 0 4px 0 var(--wood);
   z-index: 1;
 }
 
-.agent-desk[data-status="working"] .agent-desk-top {
-  box-shadow:
-    inset 0 4px 0 var(--ember),
-    inset 0 -4px 0 var(--darkwood);
+.desk-plank {
+  position: absolute;
+  top: 4px;
+  bottom: 0;
+  width: 4px;
+  background: var(--darkwood);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.agent-desk-top::after {
-  content: "";
+.desk-plank-a { left: 34%; }
+.desk-plank-b { left: 68%; }
+
+.overview-pool {
   position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 100%;
-  height: 8px;
+  line-height: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.agent-desk-top > .overview-pool {
+  left: 22%;
+  bottom: 2px;
+}
+
+.agent-desk-front {
+  display: block;
+  height: 22px;
   background: var(--darkwood);
-  box-shadow: inset 0 4px 0 var(--wood);
+  box-shadow:
+    inset 0 4px 0 var(--wood),
+    inset 0 -4px 0 var(--night);
+}
+
+.agent-desk-legs {
+  display: flex;
+  justify-content: space-between;
+  height: 16px;
+  padding: 0 14px;
+}
+
+.agent-desk-leg {
+  display: block;
+  width: 14px;
+  height: 16px;
+  background: var(--darkwood);
+  box-shadow: inset -4px 0 0 var(--night);
+}
+
+.agent-desk-shadow {
+  display: block;
+  height: 6px;
+  margin: 0 8px;
+  background: var(--night);
+  box-shadow: 0 4px 0 var(--darkwood);
 }
 
 .agent-desk-sheet {
   position: absolute;
   right: 8%;
-  top: -16px;
-  width: 36px;
-  height: 24px;
+  top: -18px;
+  width: 40px;
+  height: 28px;
   background: var(--paper);
   border: 3px solid var(--darkwood);
-  z-index: 2;
+  z-index: 3;
+}
+
+.agent-desk-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 8px;
+  bottom: 0;
+  width: 10px;
+  background: var(--slate);
+}
+
+.agent-desk[data-status="working"] .agent-desk-sheet::before {
+  width: 4px;
+  background: var(--ember);
+}
+
+.agent-desk-sheet .overview-pool {
+  left: 2px;
+  top: 3px;
+  z-index: 1;
 }
 
 .agent-desk-sheet::after {
@@ -1527,7 +1828,7 @@ html:has(.room-portal-layer) body {
 }
 
 .agent-desk-plaque {
-  order: 3;
+  order: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2152,15 +2453,14 @@ html:has(.room-portal-layer) body {
   grid-template-rows: auto;
 }
 
-.app[data-layout="portrait"] .agent-desk-wainscot {
-  top: 148px;
-  height: auto;
-  bottom: clamp(200px, 36%, 300px);
+.app[data-layout="portrait"] .desk-room {
+  --floor-rise: 40%;
+  --wainscot-rise: 26%;
 }
 
-.app[data-layout="portrait"] .desk-room-rail {
-  top: 140px;
-  bottom: auto;
+.app[data-layout="desktop"] .desk-room {
+  --floor-rise: 48%;
+  --wainscot-rise: 22%;
 }
 
 .app[data-layout="landscape"] .paper-slot[data-pose="desk"],
