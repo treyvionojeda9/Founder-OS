@@ -157,6 +157,8 @@ test("school door opens into the learning desk", async ({ page }, info) => {
   });
   expect(spillArea).toBe(0);
   await seek(page, Math.round(ENTER_MS * 0.28));
+  const ajar = await page.locator(".door.is-opening .spill").evaluate((el) => Number(getComputedStyle(el).opacity));
+  expect(ajar).toBeGreaterThan(0.5);
   await expect(page).toHaveURL(/\/home$/);
   await keep(page, "school-door-mid-tablet-portrait");
   await page.clock.runFor(ENTER_MS + 500);

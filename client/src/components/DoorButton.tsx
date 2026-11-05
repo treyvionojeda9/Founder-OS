@@ -73,6 +73,7 @@ export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps
     "--drop": `${pose.drop}px`,
     "--swing-ms": `${DOLLY_MS}ms`,
     "--dolly-ms": `${ENTER_MS - DOLLY_MS}ms`,
+    "--enter-ms": `${ENTER_MS}ms`,
     "--pool-w": `${lightPoolA[0].length * scale}px`,
     "--edge": `${depth}px`,
   } as CSSProperties;

@@ -21,26 +21,22 @@ export function paintWarmLight(ctx: CanvasRenderingContext2D, width: number, hei
 }
 
 /**
- * Stepped vignette. Night is already the darkest palette swatch, so the
- * mask uses black cells in hard bands rather than a new sprite colour.
+ * Stepped hall vignette. Solid rings of slate then black — no Bayer checker.
+ * Night is the page colour, so the open middle stays unpainted.
  */
 export function paintVignette(ctx: CanvasRenderingContext2D, width: number, height: number, cell: number) {
   ctx.clearRect(0, 0, width, height);
   for (let y = 0; y < height; y += cell) {
     for (let x = 0; x < width; x += cell) {
-      const nx = (x / width - 0.5) * 2;
-      const ny = (y / height - 0.5) * 2;
+      const nx = ((x + cell * 0.5) / width - 0.5) * 2;
+      const ny = ((y + cell * 0.5) / height - 0.5) * 2;
       const r = Math.hypot(nx * 0.92, ny);
-      let band = 0;
-      if (r > 0.96) band = 16;
-      else if (r > 0.82) band = 11;
-      else if (r > 0.68) band = 6;
-      if (band === 0) continue;
-      const thresh = BAYER[Math.floor(y / cell) % 4][Math.floor(x / cell) % 4];
-      if (band > thresh) {
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(x, y, cell, cell);
-      }
+      let color: string | null = null;
+      if (r > 0.92) color = "#000000";
+      else if (r > 0.74) color = founderEmber.slate;
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, cell, cell);
     }
   }
 }
