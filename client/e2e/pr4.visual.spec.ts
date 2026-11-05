@@ -150,6 +150,7 @@ test("school door opens into the learning desk", async ({ page }, info) => {
   await page.getByRole("button", { name: /Reading Room/ }).click();
   await expect(page.locator(".room-portal .learn-room")).toBeVisible();
   await expect(page.locator(".room-portal .desk-top")).toBeVisible();
+  // CSS time is not the mocked clock. Pin the shut frame before reading the spill.
   await seek(page, 0);
   const spillArea = await page.locator(".door.is-opening .spill").evaluate((el) => {
     const opacity = Number(getComputedStyle(el).opacity);

@@ -102,14 +102,21 @@ export function stepMailIndex(index: number, count: number, direction: 1 | -1): 
   return next;
 }
 
-/** Words painted on the plaque, after the count. */
+/** Words painted on the slot. The accessible name has to contain this phrase. */
 export const MAIL_SLOT_CAPTION = "Needs you";
 
+export function mailSlotVisibleLabel(count: number): string {
+  return `${count} ${MAIL_SLOT_CAPTION}`;
+}
+
 /**
- * Plaque text is `{count} Needs you`. The name starts with that, then the
- * slot role. A space has to exist in the DOM between the count and the
- * caption, or the visible string becomes `2Needs you` and axe rejects the label.
+ * Accessible name for the slot mouth.
+ * It starts with the visible plaque (`2 Needs you`) so the name is not a mismatch,
+ * then announces the mail slot and how many items need you.
  */
 export function mailSlotName(count: number): string {
-  return `${count} ${MAIL_SLOT_CAPTION}, mail slot`;
+  const visible = mailSlotVisibleLabel(count);
+  if (count === 0) return `${visible}, mail slot, nothing needs you`;
+  if (count === 1) return `${visible}, mail slot, 1 needs you`;
+  return `${visible}, mail slot, ${count} need you`;
 }
