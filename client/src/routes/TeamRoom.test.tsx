@@ -231,6 +231,8 @@ describe("team board", () => {
       renderRoom(team.id);
       await user.click(screen.getByRole("button", { name: "Team" }));
       expect(document.querySelector(".team-board")).toHaveAttribute("data-count", String(team.agents.length));
+      expect(document.querySelector(".team-board")).toHaveAttribute("data-mount", "wall");
+      expect(document.querySelector(".board-wall")).toHaveAttribute("data-material", "plaster");
       expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
       expect(document.querySelector(".board-team")).toHaveTextContent(team.name);
       expect(screen.queryByText(/Team is a stub/)).not.toBeInTheDocument();
@@ -238,6 +240,9 @@ describe("team board", () => {
         const lamp = lampArt(agent.status);
         const plaque = screen.getByRole("button", { name: new RegExp(agent.name) });
         expect(plaque).toHaveAttribute("data-status", agent.status);
+        expect(plaque).toHaveAttribute("data-plaque", "engraved");
+        expect(plaque.querySelector("input, textarea, select")).toBeNull();
+        expect(plaque.querySelector(".plaque-plate")).not.toBeNull();
         expect(plaque).toHaveTextContent(lamp.caption);
         if (agent.title) expect(plaque).toHaveTextContent(agent.title);
         expect(plaque.querySelector(`[aria-label="${lamp.title}"]`)).toBeTruthy();
@@ -322,6 +327,7 @@ describe("team board", () => {
     renderRoom();
     await user.click(screen.getByRole("button", { name: "Team" }));
     await user.click(screen.getByRole("button", { name: "Stapler" }));
+    expect(screen.getByRole("button", { name: "Stapler" })).toHaveAttribute("data-reach", "local");
     expect(screen.getByRole("menu", { name: "Fixture tools" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Swatch sheet" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Forge stamp" })).toBeInTheDocument();
@@ -401,7 +407,9 @@ describe("work library shelf", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const user = await openLibrary();
     expect(screen.getByRole("heading", { name: "Library" })).toBeInTheDocument();
+    expect(document.querySelector(".bookcase .library-head")).toBeTruthy();
     expect(screen.getByText("The shelf is bare.")).toBeInTheDocument();
+    expect(screen.getByText("Place a sheet.")).toBeInTheDocument();
     expect(screen.getByText("Human notes for this team.")).toBeInTheDocument();
     expect(document.querySelector(".library-room")).toHaveAttribute("data-vault", "human");
     expect(screen.queryByText(/Library is a stub/)).not.toBeInTheDocument();
@@ -456,6 +464,9 @@ describe("work library shelf", () => {
     expect(screen.queryByText("The shelf is bare.")).not.toBeInTheDocument();
     const spines = document.querySelectorAll(".spine");
     expect(spines[0]?.getAttribute("data-band")).not.toBe(spines[1]?.getAttribute("data-band"));
+    expect(spines[0]?.getAttribute("data-tone")).not.toBe(spines[1]?.getAttribute("data-tone"));
+    expect(spines[0]?.querySelector(".spine-title")).toHaveAttribute("data-label", "pixel");
+    expect(spines[0]?.querySelector(".spine-line")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "A margin I kept." }));
     expect(screen.getByRole("heading", { name: "A margin I kept." })).toBeInTheDocument();

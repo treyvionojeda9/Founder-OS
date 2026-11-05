@@ -10,6 +10,7 @@ import {
   saveShelfNote,
   shelfBays,
   shelfTitle,
+  spineLines,
   spineMark,
   workProjectId,
 } from "./shelfNote";
@@ -143,6 +144,11 @@ describe("shelf notes", () => {
     expect(booksPerShelf("desktop")).toBe(5);
     expect(shelfBays(["a"], 3)).toEqual([["a"], [], []]);
     expect(bookLabel(human({ id: "HN-A", content: "Same", updatedAt: "t" }), [])).toBe("Same");
+    expect(spineLines("A margin I kept.").join(" ")).toBe("A margin I kept.");
+    expect(spineLines("Lamp hours on the forge.").join(" ")).toBe("Lamp hours on the forge.");
+    expect(spineLines("A margin I kept.").every((line) => line.length <= 7)).toBe(true);
+    expect(spineLines("supercalifragilistic").join("")).toBe("supercalifragilistic");
+    expect(spineLines("   ")).toEqual(["Sheet"]);
   });
 
   it("has no machine vault write on the shelf path", () => {
