@@ -24,7 +24,7 @@ function luma(hex: string): number {
 }
 
 describe("overview desk scene", () => {
-  it("engraves a name plaque and parks the status token beside the lamp", async () => {
+  it("engraves a name plaque and parks the status token on the desk front", async () => {
     const user = userEvent.setup();
     const opened: string[] = [];
     render(<DeskGrid teamId="hale-design-lab" agents={agents} still expandingId={null} onOpen={(id) => opened.push(id)} />);
@@ -42,7 +42,7 @@ describe("overview desk scene", () => {
       const desk = screen.getByRole("button", { name: new RegExp(`${agent.name}.*${lamp.caption}`) });
       expect(desk).toHaveAttribute("data-status", agent.status);
       const row = desk.querySelector(".agent-desk-lamp-row");
-      const chip = row?.querySelector(".status-chip");
+      const chip = desk.querySelector(".overview-state .status-chip");
       expect(row?.querySelector(`[aria-label="${lamp.title}"]`)).toBeTruthy();
       expect(chip).toHaveTextContent(lamp.caption);
       expect(chip).toHaveAttribute("data-status", agent.status);
@@ -155,6 +155,42 @@ describe("overview desk scene", () => {
     expect(screen.getByRole("button", { name: /Porter/ })).toHaveTextContent("Waiting for you");
     expect(screen.getByRole("button", { name: /Quire/ })).toHaveTextContent("Done");
     expect(screen.getByRole("button", { name: /Shard/ })).toHaveTextContent("Error");
+  });
+
+  it("fits each sheet inside the desk top and seats the agent behind it", async () => {
+    const user = userEvent.setup();
+    const walked: string[] = [];
+    const opened: string[] = [];
+    render(
+      <DeskGrid
+        teamId="hale-design-lab"
+        agents={agents}
+        still
+        expandingId={null}
+        onOpen={(id) => opened.push(id)}
+        onWalk={(id) => walked.push(id)}
+      />,
+    );
+
+    for (const agent of agents) {
+      const desk = document.querySelector(`.agent-desk[data-agent='${agent.id}']`);
+      const rig = desk?.querySelector(".fitted-desk");
+      const top = rig?.querySelector(".desk-top");
+      const paper = top?.querySelector(".overview-paper");
+      const seat = rig?.querySelector(".behind-cast .agent-seat");
+      expect(rig).toHaveAttribute("data-desk", "fitted");
+      expect(top).toBeTruthy();
+      expect(paper).toBeTruthy();
+      expect(top?.contains(paper ?? null)).toBe(true);
+      expect(seat).toBeTruthy();
+      expect(paper?.querySelector(".overview-line")?.textContent?.trim().length).toBeGreaterThan(0);
+    }
+
+    const line = document.querySelector(".agent-desk[data-agent='ceo'] .overview-line");
+    expect(line).toHaveTextContent("I can publish the forge note to the studio channel.");
+    await user.click(document.querySelector(".agent-desk[data-agent='ceo'] .overview-paper")!);
+    expect(walked).toEqual(["ceo"]);
+    expect(opened).toEqual([]);
   });
 
   it("has no human-vault write path on the desk scene", () => {

@@ -6,7 +6,7 @@ import { faceWashByMark, paperLightPool, deskLightPool, raisedHand, seatMark, se
 import { useFormFactor } from "../hooks/useFormFactor";
 import { linesForAgent, type TeamAgent } from "../team/chatStore";
 import { pauseSnapshot, subscribeWorkPause, toggleWorkPause } from "./deskPause";
-import { deskStampFor } from "./deskStamp";
+import { deskStampFor, latestSheetLine } from "./deskStamp";
 import { setTileCount, subscribeDeskTiles, TILE_COUNTS, TILE_TAP_MS, tileCount, type TileCount } from "./deskTiles";
 import { SpaceWash } from "../hall/SpaceWash";
 import { EmptyDesk } from "./EmptyDesk";
@@ -28,6 +28,8 @@ type DeskGridProps = {
   panelId?: string;
   labelledBy?: string;
   onOpen: (agentId: string) => void;
+  /** Paper tap, or Enter on the focused desk, walks into that agent's desk room. */
+  onWalk?: (agentId: string) => void;
   /** Desktop only. Enlarge this desk in the room. Does not approve or write a vault. */
   onFocusTile?: (agentId: string) => void;
   focusedId?: string | null;
@@ -51,6 +53,7 @@ export function DeskGrid({
   panelId,
   labelledBy,
   onOpen,
+  onWalk,
   onFocusTile,
   focusedId = null,
   onOpenMail,
@@ -60,9 +63,19 @@ export function DeskGrid({
   const layout = useFormFactor();
   const arrange = layout === "desktop" ? "tiles" : "strip";
   const tiles = useSyncExternalStore(subscribeDeskTiles, tileCount, () => 3 as TileCount);
-  const lampScale = layout === "portrait" ? 3 : 4;
-  const seatScale = 4;
-  const poolScale = 3;
+  const [shortHall, setShortHall] = useState(() => typeof window !== "undefined" && window.innerHeight <= 700);
+  useEffect(() => {
+    const update = () => setShortHall(window.innerHeight <= 700);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  // Same bust and lamp as the single desk room (scale 8 and 2). A 640-tall row cannot
+  // keep that bust, a two-line sheet, and the chip in one tile, so the short hall steps down to scale 6.
+  const lampScale = 2;
+  const seatScale = shortHall && layout !== "desktop" ? 6 : 8;
+  const poolScale = 2;
+  const lampHeight = 35 * lampScale;
   const roomRef = useRef<HTMLDivElement>(null);
   const tilesRef = useRef<HTMLFieldSetElement>(null);
   const pipelineRef = useRef<HTMLDivElement>(null);
@@ -170,10 +183,22 @@ export function DeskGrid({
     }, TILE_TAP_MS);
   };
 
+  const hitPaper = (target: EventTarget | null) => target instanceof Element && !!target.closest(".overview-paper");
+
+  const walkUp = (agentId: string) => {
+    if (openTimer.current !== null) window.clearTimeout(openTimer.current);
+    openTimer.current = null;
+    onWalk?.(agentId);
+  };
+
   const onDeskKeyDown = (event: KeyboardEvent<HTMLButtonElement>, agentId: string) => {
-    if (!canFocus || event.key !== "Enter") return;
+    if (event.key !== "Enter") return;
     event.preventDefault();
-    focusTile(agentId);
+    if (canFocus && focusedId !== agentId) {
+      focusTile(agentId);
+      return;
+    }
+    walkUp(agentId);
   };
 
   return (
@@ -193,7 +218,7 @@ export function DeskGrid({
       data-lighting="ember"
       data-pipeline={showPipeline ? (pipeline ?? "all") : undefined}
       data-drawer={drawerId ?? "shut"}
-      style={arrange === "tiles" ? { ["--tile-count" as string]: String(tiles) } : undefined}
+      style={{ ["--tile-count" as string]: String(tiles) }}
     >
       <h1 className="overview-title" hidden={covered}>
         Overview
@@ -262,7 +287,9 @@ export function DeskGrid({
             const paused = pauseKey.split("|").includes(`${teamId}:${agent.id}`);
             const lit = agent.status === "working" && !paused;
             const waiting = agent.status === "waiting";
-            const stamp = deskStampFor(agent, linesForAgent(teamId, agent.id));
+            const lines = linesForAgent(teamId, agent.id);
+            const stamp = deskStampFor(agent, lines);
+            const sheetLine = latestSheetLine(lines);
             const focused = focusedId === agent.id;
             const stage = stageForStatus(agent.status);
             const inStage = deskInStage(agent.status, showPipeline ? pipeline : null);
@@ -284,8 +311,18 @@ export function DeskGrid({
                   data-work={paused ? "halted" : "live"}
                   data-focused={focused ? "true" : "false"}
                   data-expanding={expandingId === agent.id ? "true" : "false"}
-                  onClick={(event: MouseEvent<HTMLButtonElement>) => activateDesk(agent.id, event.detail)}
+                  onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                    if (hitPaper(event.target)) {
+                      walkUp(agent.id);
+                      return;
+                    }
+                    activateDesk(agent.id, event.detail);
+                  }}
                   onDoubleClick={(event) => {
+                    if (hitPaper(event.target)) {
+                      event.preventDefault();
+                      return;
+                    }
                     if (!canFocus) return;
                     event.preventDefault();
                     focusTile(agent.id);
@@ -307,51 +344,59 @@ export function DeskGrid({
                       </span>
                     </span>
                     <span className="agent-desk-stage">
-                      <span className="agent-seat" data-seat={mark} data-pose={waiting ? "raised-hand" : "seated"} aria-hidden="true">
-                        <span className="agent-figure">
-                          <Sprite rows={seatedByMark[mark]} scale={seatScale} title="" />
-                          {waiting ? (
-                            <span className="raised-hand">
-                              <Sprite rows={raisedHand} scale={seatScale} title="" />
+                      <span
+                        className="desk-rig fitted-desk overview-desk"
+                        data-desk="fitted"
+                        style={{ ["--lamp-h" as string]: `${lampHeight}px` }}
+                      >
+                        <span className="desk-shadow" aria-hidden="true" />
+                        <span className="behind-cast">
+                          <span className="agent-seat" data-seat={mark} data-pose={waiting ? "raised-hand" : "seated"} aria-hidden="true">
+                            <span className="agent-figure">
+                              <Sprite rows={seatedByMark[mark]} scale={seatScale} title="" />
+                              {waiting ? (
+                                <span className="raised-hand">
+                                  <Sprite rows={raisedHand} scale={seatScale} title="" />
+                                </span>
+                              ) : null}
+                              {lit ? (
+                                <span className="face-pool" data-light-pool="face">
+                                  <Sprite rows={faceWashByMark[mark]} scale={seatScale} title="" />
+                                </span>
+                              ) : null}
                             </span>
-                          ) : null}
-                          {lit ? (
-                            <span className="face-pool" data-light-pool="face">
-                              <Sprite rows={faceWashByMark[mark]} scale={seatScale} title="" />
-                            </span>
-                          ) : null}
+                          </span>
                         </span>
-                      </span>
-                      <span className="agent-desk-lamp-row">
-                        <span className="agent-desk-lamp">
-                          <WorkingLamp status={agent.status} scale={lampScale} still={still || paused} />
-                        </span>
-                        <StatusFrame className="agent-desk-state" status={agent.status} still={still} />
-                      </span>
-                      <span className="agent-desk-volume">
-                        <span className="agent-desk-top" data-material="desk" aria-hidden="true">
-                          <SpaceWash space="work" part="desk" />
-                          <span className="desk-plank desk-plank-a" />
-                          <span className="desk-plank desk-plank-b" />
+                        <span className="desk-top" data-material="desk">
                           {lit ? (
                             <span className="overview-pool" data-light-pool="desk">
                               <Sprite rows={deskLightPool} scale={poolScale} title="" />
                             </span>
                           ) : null}
-                          <span className="agent-desk-sheet">
-                            {lit ? (
-                              <span className="overview-pool" data-light-pool="paper">
-                                <Sprite rows={paperLightPool} scale={2} title="" />
-                              </span>
-                            ) : null}
+                          <span className="fitted-sheet" data-pose="desk" data-still={still ? "true" : "false"}>
+                            <span className={lit ? "paper overview-paper is-lit" : "paper overview-paper"}>
+                              {covered ? null : <span className="overview-line">{sheetLine}</span>}
+                              {lit ? (
+                                <span className="overview-pool" data-light-pool="paper">
+                                  <Sprite rows={paperLightPool} scale={2} title="" />
+                                </span>
+                              ) : null}
+                            </span>
                           </span>
                         </span>
-                        <span className="agent-desk-front" aria-hidden="true" />
-                        <span className="agent-desk-legs" aria-hidden="true">
-                          <span className="agent-desk-leg" />
-                          <span className="agent-desk-leg" />
+                        <span className="desk-side" data-material="wainscot" aria-hidden="true" />
+                        <span className="desk-front agent-desk-front" aria-hidden="true">
+                          <span className="desk-leg leg-left agent-desk-leg" />
+                          <span className="desk-leg leg-right agent-desk-leg" />
                         </span>
-                        <span className="agent-desk-shadow" aria-hidden="true" />
+                        <span className="agent-desk-lamp-row">
+                          <span className="agent-desk-lamp">
+                            <WorkingLamp status={agent.status} scale={lampScale} still={still || paused} />
+                          </span>
+                        </span>
+                        <span className="overview-state">
+                          <StatusFrame className="agent-desk-state" status={agent.status} still={still} />
+                        </span>
                       </span>
                     </span>
                   </span>

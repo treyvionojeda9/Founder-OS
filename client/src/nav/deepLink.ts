@@ -49,7 +49,7 @@ function readParam(search: string, hash: string, key: string): string | null {
 }
 
 export function readDeepRequest(pathname: string, search: string, hash = ""): DeepRequest | null {
-  const agent = readParam(search, hash, "agent");
+  const agent = readParam(search, hash, "agent") ?? readParam(search, hash, "desk");
   const note = readParam(search, hash, "note");
   const node = readParam(search, hash, "node");
 

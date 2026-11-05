@@ -69,7 +69,7 @@ test.describe("overview room depth", () => {
     }
     if (proj === "desktop") await keepClip(page, page.locator(".desk-grid-list"), "desks-working-idle-failed");
 
-    await page.getByRole("button", { name: /Atelier/ }).click();
+    await page.locator(".agent-desk[data-agent='atelier'] .agent-desk-name").click();
     await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
     await expect(page.locator(".overview-sheet")).toBeVisible();
     await expect(page.locator(".desk-grid")).toHaveAttribute("data-sheet", "open");

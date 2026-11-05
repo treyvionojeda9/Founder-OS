@@ -48,6 +48,15 @@ export type DeskStamp = {
   timeLabel: string;
 };
 
+/** Newest line on the sheet, for the overview paper. Display only. */
+export function latestSheetLine(lines: readonly ChatLine[]): string {
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const body = lines[index]?.body.replace(/\s+/g, " ").trim();
+    if (body) return body;
+  }
+  return "The sheet is clear.";
+}
+
 /** Agent, task, and local update time. Display only. It does not write a vault. */
 export function deskStampFor(agent: TeamAgent, lines: readonly ChatLine[]): DeskStamp {
   const latest = latestMachine(lines);

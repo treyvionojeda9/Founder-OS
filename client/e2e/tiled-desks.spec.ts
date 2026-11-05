@@ -136,26 +136,44 @@ test.describe("tiled desks", () => {
     await expect(grid).toHaveAttribute("data-still", "true");
     await expect(page.locator(".desk-scroll")).toHaveAttribute("data-strip", "snap");
     await expect(page.getByRole("radio", { name: "2 tiles" })).toHaveCount(0);
-    const snap = await page.locator(".desk-scroll").evaluate((el) => getComputedStyle(el).scrollSnapType);
-    expect(snap).toContain("x");
-    expect(snap).toContain("mandatory");
-    const metrics = await page.locator(".desk-scroll").evaluate((el) => {
-      el.scrollLeft = 0;
-      return { scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
-    });
-    expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth + 8);
-    if (proj === "tablet-portrait") await keep(page, "tablet-strip");
-    await page.locator(".desk-scroll").evaluate((el) => {
-      el.scrollTo({ left: el.clientWidth, behavior: "auto" });
-    });
-    const left = await page.locator(".desk-scroll").evaluate((el) => el.scrollLeft);
-    expect(left).toBeGreaterThan(8);
+    if (proj === "tablet-portrait") {
+      const metrics = await page.locator(".desk-scroll").evaluate((el) => ({
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      }));
+      expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 8);
+      const room = await page.locator(".desk-room").boundingBox();
+      const desks = await page.locator(".overview-desk").evaluateAll((els) =>
+        els.map((el) => {
+          const box = el.getBoundingClientRect();
+          return { top: box.top, bottom: box.bottom };
+        }),
+      );
+      expect(desks.length).toBeGreaterThan(1);
+      const span = Math.max(...desks.map((desk) => desk.bottom)) - Math.min(...desks.map((desk) => desk.top));
+      expect(span).toBeGreaterThan((room?.height ?? 0) * 0.5);
+      await keep(page, "tablet-strip");
+    } else {
+      const snap = await page.locator(".desk-scroll").evaluate((el) => getComputedStyle(el).scrollSnapType);
+      expect(snap).toContain("x");
+      expect(snap).toContain("mandatory");
+      const metrics = await page.locator(".desk-scroll").evaluate((el) => {
+        el.scrollLeft = 0;
+        return { scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+      });
+      expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth + 8);
+      await page.locator(".desk-scroll").evaluate((el) => {
+        el.scrollTo({ left: el.clientWidth, behavior: "auto" });
+      });
+      const left = await page.locator(".desk-scroll").evaluate((el) => el.scrollLeft);
+      expect(left).toBeGreaterThan(8);
+    }
     await expect(page.locator(".agent-desk[data-agent='ceo'] .status-frame")).toHaveAttribute("data-state", "working");
     await expect(page.locator(".agent-desk[data-agent='atelier'] .desk-stamp-task")).toHaveText("idle");
     await expect(page.locator(".lamp-chain")).toHaveCount(3);
     await expect(page.locator(".mail-slot")).toBeVisible();
 
-    await page.locator(".agent-desk[data-agent='atelier']").click();
+    await page.locator(".agent-desk[data-agent='atelier'] .agent-desk-name").click();
     await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
     await expect(page.locator(".overview-sheet")).toBeVisible();
     await expect(page.locator(".desk-grid")).toHaveAttribute("data-focus", "none");

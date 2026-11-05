@@ -71,7 +71,7 @@ test.describe("overview desks", () => {
     if (proj === "desktop") expect(layout).toBe("desktop");
     await keep(page, `overview-${proj}`);
 
-    await page.getByRole("button", { name: "Atelier" }).click();
+    await page.locator(".agent-desk[data-agent='atelier'] .agent-desk-name").click();
     await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
     await expect(page.locator(".machine-line").first()).toContainText("generated · not verified");
     await expect(page.getByRole("img", { name: "Desk lamp, dark" })).toBeVisible();

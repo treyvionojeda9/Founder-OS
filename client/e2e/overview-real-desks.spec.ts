@@ -1,0 +1,732 @@
+import { copyFileSync, mkdirSync } from "node:fs";
+import { expect, test, type Page } from "@playwright/test";
+
+const shotDir = "../docs/shots/overview-real-desks";
+const artifactDir = "/opt/cursor/artifacts/screenshots/overview-real-desks";
+mkdirSync(shotDir, { recursive: true });
+mkdirSync(artifactDir, { recursive: true });
+
+type Box = { x: number; y: number; width: number; height: number };
+
+async function boxOf(page: Page, selector: string) {
+  const box = await page.locator(selector).first().boundingBox();
+  if (!box) throw new Error(`missing box for ${selector}`);
+  return box;
+}
+
+function inside(inner: Box, outer: Box, slop = 1.5) {
+  return (
+    inner.x >= outer.x - slop &&
+    inner.y >= outer.y - slop &&
+    inner.x + inner.width <= outer.x + outer.width + slop &&
+    inner.y + inner.height <= outer.y + outer.height + slop
+  );
+}
+
+/** The seat crosses the desk top's back edge instead of floating above it. */
+function overlapsBackEdge(seat: Box, top: Box) {
+  const back = top.y;
+  return seat.y < back - 0.5 && seat.y + seat.height > back + 0.5;
+}
+
+/** Touching edges are not an overlap. */
+function intersects(a: Box, b: Box) {
+  return a.x < b.x + b.width - 1 && a.x + a.width > b.x + 1 && a.y < b.y + b.height - 1 && a.y + a.height > b.y + 1;
+}
+
+/** Hair through the shoulders. The tucked body is allowed to meet the desk top. */
+const HEAD_FRACTION = 9 / 16;
+
+function headOf(sprite: Box): Box {
+  return { x: sprite.x, y: sprite.y, width: sprite.width, height: sprite.height * HEAD_FRACTION };
+}
+
+/** A desk that only nicks the viewport edge is the scrollport's far neighbour, not a clipped one. */
+const VIEW_SLOP = 4;
+
+function mostlyOutside(box: Box, width: number, height: number) {
+  return box.x + box.width <= VIEW_SLOP || box.y + box.height <= VIEW_SLOP || box.x >= width - VIEW_SLOP || box.y >= height - VIEW_SLOP;
+}
+
+function fullyInside(box: Box, width: number, height: number) {
+  return box.x >= -VIEW_SLOP && box.y >= -VIEW_SLOP && box.x + box.width <= width + VIEW_SLOP && box.y + box.height <= height + VIEW_SLOP;
+}
+
+function visibleFraction(box: Box, clip: Box) {
+  const width = Math.max(0, Math.min(box.x + box.width, clip.x + clip.width) - Math.max(box.x, clip.x));
+  const height = Math.max(0, Math.min(box.y + box.height, clip.y + clip.height) - Math.max(box.y, clip.y));
+  const area = box.width * box.height;
+  return area <= 0 ? 0 : (width * height) / area;
+}
+
+/**
+ * A line is readable only when its whole fragment sits in the region that is
+ * actually painted: every ancestor that clips (overflow or clip-path), and no
+ * desk front, status chip, drawer, or neighbouring tile painted across it.
+ * Checking the text against its own box misses a parent that slices the glyphs.
+ */
+async function assertTextVisible(page: Page) {
+  const issues = await page.evaluate(() => {
+    const SLOP = 1.5;
+    const OVERLAP = 1;
+
+    type Rect = { x: number; y: number; width: number; height: number };
+
+    const rectOf = (el: Element): Rect => {
+      const box = el.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    };
+
+    const paddingBox = (el: Element): Rect => {
+      const box = rectOf(el);
+      const style = getComputedStyle(el);
+      const top = Number.parseFloat(style.borderTopWidth) || 0;
+      const right = Number.parseFloat(style.borderRightWidth) || 0;
+      const bottom = Number.parseFloat(style.borderBottomWidth) || 0;
+      const left = Number.parseFloat(style.borderLeftWidth) || 0;
+      return {
+        x: box.x + left,
+        y: box.y + top,
+        width: Math.max(0, box.width - left - right),
+        height: Math.max(0, box.height - top - bottom),
+      };
+    };
+
+    const intersect = (a: Rect, b: Rect): Rect => {
+      const x = Math.max(a.x, b.x);
+      const y = Math.max(a.y, b.y);
+      const right = Math.min(a.x + a.width, b.x + b.width);
+      const bottom = Math.min(a.y + a.height, b.y + b.height);
+      return { x, y, width: Math.max(0, right - x), height: Math.max(0, bottom - y) };
+    };
+
+    const covers = (outer: Rect, inner: Rect) =>
+      inner.x >= outer.x - SLOP &&
+      inner.y >= outer.y - SLOP &&
+      inner.x + inner.width <= outer.x + outer.width + SLOP &&
+      inner.y + inner.height <= outer.y + outer.height + SLOP;
+
+    const overlaps = (a: Rect, b: Rect) =>
+      a.width > 0 &&
+      b.width > 0 &&
+      a.height > 0 &&
+      b.height > 0 &&
+      a.x < b.x + b.width - OVERLAP &&
+      a.x + a.width > b.x + OVERLAP &&
+      a.y < b.y + b.height - OVERLAP &&
+      a.y + a.height > b.y + OVERLAP;
+
+    const parseLength = (token: string, extent: number) => {
+      if (token.endsWith("%")) return (Number.parseFloat(token) / 100) * extent;
+      return Number.parseFloat(token) || 0;
+    };
+
+    /** Clip-path painted region, or null when the path isn't a box we can intersect. */
+    const clipBox = (el: Element): Rect | null => {
+      const style = getComputedStyle(el);
+      const raw = style.clipPath;
+      if (!raw || raw === "none") return null;
+      const box = rectOf(el);
+      if (raw.startsWith("inset(")) {
+        const parts = raw
+          .slice(6, -1)
+          .trim()
+          .split(/\s+/)
+          .map((part) => part.trim())
+          .filter(Boolean);
+        const [top = "0", right = top, bottom = top, left = right] = parts;
+        const insetTop = parseLength(top, box.height);
+        const insetRight = parseLength(right, box.width);
+        const insetBottom = parseLength(bottom, box.height);
+        const insetLeft = parseLength(left, box.width);
+        return {
+          x: box.x + insetLeft,
+          y: box.y + insetTop,
+          width: Math.max(0, box.width - insetLeft - insetRight),
+          height: Math.max(0, box.height - insetTop - insetBottom),
+        };
+      }
+      if (!raw.startsWith("polygon(")) return null;
+      const points = raw
+        .slice(raw.indexOf("(") + 1, raw.lastIndexOf(")"))
+        .split(",")
+        .map((part) => {
+          const [xToken, yToken] = part.trim().split(/\s+/);
+          return {
+            x: box.x + parseLength(xToken ?? "0", box.width),
+            y: box.y + parseLength(yToken ?? "0", box.height),
+          };
+        });
+      if (points.length < 3) return null;
+      let minX = Number.POSITIVE_INFINITY;
+      let minY = Number.POSITIVE_INFINITY;
+      let maxX = Number.NEGATIVE_INFINITY;
+      let maxY = Number.NEGATIVE_INFINITY;
+      for (const point of points) {
+        minX = Math.min(minX, point.x);
+        minY = Math.min(minY, point.y);
+        maxX = Math.max(maxX, point.x);
+        maxY = Math.max(maxY, point.y);
+      }
+      const inside = (x: number, y: number) => {
+        let hits = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
+          const a = points[i];
+          const b = points[j];
+          if (!a || !b) continue;
+          const crosses = a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x;
+          if (crosses) hits = !hits;
+        }
+        return hits;
+      };
+      // A transformed trapezoid's viewport hull is a little larger than the painted quad.
+      // Require the fragment's inset corners to fall inside that hull.
+      return {
+        x: minX,
+        y: minY,
+        width: Math.max(0, maxX - minX),
+        height: Math.max(0, maxY - minY),
+        inside,
+      } as Rect & { inside: (x: number, y: number) => boolean };
+    };
+
+    const clippingRegions = (el: Element) => {
+      const rects: Rect[] = [];
+      const polygons: Array<(x: number, y: number) => boolean> = [];
+      let node: Element | null = el;
+      while (node && node !== document.documentElement) {
+        const style = getComputedStyle(node);
+        const scroll = ["auto", "scroll"].includes(style.overflowX) || ["auto", "scroll"].includes(style.overflowY);
+        const hidden = ["hidden", "clip"].includes(style.overflowX) || ["hidden", "clip"].includes(style.overflowY);
+        if (scroll || hidden) rects.push(paddingBox(node));
+        const clipped = clipBox(node);
+        if (clipped && "inside" in clipped && typeof clipped.inside === "function") {
+          polygons.push(clipped.inside);
+          rects.push(clipped);
+        } else if (clipped) rects.push(clipped);
+        node = node.parentElement;
+      }
+      rects.push({ x: 0, y: 0, width: window.innerWidth, height: window.innerHeight });
+      return { rects, polygons };
+    };
+
+    const paintedBox = (el: Element): Rect | null => {
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" || Number.parseFloat(style.opacity) === 0) return null;
+      let box = rectOf(el);
+      const own = clipBox(el);
+      if (own) box = intersect(box, own);
+      let node: Element | null = el.parentElement;
+      while (node && node !== document.documentElement) {
+        const parent = getComputedStyle(node);
+        const scroll = ["auto", "scroll"].includes(parent.overflowX) || ["auto", "scroll"].includes(parent.overflowY);
+        const hidden = ["hidden", "clip"].includes(parent.overflowX) || ["hidden", "clip"].includes(parent.overflowY);
+        if (scroll || hidden) box = intersect(box, paddingBox(node));
+        const clipped = clipBox(node);
+        if (clipped && !("inside" in clipped)) box = intersect(box, clipped);
+        node = node.parentElement;
+      }
+      if (box.width < 1 || box.height < 1) return null;
+      return box;
+    };
+
+    const fragments = (el: Element): Rect[] => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return [...range.getClientRects()]
+        .filter((box) => box.width >= 1 && box.height >= 1)
+        .map((box) => ({ x: box.x, y: box.y, width: box.width, height: box.height }));
+    };
+
+    const round = (box: Rect) => ({
+      x: Math.round(box.x * 10) / 10,
+      y: Math.round(box.y * 10) / 10,
+      width: Math.round(box.width * 10) / 10,
+      height: Math.round(box.height * 10) / 10,
+    });
+
+    const issues: string[] = [];
+    const desks = [...document.querySelectorAll<HTMLElement>(".agent-desk")];
+    for (const desk of desks) {
+      const agent = desk.dataset.agent ?? "desk";
+      const tile = desk.closest("li");
+      const occluders: { name: string; box: Rect }[] = [];
+      for (const selector of [".desk-front", ".desk-leg", ".status-chip", ".desk-drawer-pull", ".desk-drawer"]) {
+        for (const el of tile?.querySelectorAll(selector) ?? []) {
+          const box = paintedBox(el);
+          if (box) occluders.push({ name: selector, box });
+        }
+      }
+      for (const other of document.querySelectorAll(".desk-grid-list > li")) {
+        if (other === tile) continue;
+        const box = paintedBox(other);
+        if (box) occluders.push({ name: "neighbouring tile", box });
+      }
+
+      const viewport: Rect = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
+      const check = (kind: string, el: Element | null) => {
+        if (!el) {
+          issues.push(`${agent} ${kind} missing`);
+          return;
+        }
+        const sample = (el.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 48);
+        const { rects, polygons } = clippingRegions(el);
+        const host = paddingBox(el);
+        let hostVisible = host;
+        for (const clip of rects) hostVisible = intersect(hostVisible, clip);
+        const hostOnScreen =
+          host.width > 1 &&
+          host.height > 1 &&
+          hostVisible.width * hostVisible.height > host.width * host.height * 0.5;
+        let shown = 0;
+        for (const fragment of fragments(el)) {
+          const inView = intersect(fragment, viewport);
+          if (inView.width < 1 || inView.height < 1) continue;
+          let visible = fragment;
+          for (const clip of rects) visible = intersect(visible, clip);
+          if (visible.width < 1 || visible.height < 1) continue;
+          const inset = {
+            x: fragment.x + SLOP,
+            y: fragment.y + SLOP,
+            width: Math.max(0, fragment.width - SLOP * 2),
+            height: Math.max(0, fragment.height - SLOP * 2),
+          };
+          const cornerCut =
+            inset.width > 0 &&
+            inset.height > 0 &&
+            polygons.some((inside) => {
+              const corners = [
+                [inset.x, inset.y],
+                [inset.x + inset.width, inset.y],
+                [inset.x, inset.y + inset.height],
+                [inset.x + inset.width, inset.y + inset.height],
+              ];
+              return corners.some(([x, y]) => x !== undefined && y !== undefined && !inside(x, y));
+            });
+          if (!covers(visible, fragment) || cornerCut) {
+            issues.push(
+              `${agent} ${kind} sliced (${sample}) fragment ${JSON.stringify(round(fragment))} visible ${JSON.stringify(round(visible))}`,
+            );
+            continue;
+          }
+          const cover = occluders.find((item) => overlaps(fragment, item.box));
+          if (cover) {
+            issues.push(
+              `${agent} ${kind} covered by ${cover.name} (${sample}) fragment ${JSON.stringify(round(fragment))} cover ${JSON.stringify(round(cover.box))}`,
+            );
+            continue;
+          }
+          shown += 1;
+        }
+        if (hostOnScreen && shown === 0) issues.push(`${agent} ${kind} has no fully visible line (${sample})`);
+      };
+
+      check("sheet", desk.querySelector(".overview-line"));
+      check("nameplate", desk.querySelector(".agent-desk-name"));
+    }
+    return issues;
+  });
+  expect(issues, issues.join("\n")).toEqual([]);
+}
+
+/**
+ * The single desk draws this bust at scale 8 (128px) on a desk that is at most
+ * about 800px wide, so the employee reads at ~0.16 of the desk. Same bust here.
+ */
+const MIN_SPRITE_TO_DESK = 0.16;
+
+async function keep(page: Page, name: string) {
+  const path = `${shotDir}/${name}.png`;
+  await page.screenshot({ path, animations: "disabled" });
+  copyFileSync(path, `${artifactDir}/${name}.png`);
+}
+
+async function openOverview(page: Page) {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/team/hale-design-lab");
+  await page.evaluate(() => document.fonts.ready);
+  await page.getByRole("tab", { name: "Overview" }).click();
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.locator(".overview-desk")).toHaveCount(3);
+}
+
+async function assertFitted(page: Page) {
+  const desks = page.locator(".agent-desk");
+  const count = await desks.count();
+  expect(count).toBeGreaterThan(0);
+  const windows = await boxOf(page, ".desk-room-windows");
+  const room = await boxOf(page, ".desk-room");
+  const bays = await page.locator(".wall-bay").evaluateAll((els) =>
+    els.map((el) => {
+      const box = el.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    }),
+  );
+  let contentTop = Number.POSITIVE_INFINITY;
+  let contentBottom = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < count; index += 1) {
+    const desk = desks.nth(index);
+    const top = await desk.locator(".desk-top").boundingBox();
+    const paper = await desk.locator(".overview-paper").boundingBox();
+    const seat = await desk.locator(".agent-figure").boundingBox();
+    const sprite = await desk.locator(".agent-figure canvas").first().boundingBox();
+    const chip = await desk.locator(".overview-state .status-chip").boundingBox();
+    const rig = await desk.locator(".overview-desk").boundingBox();
+    const plaque = await desk.locator(".agent-desk-plaque").boundingBox();
+    if (!top || !paper || !seat || !sprite || !chip || !rig || !plaque) throw new Error("desk parts missing");
+    expect(inside(paper, top), JSON.stringify({ paper, top })).toBe(true);
+    expect(overlapsBackEdge(seat, top), JSON.stringify({ seat, top })).toBe(true);
+    expect(intersects(chip, sprite), JSON.stringify({ chip, sprite })).toBe(false);
+    expect(sprite.height).toBeGreaterThanOrEqual(rig.width * MIN_SPRITE_TO_DESK);
+    expect(top.y).toBeGreaterThanOrEqual(windows.y + windows.height - 2);
+    for (const bay of bays) {
+      const overlap =
+        top.x < bay.x + bay.width - 2 &&
+        top.x + top.width > bay.x + 2 &&
+        top.y < bay.y + bay.height - 2 &&
+        top.y + top.height > bay.y + 2;
+      expect(overlap, JSON.stringify({ top, bay })).toBe(false);
+    }
+    const line = desk.locator(".overview-line");
+    await expect(line).toBeVisible();
+    const text = await line.evaluate((node) => {
+      const style = getComputedStyle(node);
+      const host = node.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const tops: number[] = [];
+      const heights: number[] = [];
+      for (const rect of range.getClientRects()) {
+        if (rect.width < 1 || rect.height < 1) continue;
+        if (rect.bottom <= host.top + 1 || rect.top >= host.bottom - 1) continue;
+        heights.push(rect.height);
+        if (!tops.some((top) => Math.abs(top - rect.top) < 1)) tops.push(rect.top);
+      }
+      return {
+        lines: tops.length,
+        minHeight: heights.length ? Math.min(...heights) : 0,
+        fontSize: Number.parseFloat(style.fontSize),
+        lineHeight: style.lineHeight,
+        whiteSpace: style.whiteSpace,
+        clamp: style.getPropertyValue("-webkit-line-clamp"),
+        clientWidth: node.clientWidth,
+        clientHeight: node.clientHeight,
+        paper: node.closest(".overview-paper")?.getBoundingClientRect().height ?? 0,
+        deskTop: node.closest(".desk-top")?.getBoundingClientRect().height ?? 0,
+        rig: node.closest(".overview-desk")?.getBoundingClientRect().height ?? 0,
+        sample: (node.textContent ?? "").trim(),
+        overflow: node.scrollWidth > node.clientWidth + 1 || node.scrollHeight > node.clientHeight + 1,
+        scrollHeight: node.scrollHeight,
+        hostBox: { x: host.x, y: host.y, width: host.width, height: host.height },
+        paperBox: (() => {
+          const paper = node.closest(".overview-paper")?.getBoundingClientRect();
+          return paper ? { x: paper.x, y: paper.y, width: paper.width, height: paper.height } : null;
+        })(),
+        lineRects: (() => {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          return [...range.getClientRects()]
+            .filter((rect) => rect.width >= 1 && rect.height >= 1)
+            .map((rect) => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }));
+        })(),
+      };
+    });
+    expect(text.whiteSpace).not.toContain("nowrap");
+    const clamp = Number.parseFloat(text.clamp);
+    expect([2, 3]).toContain(clamp);
+    if (text.paperBox) {
+      for (const rect of text.lineRects) {
+        const mid = rect.y + rect.height / 2;
+        if (mid < text.hostBox.y - 1 || mid > text.hostBox.y + text.hostBox.height + 1) continue;
+        expect(rect.height, JSON.stringify(text)).toBeGreaterThanOrEqual(text.fontSize - 1);
+        expect(inside(rect, text.paperBox, 1.5), JSON.stringify({ rect, paper: text.paperBox, sample: text.sample })).toBe(true);
+      }
+    }
+    if (text.overflow) {
+      expect(clamp).toBeGreaterThanOrEqual(2);
+      expect(text.lineRects.length).toBeGreaterThan(0);
+    }
+    if (text.sample.length >= 40) {
+      expect(text.lines, JSON.stringify(text)).toBeGreaterThanOrEqual(2);
+      expect(text.lines, JSON.stringify(text)).toBeLessThanOrEqual(clamp);
+      const lineBox = Number.parseFloat(text.lineHeight);
+      expect(text.clientHeight, JSON.stringify(text)).toBeGreaterThanOrEqual(lineBox * Math.min(2, clamp) - 2);
+      expect(text.paper, JSON.stringify(text)).toBeGreaterThanOrEqual(text.clientHeight - 1);
+      expect(text.minHeight).toBeGreaterThanOrEqual(text.fontSize - 1);
+    }
+    const head = headOf(sprite);
+    const viewportNow = page.viewportSize();
+    const scrolled = await desk.locator(".overview-desk").evaluate((el) => {
+      let node = el.parentElement;
+      while (node) {
+        const style = getComputedStyle(node);
+        if (style.overflowY === "auto" || style.overflowY === "scroll" || style.overflowX === "auto" || style.overflowX === "scroll") {
+          return true;
+        }
+        node = node.parentElement;
+      }
+      return false;
+    });
+    if (viewportNow && !mostlyOutside(rig, viewportNow.width, viewportNow.height)) {
+      if (!scrolled) expect(fullyInside(rig, viewportNow.width, viewportNow.height), JSON.stringify({ rig, viewportNow })).toBe(true);
+      if (!mostlyOutside(head, viewportNow.width, viewportNow.height)) {
+        expect(head.y + head.height, JSON.stringify({ head, top })).toBeLessThanOrEqual(top.y + 1);
+        expect(head.height).toBeGreaterThanOrEqual(48);
+      }
+    }
+    contentTop = Math.min(contentTop, sprite.y, top.y);
+    contentBottom = Math.max(contentBottom, plaque.y + plaque.height, top.y + top.height);
+  }
+  const viewport = page.viewportSize();
+  const tiles = await page.locator(".desk-grid-list > li").evaluateAll((els) =>
+    els.map((el) => {
+      const box = el.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, height: box.height };
+    }),
+  );
+  for (let i = 0; i < tiles.length; i += 1) {
+    for (let j = i + 1; j < tiles.length; j += 1) {
+      expect(intersects(tiles[i], tiles[j]), JSON.stringify({ a: tiles[i], b: tiles[j] })).toBe(false);
+    }
+  }
+  const mouth = await page.locator(".mail-mouth").boundingBox();
+  if (mouth) expect(intersects(mouth, windows), JSON.stringify({ mouth, windows })).toBe(false);
+  if (viewport) {
+    const heads = await page.locator(".agent-desk .agent-figure canvas").evaluateAll((els) =>
+      els.map((el) => {
+        const box = el.getBoundingClientRect();
+        const clips: { x: number; y: number; width: number; height: number; scroll: boolean }[] = [];
+        let node = el.parentElement;
+        while (node && node !== document.documentElement) {
+          const style = getComputedStyle(node);
+          const scroll = ["auto", "scroll"].includes(style.overflowX) || ["auto", "scroll"].includes(style.overflowY);
+          const hidden = ["hidden", "clip"].includes(style.overflowX) || ["hidden", "clip"].includes(style.overflowY);
+          if (scroll || hidden) {
+            const host = node.getBoundingClientRect();
+            clips.push({ x: host.x, y: host.y, width: host.width, height: host.height, scroll });
+          }
+          node = node.parentElement;
+        }
+        return { x: box.x, y: box.y, width: box.width, height: box.height, clips };
+      }),
+    );
+    const covers = await page.locator(".desk-top, .overview-paper, .agent-desk-plaque, .desk-stamp, .status-chip, .mail-mouth").evaluateAll((els) =>
+      els.map((el) => {
+        const box = el.getBoundingClientRect();
+        return { x: box.x, y: box.y, width: box.width, height: box.height };
+      }),
+    );
+    for (const sprite of heads) {
+      const head = headOf(sprite);
+      const scrolledAway = sprite.clips.some((clip) => clip.scroll && visibleFraction(head, clip) < 0.5);
+      if (scrolledAway || mostlyOutside(head, viewport.width, viewport.height)) continue;
+      for (const clip of sprite.clips) {
+        if (clip.scroll) continue;
+        expect(visibleFraction(head, clip), JSON.stringify({ head, clip })).toBeGreaterThanOrEqual(0.98);
+      }
+      expect(visibleFraction(head, { x: 0, y: 0, width: viewport.width, height: viewport.height }), JSON.stringify({ head, viewport })).toBeGreaterThanOrEqual(0.98);
+      for (const cover of covers) {
+        if (mostlyOutside(cover, viewport.width, viewport.height)) continue;
+        expect(intersects(head, cover), JSON.stringify({ head, cover })).toBe(false);
+      }
+    }
+  }
+  if (viewport?.width === 800 && viewport.height === 1280) {
+    expect((contentTop - room.y) / room.height).toBeLessThanOrEqual(0.5);
+    expect((contentBottom - contentTop) / room.height).toBeGreaterThan(0.5);
+  }
+  await assertTextVisible(page);
+}
+
+/**
+ * First painted line on the overview sheet, ignoring the clamped tail.
+ * Pass 4 at 1024×640 / 3 tiles painted "I can" / "The" / "The"
+ * (the sheet reads "I can publis…", "The desk i…", "The lamp i…").
+ * N = 16 is the shortest 4-word fixture prefix ("The lamp is out.") and
+ * is past that failure: "I can publis" is 12, "I can" is 5, "The" is 3.
+ */
+const MIN_FIRST_LINE_CHARS = 16;
+const MIN_FIRST_LINE_WORDS = 4;
+
+async function assertFirstLinesReadable(page: Page) {
+  const lines = await page.locator(".agent-desk").evaluateAll((desks) =>
+    desks.map((desk) => {
+      const line = desk.querySelector(".overview-line");
+      const agent = desk.getAttribute("data-agent") ?? "desk";
+      const text = line?.textContent ?? "";
+      const node = line?.firstChild;
+      if (!line || !node || node.nodeType !== Node.TEXT_NODE) return { agent, raw: "", chars: 0, words: 0 };
+      const host = line.getBoundingClientRect();
+      const range = document.createRange();
+      let firstTop = Number.POSITIVE_INFINITY;
+      const chars: { ch: string; top: number }[] = [];
+      for (let index = 0; index < text.length; index += 1) {
+        range.setStart(node, index);
+        range.setEnd(node, index + 1);
+        const rect = range.getBoundingClientRect();
+        if (rect.width < 0.5 || rect.height < 0.5) continue;
+        const mid = rect.top + rect.height / 2;
+        if (mid < host.top - 1 || mid > host.bottom + 1) continue;
+        if (rect.top < firstTop) firstTop = rect.top;
+        chars.push({ ch: text[index] ?? "", top: rect.top });
+      }
+      const raw = chars
+        .filter((item) => Math.abs(item.top - firstTop) < 2)
+        .map((item) => item.ch)
+        .join("")
+        .trim();
+      return { agent, raw, chars: raw.length, words: raw.split(/\s+/).filter(Boolean).length };
+    }),
+  );
+  expect(lines.length).toBeGreaterThanOrEqual(3);
+  for (const line of lines) {
+    expect(line.chars, JSON.stringify(line)).toBeGreaterThanOrEqual(MIN_FIRST_LINE_CHARS);
+    expect(line.words, JSON.stringify(line)).toBeGreaterThanOrEqual(MIN_FIRST_LINE_WORDS);
+  }
+}
+
+async function applyTiles(page: Page, count: number) {
+  const radio = page.getByRole("radio", { name: `${count} tiles` });
+  if ((await radio.count()) > 0) {
+    await radio.click();
+    await expect(page.locator(".desk-grid")).toHaveAttribute("data-tiles", String(count));
+    return;
+  }
+  await page.evaluate((next) => {
+    localStorage.setItem("founder-os.desk-tiles", JSON.stringify({ count: next }));
+  }, count);
+  await page.reload();
+  await page.evaluate(() => document.fonts.ready);
+  await page.getByRole("tab", { name: "Overview" }).click();
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.locator(".agent-desk").first()).toBeVisible();
+}
+
+test.describe("overview desks match the fitted desk", () => {
+  test("paper stays on the desk and the agent sits on the back edge", async ({ page }, info) => {
+    test.skip(info.project.name === "desktop-video", "visual projects only");
+    await openOverview(page);
+    await assertFitted(page);
+
+    const size = page.viewportSize();
+    if (!size) throw new Error("viewport missing");
+    const tag = `${size.width}x${size.height}`;
+    await keep(page, `overview-${tag}`);
+    await page.evaluate(() => {
+      document.documentElement.style.filter = "grayscale(1)";
+    });
+    await assertFitted(page);
+    await keep(page, `overview-${tag}-grayscale`);
+    await page.evaluate(() => {
+      document.documentElement.style.filter = "";
+    });
+
+    const native = page.viewportSize();
+    if (!native) throw new Error("viewport missing");
+    for (const count of [2, 4, 3]) {
+      await applyTiles(page, count);
+      if (native.width >= 1100 && info.project.name === "desktop") {
+        await expect(page.locator(".desk-grid")).toHaveAttribute("data-tiles", String(count));
+      }
+      await assertFitted(page);
+    }
+
+    if (info.project.name !== "desktop") return;
+
+    const viewports = [
+      { width: 1440, height: 900 },
+      { width: 1024, height: 640 },
+      { width: 800, height: 1280 },
+      { width: 1280, height: 800 },
+    ];
+    for (const size of viewports) {
+      await page.setViewportSize(size);
+      if (size.width === 1024) {
+        await expect(page.locator(".desk-grid")).toHaveAttribute("data-arrange", "strip");
+      }
+      for (const count of [2, 3, 4]) {
+        await applyTiles(page, count);
+        await assertFitted(page);
+        if (size.width === 1024 && size.height === 640 && count === 3) await assertFirstLinesReadable(page);
+      }
+      if (size.width !== 1024) continue;
+      await applyTiles(page, 3);
+      await keep(page, "overview-1024x640");
+      await page.evaluate(() => {
+        document.documentElement.style.filter = "grayscale(1)";
+      });
+      await assertFitted(page);
+      await keep(page, "overview-1024x640-grayscale");
+      await page.evaluate(() => {
+        document.documentElement.style.filter = "";
+      });
+    }
+  });
+
+  test("clicking a paper walks into that agent's desk room", async ({ page }, info) => {
+    test.skip(info.project.name === "desktop-video", "one interaction pass per layout");
+    await openOverview(page);
+    await page.locator(".agent-desk[data-agent='atelier'] .overview-paper").click();
+    await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
+    await expect(page.locator(".study")).toHaveAttribute("data-place", "chat");
+    await expect(page.locator(".study-stage")).toHaveAttribute("data-approach", "near");
+    await expect(page.locator(".study-stage")).toHaveAttribute("data-still", "true");
+    await expect(page.locator(".overview-sheet")).toHaveCount(0);
+    await expect(page.locator(".paper-log")).toBeVisible();
+    await expect(page.getByText("The desk is quiet.")).toBeVisible();
+    expect(await page.locator(".study-stage").evaluate((el) => el.getAnimations().length)).toBe(0);
+
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+    await expect(page.locator(".agent-desk[data-agent='atelier']")).toBeFocused();
+  });
+
+  test("the keyboard walks into the focused desk", async ({ page }, info) => {
+    test.skip(info.project.name === "tablet-landscape" || info.project.name === "desktop-video", "portrait and desktop");
+    await openOverview(page);
+    const courier = page.locator(".agent-desk[data-agent='courier']");
+    await courier.focus();
+    if (info.project.name === "desktop") {
+      await page.keyboard.press("Enter");
+      await expect(page.locator(".desk-grid")).toHaveAttribute("data-focus", "courier");
+      await expect(page.locator(".overview-sheet")).toHaveCount(0);
+    }
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("heading", { name: "Courier chat" })).toBeVisible();
+    await expect(page.locator(".study-stage")).toBeVisible();
+    await expect(page.locator(".overview-sheet")).toHaveCount(0);
+    await expect(page.getByText("The lamp is out.")).toBeVisible();
+  });
+
+  test("a desk deep link still focuses that desk", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "one deep-link pass");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/team/hale-design-lab?desk=atelier");
+    await expect(page.locator(".study")).toHaveAttribute("data-deep-focus", "atelier");
+    await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
+    await expect(page.locator(".overview-sheet")).toBeVisible();
+    await expect(page.locator(".desk-grid")).toHaveAttribute("data-sheet", "open");
+
+    await page.goto("/work/overview?agent=ceo");
+    await expect(page.locator(".study")).toHaveAttribute("data-deep-focus", "ceo");
+    await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+  });
+
+  test("motion dollies the walk-up and reduced motion cuts it", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "one motion check");
+    await page.clock.install({ time: new Date("2026-10-29T12:00:00Z") });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/team/hale-design-lab");
+    await page.getByRole("tab", { name: "Overview" }).click();
+    await expect(page.locator(".agent-desk[data-agent='ceo'] .overview-paper")).toBeVisible();
+    // install() keeps time moving. The far pose lasts 32ms, which is shorter than click()
+    // on a busy runner, so the stage was already "near" when this assertion ran.
+    await page.clock.pauseAt(await page.evaluate(() => Date.now()));
+    await page.locator(".agent-desk[data-agent='ceo'] .overview-paper").click();
+    await expect(page.locator(".study-stage")).toHaveAttribute("data-approach", "far");
+    await expect(page.locator(".study-stage")).toHaveAttribute("data-still", "false");
+    await page.clock.runFor(80);
+    await expect(page.locator(".study-stage")).toHaveAttribute("data-approach", "near");
+    await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+  });
+});

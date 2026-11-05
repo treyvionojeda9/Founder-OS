@@ -69,6 +69,21 @@ describe("deep link addresses", () => {
       boundId: null,
     });
     expect(readDeepRequest("/home", "?agent=ceo")).toBeNull();
+    expect(readDeepRequest("/work/overview", "?desk=ceo")).toEqual({
+      surface: "overview",
+      rawId: "ceo",
+      boundId: null,
+    });
+    expect(readDeepRequest("/team/hale-design-lab", "?desk=atelier")).toEqual({
+      surface: "overview",
+      rawId: "atelier",
+      boundId: "hale-design-lab",
+    });
+    expect(readDeepRequest("/work/overview", "?agent=ceo&desk=atelier")).toEqual({
+      surface: "overview",
+      rawId: "ceo",
+      boundId: null,
+    });
   });
 
   it("keeps the room stamp on the deep paths", () => {

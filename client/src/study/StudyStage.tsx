@@ -58,6 +58,7 @@ export function StudyStage({
       data-space={variant}
       data-lighting={variant === "school" ? "school" : "ember"}
       data-approach={variant === "work" ? approach : undefined}
+      data-still={still ? "true" : "false"}
       style={stageStyle}
     >
       <div className="study-world">
@@ -72,7 +73,7 @@ export function StudyStage({
         <div className="floor-plane" data-material="floor" aria-hidden="true">
           {variant === "school" ? <ReadingFloor /> : null}
         </div>
-        <div className="desk-rig" data-desk={variant === "work" ? "fitted" : "study"}>
+        <div className={variant === "work" ? "desk-rig fitted-desk" : "desk-rig"} data-desk={variant === "work" ? "fitted" : "study"}>
           {variant === "work" ? <span className="desk-shadow" aria-hidden="true" /> : null}
           {behind ? <div className="behind-cast">{behind}</div> : null}
           <div className="desk-top" data-material="desk">

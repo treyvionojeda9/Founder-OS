@@ -88,22 +88,30 @@ test.describe("overview desk scene", () => {
     const desks = page.locator(".agent-desk");
     await expect(desks).toHaveCount(3);
     const tops = await desks.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
-    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(8);
+    const spread = Math.max(...tops) - Math.min(...tops);
+    if (proj === "tablet-portrait") expect(spread).toBeGreaterThan(8);
+    else expect(spread).toBeLessThan(8);
 
     for (const status of ["working", "idle", "failed"] as const) {
       const desk = page.locator(`.agent-desk[data-status='${status}']`);
       const lamp = desk.locator(".agent-desk-lamp");
-      const chip = desk.locator(".agent-desk-lamp-row .status-chip");
+      const chip = desk.locator(".overview-state .status-chip");
       const plaque = desk.locator(".agent-desk-plaque");
+      const sprite = desk.locator(".agent-figure");
       await expect(chip).toBeVisible();
       await expect(plaque).toHaveAttribute("data-plaque", "engraved");
       const lampBox = await lamp.boundingBox();
       const chipBox = await chip.boundingBox();
       const plaqueBox = await plaque.boundingBox();
-      if (!lampBox || !chipBox || !plaqueBox) throw new Error("desk parts missing");
-      expect(chipBox.x).toBeGreaterThan(lampBox.x + lampBox.width * 0.45);
-      expect(chipBox.y).toBeLessThan(lampBox.y + lampBox.height);
-      expect(chipBox.y + chipBox.height).toBeGreaterThan(lampBox.y);
+      const spriteBox = await sprite.boundingBox();
+      if (!lampBox || !chipBox || !plaqueBox || !spriteBox) throw new Error("desk parts missing");
+      const missesSprite =
+        chipBox.x + chipBox.width <= spriteBox.x + 1 ||
+        spriteBox.x + spriteBox.width <= chipBox.x + 1 ||
+        chipBox.y + chipBox.height <= spriteBox.y + 1 ||
+        spriteBox.y + spriteBox.height <= chipBox.y + 1;
+      expect(missesSprite).toBe(true);
+      expect(chipBox.y).toBeGreaterThan(lampBox.y + lampBox.height * 0.45);
       expect(plaqueBox.y).toBeGreaterThan(lampBox.y);
       const nameFamily = await plaque.locator(".agent-desk-name").evaluate((el) => getComputedStyle(el).fontFamily);
       expect(nameFamily.toLowerCase()).toContain("press start");
