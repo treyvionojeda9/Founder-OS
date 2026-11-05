@@ -34,12 +34,21 @@ export type FounderLine = {
 
 export type ChatLine = MachineLine | FounderLine;
 
+/** Carved plaque fields. Values are fixture words, not a model endpoint. */
+export type PlaqueSlots = {
+  model: string;
+  tools: string;
+  room: string;
+};
+
 export type TeamAgent = {
   id: string;
   name: string;
   status: AgentStatus;
   /** Plaque line. Omitted when the fixture has no role. */
   title?: string;
+  /** Model, Tools, and Room. Omitted when the fixture has no carved values. */
+  slots?: PlaqueSlots;
 };
 
 export type TeamRecord = {
@@ -103,6 +112,20 @@ function asTools(values: readonly string[] | undefined): string[] {
   return values.map((item) => item.trim()).filter((item) => item.length > 0);
 }
 
+function asSlotLine(value: string | undefined): string {
+  return value?.trim() ?? "";
+}
+
+function asSlots(agent: { slots?: { model?: string; tools?: string; room?: string } }): PlaqueSlots | undefined {
+  const raw = agent.slots;
+  if (!raw) return undefined;
+  const model = asSlotLine(raw.model);
+  const tools = asSlotLine(raw.tools);
+  const room = asSlotLine(raw.room);
+  if (!model && !tools && !room) return undefined;
+  return { model, tools, room };
+}
+
 function asTeam(raw: (typeof teamsJson.teams)[number]): TeamRecord {
   return {
     id: raw.id,
@@ -112,6 +135,7 @@ function asTeam(raw: (typeof teamsJson.teams)[number]): TeamRecord {
       name: agent.name,
       status: asStatus(agent.status),
       title: asTitle(agent.title),
+      slots: asSlots(agent),
     })),
     tools: asTools(raw.tools),
     transcript: raw.transcript.map((line) => asLine(raw.id, line as RawLine)),

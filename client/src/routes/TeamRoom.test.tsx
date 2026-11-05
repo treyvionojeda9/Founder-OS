@@ -6,7 +6,8 @@ import { frameSpec } from "../design/statusFrame";
 import { lampArt } from "../study/lampArt";
 import { localDb, noteRepo, sessionSource } from "../storage/services";
 import { SessionProvider } from "../storage/session";
-import { listTeams, resetChatForTests } from "../team/chatStore";
+import { getBoardPrefs } from "../team/boardPrefs";
+import { listTeams, resetChatForTests, teamById } from "../team/chatStore";
 import { TeamBoard } from "../team/TeamBoard";
 import boardSource from "../team/TeamBoard.tsx?raw";
 import { TeamRoom } from "./TeamRoom";
@@ -355,6 +356,11 @@ describe("team board", () => {
         expect(plaque.querySelector(".status-frame")).toHaveAttribute("data-state", frame.state);
         expect(plaque.querySelector(".status-frame")).toHaveAttribute("data-pattern", frame.pattern);
         if (agent.title) expect(plaque).toHaveTextContent(agent.title);
+        expect(plaque.querySelector("[data-slot='model']")).toHaveTextContent("Model");
+        expect(plaque.querySelector("[data-slot='tools']")).toHaveTextContent("Tools");
+        expect(plaque.querySelector("[data-slot='room']")).toHaveTextContent("Room");
+        if (agent.slots?.model) expect(plaque).toHaveTextContent(agent.slots.model);
+        if (agent.slots?.room) expect(plaque).toHaveTextContent(agent.slots.room);
         expect(plaque.querySelector(`[aria-label="${lamp.title}"]`)).toBeTruthy();
       }
     }
@@ -489,6 +495,123 @@ describe("team board", () => {
     expect(screen.getByText(/lamp is out/)).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Desk lamp, failed" })).toBeInTheDocument();
     expect(document.querySelector(".plaque")).not.toBeInTheDocument();
+  });
+
+  it("pins a seat to the top of the roster without writing a vault", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    const saveMachine = vi.spyOn(noteRepo, "saveMachineOutput");
+    await localDb.open();
+    renderRoom();
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    const order = () => [...document.querySelectorAll(".plaque")].map((node) => node.getAttribute("data-agent"));
+    expect(order()).toEqual(["ceo", "atelier", "courier"]);
+    expect(document.querySelector(".brass-pin[data-agent='courier']")).toHaveAttribute("data-pin", "out");
+    expect(document.querySelector(".plaque[data-agent='courier'] .status-frame")).toHaveAttribute("data-state", "error");
+
+    await user.click(document.querySelector(".brass-pin[data-agent='courier']")!);
+    expect(order()).toEqual(["courier", "ceo", "atelier"]);
+    expect(document.querySelector(".plaque-seat[data-agent='courier']")).toHaveAttribute("data-pinned", "true");
+    expect(document.querySelector(".brass-pin[data-agent='courier']")).toHaveAttribute("aria-pressed", "true");
+    expect(document.querySelector(".brass-pin[data-agent='courier']")).toHaveAttribute("data-pin", "in");
+
+    await user.click(document.querySelector(".brass-pin[data-agent='atelier']")!);
+    expect(order()).toEqual(["atelier", "courier", "ceo"]);
+    await user.click(document.querySelector(".brass-pin[data-agent='atelier']")!);
+    expect(order()).toEqual(["courier", "ceo", "atelier"]);
+    expect(document.querySelector(".tools-dock")).toHaveAttribute("data-reach", "local");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(saveMachine).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.machineNotes.count()).toBe(0);
+    expect(localStorage.getItem("founder-os.team-board")).toContain("courier");
+  });
+
+  it("opens swap and edit on the board and leaves the agent and both vaults alone", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    const saveMachine = vi.spyOn(noteRepo, "saveMachineOutput");
+    await localDb.open();
+    renderRoom();
+    await user.click(screen.getByRole("button", { name: "Team" }));
+
+    await user.click(document.querySelector(".scene-swap[data-agent='atelier']")!);
+    const swap = screen.getByRole("dialog", { name: "Swap seat" });
+    expect(swap).toHaveAttribute("data-overlay", "swap");
+    expect(swap).toHaveAttribute("data-reach", "local");
+    expect(swap).toHaveAttribute("data-frames", "1");
+    expect(swap).toHaveAttribute("data-still", "true");
+    expect(swap).toHaveTextContent("Nothing is sent.");
+    expect(screen.queryByRole("heading", { name: "Approve this action?" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Swap with Courier" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Marked on this board. Nothing was sent.");
+    expect(getBoardPrefs().marks["hale-design-lab:atelier"]).toBe("courier");
+    expect([...document.querySelectorAll(".plaque")].map((node) => node.getAttribute("data-agent"))).toEqual([
+      "ceo",
+      "atelier",
+      "courier",
+    ]);
+
+    await user.click(document.querySelector(".scene-edit[data-agent='atelier']")!);
+    const edit = screen.getByRole("dialog", { name: "Edit agent" });
+    expect(edit).toHaveTextContent("This changes the agent everywhere.");
+    expect(edit).toHaveTextContent("This sheet does not send it.");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Atelier");
+    await user.clear(screen.getByRole("textbox", { name: "Name" }));
+    await user.type(screen.getByRole("textbox", { name: "Name" }), "Painter");
+    await user.click(screen.getByRole("button", { name: "Keep on this sheet" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Painter/ })).toHaveAttribute("data-agent", "atelier");
+    expect(screen.getByRole("button", { name: /Painter/ }).querySelector(".status-frame")).toHaveAttribute(
+      "data-status",
+      "idle",
+    );
+    expect(teamById("hale-design-lab")?.agents.find((agent) => agent.id === "atelier")?.name).toBe("Atelier");
+    expect(screen.getByRole("tab", { name: "Atelier" })).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(saveMachine).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.machineNotes.count()).toBe(0);
+  });
+
+  it("keeps a local tool label on the dock and refuses an address", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    await localDb.open();
+    renderRoom();
+    await user.click(screen.getByRole("button", { name: "Team" }));
+    expect(document.querySelector(".dock-label[data-tool='Swatch sheet']")).toHaveTextContent("Swatch sheet");
+    await user.click(screen.getByRole("button", { name: "Stapler" }));
+    await user.click(screen.getByRole("menuitem", { name: "Swatch sheet" }));
+    const field = screen.getByRole("textbox", { name: "Local label" });
+    await user.clear(field);
+    await user.type(field, "Swatch card");
+    await user.click(screen.getByRole("button", { name: "Keep label" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Kept on this board. Nothing was sent.");
+    expect(screen.getByRole("menuitem", { name: "Swatch card" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(document.querySelector(".dock-label[data-tool='Swatch sheet']")).toHaveTextContent("Swatch card");
+
+    await user.click(screen.getByRole("button", { name: "Stapler" }));
+    await user.click(screen.getByRole("menuitem", { name: "Forge stamp" }));
+    const stamp = screen.getByRole("textbox", { name: "Local label" });
+    await user.clear(stamp);
+    await user.type(stamp, "https://forge.example");
+    await user.click(screen.getByRole("button", { name: "Keep label" }));
+    expect(screen.getByRole("status")).toHaveTextContent("That label stays here.");
+    expect(screen.getByRole("menuitem", { name: "Forge stamp" })).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.machineNotes.count()).toBe(0);
   });
 
   it("swells a plaque before the chat when motion is allowed", async () => {
