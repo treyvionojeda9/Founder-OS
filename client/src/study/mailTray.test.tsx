@@ -8,6 +8,7 @@ import { SessionProvider } from "../storage/session";
 import { resetChatForTests, teamById } from "../team/chatStore";
 import traySource from "./MailTray.tsx?raw";
 import { MailTray } from "./MailTray";
+import { mailSlotName } from "./mailSlot";
 
 const originalMatchMedia = window.matchMedia.bind(window);
 
@@ -51,8 +52,7 @@ describe("mail slot tray", () => {
     if (!hale) throw new Error("missing hale");
     render(<MailTray teamId="hale-design-lab" agents={hale.agents} still onOpen={() => {}} />);
 
-    expect(document.querySelector(".mail-plaque")?.textContent).toBe("2 Needs you");
-    await user.click(screen.getByRole("button", { name: "2 Needs you, mail slot" }));
+    await user.click(screen.getByRole("button", { name: mailSlotName(2) }));
     const list = screen.getByRole("listbox", { name: "Needs you" });
     expect(list).toHaveFocus();
     let options = within(list).getAllByRole("option");
@@ -82,7 +82,10 @@ describe("mail slot tray", () => {
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "2 Needs you, mail slot" })).toHaveFocus();
+    const slot = screen.getByRole("button", { name: mailSlotName(2) });
+    expect(slot).toHaveFocus();
+    expect(slot).toHaveTextContent("2");
+    expect(slot).toHaveTextContent("Needs you");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -94,7 +97,7 @@ describe("mail slot tray", () => {
     const slot = document.querySelector(".mail-slot");
     expect(slot).toHaveAttribute("data-still", "true");
     expect(slot).toHaveAttribute("data-frames", "1");
-    await user.click(screen.getByRole("button", { name: /mail slot/ }));
+    await user.click(screen.getByRole("button", { name: mailSlotName(2) }));
     expect(document.querySelector(".mail-tray")).toHaveAttribute("data-frames", "1");
     expect(document.querySelector(".mail-slot")).toHaveAttribute("data-open", "true");
     expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
@@ -110,7 +113,7 @@ describe("mail slot tray", () => {
     await localDb.open();
     renderOverview();
     await user.click(screen.getByRole("tab", { name: "Overview" }));
-    await user.click(screen.getByRole("button", { name: "2 Needs you, mail slot" }));
+    await user.click(screen.getByRole("button", { name: mailSlotName(2) }));
     await user.keyboard("{Enter}");
 
     const dialog = screen.getByRole("dialog", { name: "Approve this action?" });
@@ -133,7 +136,7 @@ describe("mail slot tray", () => {
     await localDb.open();
     renderOverview("cloud-agent-team");
     await user.click(screen.getByRole("tab", { name: "Overview" }));
-    await user.click(screen.getByRole("button", { name: /mail slot/ }));
+    await user.click(screen.getByRole("button", { name: mailSlotName(2) }));
     const filters = screen.getByRole("toolbar", { name: "Filter by agent" });
     await user.click(within(filters).getByRole("button", { name: "Relay" }));
     expect(screen.getByRole("option")).toHaveAttribute("data-glyph", "hand");
