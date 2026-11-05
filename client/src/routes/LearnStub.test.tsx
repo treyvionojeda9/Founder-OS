@@ -168,8 +168,20 @@ describe("learning desk", () => {
     expect(dialog).toHaveTextContent("Write that sentence in your own words.");
     await user.click(screen.getByRole("button", { name: "Close the book" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open the current path" })).toHaveFocus();
     expect(saveHuman).not.toHaveBeenCalled();
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns focus to the book when Escape closes the path", async () => {
+    const user = userEvent.setup();
+    await readyDesk();
+    const book = screen.getByRole("button", { name: "Open the current path" });
+    await user.click(book);
+    expect(screen.getByRole("dialog", { name: "Reading Room path" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(book).toHaveFocus();
   });
 
   it("opens the field notes path without an assignment", async () => {
