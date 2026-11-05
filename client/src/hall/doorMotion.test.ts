@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { glimpseDenominator } from "./doorFrame";
 import {
   DOLLY_MS,
   ENTER_MS,
@@ -44,6 +45,15 @@ describe("door open schedule", () => {
   it("sends work doors to a team page and school doors to a curriculum page", () => {
     expect(doorPath({ id: "hale-design-lab", section: "work" })).toBe("/team/hale-design-lab");
     expect(doorPath({ id: "reading-room", section: "school" })).toBe("/learn/reading-room");
+  });
+
+  it("shows the room through the door at a half-scale crop", () => {
+    expect(glimpseDenominator(0.1925)).toBe(2);
+    expect(glimpseDenominator(0.1222)).toBe(2);
+    expect(glimpseDenominator(0.2)).toBe(2);
+    expect(glimpseDenominator(1)).toBe(1);
+    expect(glimpseDenominator(0)).toBe(2);
+    expect(Number.isInteger(glimpseDenominator(0.15))).toBe(true);
   });
 
   it("routes team and school paths through the same portal kinds", () => {

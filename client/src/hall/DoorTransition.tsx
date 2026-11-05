@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { WarmCover } from "../components/HallLight";
+import { doorSpec } from "../design/sprites/doorFaces";
 import { doors } from "../fixtures/doors";
 import { useStillFrame } from "../hooks/useStillFrame";
 import { LearnStub } from "../routes/LearnStub";
@@ -140,6 +141,9 @@ function RoomPortal({ reveal }: { reveal: Reveal }) {
     "--ox": `${reveal.frame.ox}px`,
     "--oy": `${reveal.frame.oy}px`,
     "--door-scale": String(reveal.frame.scale),
+    "--glimpse-n": String(reveal.frame.glimpseN),
+    "--open-w": `${doorSpec.openingW * reveal.frame.pixelScale}px`,
+    "--open-h": `${doorSpec.openingH * reveal.frame.pixelScale}px`,
     "--enter-ms": `${ENTER_MS}ms`,
     "--shut-ms": `${SHUT_MS}ms`,
   } as CSSProperties;

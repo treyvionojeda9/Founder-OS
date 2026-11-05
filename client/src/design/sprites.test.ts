@@ -12,6 +12,7 @@ import {
   doorFrame,
   doorLeaf,
   doorLeafAjar,
+  doorLeafCrack,
   doorLeafOpen,
   doorSpill,
   footGlow,
@@ -134,8 +135,12 @@ describe("sprite grids", () => {
     const painted = (row: string) => [...row].filter((ch) => ch !== ".").length;
     const ajar = doorLeafAjar[8] ?? "";
     const open = doorLeafOpen[8] ?? "";
+    const crack = doorLeafCrack[8] ?? "";
     expect(painted(ajar)).toBeLessThan(painted(leafRow));
     expect(painted(open)).toBeLessThan(painted(ajar));
+    expect(painted(crack)).toBeLessThan(painted(leafRow));
+    expect(painted(crack)).toBeGreaterThan(painted(ajar));
+    expect([...crack].filter((ch) => ch === ".").length).toBe(2);
     expect(ajar.startsWith("e")).toBe(true);
     expect(open.startsWith("e")).toBe(true);
     const night = grayscaleGrid(["n"])[0][0];

@@ -10,7 +10,7 @@ import { offlineCloud } from "./offlineCloud";
 import { paperSheet } from "./paper";
 import { stapler } from "./stapler";
 import { assignmentKey, bookStack, closedBook, forgeNote, openNotebook } from "./studyProps";
-import { contactShadow, doorFrame, doorInterior, doorLeaf, doorSpill, footGlow, lightPoolA } from "./doorFaces";
+import { contactShadow, doorFrame, doorInterior, doorLeaf, doorLeafCrack, doorSpill, footGlow, lightPoolA } from "./doorFaces";
 
 export type { SpriteGrid } from "./types";
 export { flame } from "./flame";
@@ -32,6 +32,7 @@ export {
   doorJamb,
   doorLeaf,
   doorLeafAjar,
+  doorLeafCrack,
   doorLeafOpen,
   doorLeafBack,
   doorLeafEdge,
@@ -71,6 +72,7 @@ export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "foot glow", rows: footGlow },
   { name: "door frame", rows: doorFrame },
   { name: "door leaf", rows: doorLeaf },
+  { name: "door leaf crack", rows: doorLeafCrack },
   { name: "door interior", rows: doorInterior },
   { name: "door spill", rows: doorSpill },
   { name: "light pool", rows: lightPoolA },
