@@ -1,9 +1,19 @@
-import { mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { ENTER_MS, SEQUENCE_MS } from "../src/hall/doorMotion";
+import { ENTER_MS, SEQUENCE_MS, SHUT_MS } from "../src/hall/doorMotion";
 
 const dir = "/opt/cursor/artifacts/screenshots";
+const pr3 = "../docs/screenshots/pr3";
+const pr3Art = "/opt/cursor/artifacts/screenshots/pr3";
 mkdirSync(dir, { recursive: true });
+mkdirSync(pr3, { recursive: true });
+mkdirSync(pr3Art, { recursive: true });
+
+async function keep(page: Page, name: string) {
+  const path = `${pr3}/${name}.png`;
+  await page.screenshot({ path, animations: "allow" });
+  copyFileSync(path, `${pr3Art}/${name}.png`);
+}
 
 async function expectStage(page: Page, count: number) {
   const grid = page.locator(".door-grid");
@@ -84,6 +94,7 @@ test.describe("closed hall", () => {
         path: `${dir}/hall-closed-${count}-${info.project.name}.png`,
         animations: "disabled",
       });
+      if (count === 3) await keep(page, `hall-closed-${info.project.name}`);
     });
   }
 
@@ -119,7 +130,6 @@ test.describe("open frames", () => {
   });
 
   test("swing and dolly stay on the hall, then the route rises", async ({ page }, info) => {
-    test.skip(info.project.name === "tablet-landscape", "portrait and desktop frames");
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/home");
     await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeVisible();
@@ -140,21 +150,101 @@ test.describe("open frames", () => {
       { label: "75", ms: Math.round(SEQUENCE_MS * 0.75) },
       { label: "100", ms: ENTER_MS - 16 },
     ];
+    await expect(page.locator(".room-portal")).toBeVisible();
+    const spill = await page.locator(".door.is-opening .spill").evaluate((el) => getComputedStyle(el).opacity);
+    expect(Number(spill)).toBe(0);
+
     for (const frame of frames) {
       await seek(page, frame.ms);
       await expect(page).toHaveURL(/\/home$/);
+      if (frame.label === "100") {
+        const scale = await page.locator(".room-portal").evaluate((el) => {
+          const value = getComputedStyle(el).transform;
+          if (value === "none") return 1;
+          const match = value.match(/matrix(?:3d)?\(([^)]+)\)/);
+          if (!match) return -1;
+          return Number(match[1].split(",")[0]);
+        });
+        expect(scale).toBeGreaterThan(0.95);
+      }
       await page.screenshot({
         path: `${dir}/door-open-${frame.label}-${info.project.name}.png`,
         animations: "allow",
       });
+      await keep(page, `door-open-${frame.label}-${info.project.name}`);
     }
 
     await page.clock.runFor(ENTER_MS + 400);
     await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
-    await expect(page.getByRole("heading", { name: "CEO chat — PR #2" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
     await page.screenshot({
       path: `${dir}/door-landed-${info.project.name}.png`,
       animations: "allow",
     });
+    await keep(page, `room-landed-${info.project.name}`);
   });
 });
+
+test("grayscale lamp on and lamp off stay different shapes", async ({ page }, info) => {
+  test.skip(info.project.name !== "tablet-portrait", "one grayscale pair");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/team/hale-design-lab");
+  await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+  await page.evaluate(() => {
+    document.documentElement.style.filter = "grayscale(1)";
+  });
+  const lit = await lampSignature(page);
+  await keep(page, "room-grayscale-lamp-on-tablet-portrait");
+  await page.getByRole("tab", { name: "Atelier" }).click();
+  await expect(page.getByRole("img", { name: "Desk lamp, dark" })).toBeVisible();
+  const dark = await lampSignature(page);
+  expect(dark).not.toBe(lit);
+  await keep(page, "room-grayscale-lamp-off-tablet-portrait");
+});
+
+test("approval dialog sits on the paper", async ({ page }, info) => {
+  test.skip(info.project.name !== "tablet-portrait", "one dialog sheet");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/team/hale-design-lab");
+  await page.getByRole("button", { name: "Publish the forge note" }).click();
+  await expect(page.getByRole("dialog", { name: "Approve this action?" })).toBeVisible();
+  await keep(page, "approval-dialog-tablet-portrait");
+  await page.getByRole("button", { name: "Decline" }).click();
+  await expect(page.getByRole("status")).toHaveText("Declined. Nothing ran.");
+  await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
+});
+
+test.describe("back through the doorway", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.clock.install({ time: new Date("2026-10-29T12:00:00Z") });
+  });
+
+  test("the room recedes and the door closes onto the hall", async ({ page }, info) => {
+    test.skip(info.project.name !== "tablet-portrait", "one reverse sheet");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/home");
+    await page.clock.pauseAt(new Date("2026-10-29T12:00:03Z"));
+    await page.getByRole("button", { name: /Hale Design Lab/ }).click();
+    await page.clock.runFor(ENTER_MS + 500);
+    await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
+    await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page.locator(".room-portal.is-shut")).toBeVisible();
+    await seek(page, Math.round(SHUT_MS * 0.62));
+    await keep(page, "back-mid-tablet-portrait");
+    await page.clock.runFor(SHUT_MS + 200);
+    await expect(page).toHaveURL(/\/home$/);
+    await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeFocused();
+  });
+});
+
+async function lampSignature(page: Page) {
+  return page.getByRole("img", { name: /Desk lamp/ }).evaluate((canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return "";
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let sig = 0;
+    for (let i = 0; i < data.length; i += 16) sig = (sig + data[i] * 3 + data[i + 1] * 5 + data[i + 2]) % 100000;
+    return String(sig);
+  });
+}

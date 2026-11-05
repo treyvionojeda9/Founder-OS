@@ -1,0 +1,169 @@
+import teamsJson from "../fixtures/teams.json";
+
+export type AgentStatus = "working" | "idle" | "failed";
+
+export type AgentAction = {
+  id: string;
+  kind: "spend" | "publish" | "contact" | "delete" | "write";
+  label: string;
+};
+
+/** Machine Vault material. It lives in the chat transcript, not in a Human Vault note. */
+export type MachineLine = {
+  id: string;
+  teamId: string;
+  author: "machine";
+  record: "machine";
+  agentId: string;
+  body: string;
+  source: string;
+  timestamp: string;
+  action?: AgentAction;
+};
+
+/** Founder chat history. This is not a Human Vault note and has no vault write. */
+export type FounderLine = {
+  id: string;
+  teamId: string;
+  author: "founder";
+  record: "chat";
+  body: string;
+};
+
+export type ChatLine = MachineLine | FounderLine;
+
+export type TeamAgent = {
+  id: string;
+  name: string;
+  status: AgentStatus;
+};
+
+export type TeamRecord = {
+  id: string;
+  name: string;
+  agents: TeamAgent[];
+  transcript: ChatLine[];
+};
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatMachineTime(iso: string): string {
+  const date = new Date(iso);
+  const dd = String(date.getUTCDate()).padStart(2, "0");
+  const hh = String(date.getUTCHours()).padStart(2, "0");
+  const mm = String(date.getUTCMinutes()).padStart(2, "0");
+  return `${dd} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}, ${hh}:${mm} UTC`;
+}
+
+const STATUSES: readonly AgentStatus[] = ["working", "idle", "failed"];
+const KINDS: readonly AgentAction["kind"][] = ["spend", "publish", "contact", "delete", "write"];
+
+function asStatus(value: string): AgentStatus {
+  if ((STATUSES as readonly string[]).includes(value)) return value as AgentStatus;
+  throw new Error(`Unknown agent status: ${value}`);
+}
+
+function asKind(value: string): AgentAction["kind"] {
+  if ((KINDS as readonly string[]).includes(value)) return value as AgentAction["kind"];
+  throw new Error(`Unknown action kind: ${value}`);
+}
+
+type RawLine = {
+  id: string;
+  author: string;
+  body: string;
+  agentId?: string;
+  source?: string;
+  timestamp?: string;
+  action?: { id: string; kind: string; label: string };
+};
+
+function asTeam(raw: (typeof teamsJson.teams)[number]): TeamRecord {
+  return {
+    id: raw.id,
+    name: raw.name,
+    agents: raw.agents.map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      status: asStatus(agent.status),
+    })),
+    transcript: raw.transcript.map((line) => asLine(raw.id, line as RawLine)),
+  };
+}
+
+function asLine(teamId: string, line: RawLine): ChatLine {
+  if (line.author === "founder") {
+    return { id: line.id, teamId, author: "founder", record: "chat", body: line.body };
+  }
+  return {
+    id: line.id,
+    teamId,
+    author: "machine",
+    record: "machine",
+    agentId: line.agentId ?? "ceo",
+    body: line.body,
+    source: line.source ?? "",
+    timestamp: line.timestamp ?? "",
+    action: line.action
+      ? { id: line.action.id, kind: asKind(line.action.kind), label: line.action.label }
+      : undefined,
+  };
+}
+
+const teams: TeamRecord[] = teamsJson.teams.map(asTeam);
+
+const extras: FounderLine[] = [];
+const cache = new Map<string, ChatLine[]>();
+const listeners = new Set<() => void>();
+let sequence = 0;
+
+function emit() {
+  cache.clear();
+  for (const listener of listeners) listener();
+}
+
+export function listTeams(): readonly TeamRecord[] {
+  return teams;
+}
+
+export function teamById(id: string | undefined): TeamRecord | undefined {
+  return teams.find((team) => team.id === id);
+}
+
+export function transcriptFor(teamId: string): ChatLine[] {
+  const hit = cache.get(teamId);
+  if (hit) return hit;
+  const team = teamById(teamId);
+  const next = [...(team?.transcript ?? []), ...extras.filter((line) => line.teamId === teamId)];
+  cache.set(teamId, next);
+  return next;
+}
+
+export function subscribeChat(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export function appendFounderLine(teamId: string, body: string): FounderLine {
+  const line: FounderLine = {
+    id: `chat-${++sequence}`,
+    teamId,
+    author: "founder",
+    record: "chat",
+    body,
+  };
+  extras.push(line);
+  emit();
+  return line;
+}
+
+export function resetChatForTests() {
+  extras.length = 0;
+  cache.clear();
+  sequence = 0;
+  emit();
+}
+
+export function isMachineLine(line: ChatLine): line is MachineLine {
+  return line.author === "machine";
+}

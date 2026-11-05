@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { DOLLY_MS, ENTER_MS, REVEAL_MS, SEQUENCE_MS, doorOpenSchedule, doorPath } from "./doorMotion";
+import {
+  DOLLY_MS,
+  ENTER_MS,
+  REVEAL_MS,
+  SEQUENCE_MS,
+  SHUT_MS,
+  doorOpenSchedule,
+  doorPath,
+  prefersStillFrames,
+} from "./doorMotion";
 
 describe("door open schedule", () => {
   it("swings the leaf, dollies the doorway, then lets the route change", () => {
@@ -18,6 +27,14 @@ describe("door open schedule", () => {
 
   it("skips the animation when motion is reduced", () => {
     expect(doorOpenSchedule(true)).toEqual([{ at: 0, phase: "enter" }]);
+  });
+
+  it("treats reduced motion and slow e-ink updates as a one-frame cut", () => {
+    expect(prefersStillFrames(true, false)).toBe(true);
+    expect(prefersStillFrames(false, true)).toBe(true);
+    expect(prefersStillFrames(false, false)).toBe(false);
+    expect(SHUT_MS).toBeGreaterThan(400);
+    expect(SHUT_MS).toBeLessThan(ENTER_MS);
   });
 
   it("sends work doors to a team page and school doors to a curriculum page", () => {

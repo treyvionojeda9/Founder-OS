@@ -59,9 +59,10 @@ test("splash, work hall, school hall, and a work door", async ({ page }, info) =
 
   await page.getByRole("tab", { name: "Work" }).click();
   await page.getByRole("button", { name: /Hale Design Lab/ }).click();
-  await expect(page.getByRole("heading", { name: "CEO chat — PR #2" })).toBeVisible();
-  await page.getByRole("link", { name: "Back" }).click();
+  await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+  await page.getByRole("button", { name: "Back" }).click();
   await expect(page).toHaveURL(/\/home$/);
+  await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeFocused();
 });
 
 test("door opens, then the route changes", async ({ page }, info) => {
@@ -77,7 +78,7 @@ test("door opens, then the route changes", async ({ page }, info) => {
   await expect(page).toHaveURL(/\/home$/);
   await page.screenshot({ path: shot(`door-open-dolly-${proj}`) });
   await expect(page).toHaveURL(/\/team\/hale-design-lab$/, { timeout: 4000 });
-  await expect(page.getByRole("heading", { name: "CEO chat — PR #2" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
 });
 
 test("enter and space on a focused door run the open sequence", async ({ page }, info) => {
@@ -136,8 +137,65 @@ test("design system page", async ({ page }, info) => {
   await page.screenshot({ path: shot(`design-system-${info.project.name}`), fullPage: true });
 });
 
+test("machine lines are stamped and the action chip does not execute", async ({ page }) => {
+  await page.goto("/team/hale-design-lab");
+  const lines = page.locator(".machine-line");
+  await expect(lines).not.toHaveCount(0);
+  const count = await lines.count();
+  for (let i = 0; i < count; i += 1) {
+    await expect(lines.nth(i).locator(".source")).not.toBeEmpty();
+    await expect(lines.nth(i).locator("time")).not.toBeEmpty();
+    await expect(lines.nth(i)).toContainText("generated · not verified");
+  }
+  await page.getByLabel("Message the CEO").fill("Leave it on the paper.");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText("Leave it on the paper.")).toBeVisible();
+  await page.getByRole("button", { name: "Publish the forge note" }).click();
+  await expect(page.getByRole("dialog", { name: "Approve this action?" })).toBeVisible();
+  await page.getByRole("button", { name: "Decline" }).click();
+  await expect(page.getByRole("status")).toHaveText("Declined. Nothing ran.");
+  await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
+});
+
+test("a slow e-ink update cuts straight into the CEO chat", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "one cut");
+  await page.addInitScript(() => {
+    const original = window.matchMedia.bind(window);
+    window.matchMedia = (query: string) => {
+      if (query.includes("update") && query.includes("slow")) {
+        return {
+          matches: true,
+          media: query,
+          onchange: null,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          dispatchEvent: () => false,
+        } as MediaQueryList;
+      }
+      return original(query);
+    };
+  });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/home");
+  await page.evaluate(() => {
+    const door = document.querySelector("[data-door-id='hale-design-lab']");
+    const record = { swung: false };
+    (window as unknown as { __door?: { swung: boolean } }).__door = record;
+    if (!door) return;
+    new MutationObserver(() => {
+      if (door.getAttribute("data-phase") === "swing") record.swung = true;
+    }).observe(door, { attributes: true });
+  });
+  await page.getByRole("button", { name: /Hale Design Lab/ }).click();
+  await expect(page).toHaveURL(/\/team\/hale-design-lab$/);
+  await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { __door?: { swung: boolean } }).__door?.swung)).toBe(false);
+});
+
 test("axe has no serious or critical issues on the shell routes", async ({ page }) => {
-  for (const path of ["/", "/home", "/design", "/settings"]) {
+  for (const path of ["/", "/home", "/design", "/settings", "/team/hale-design-lab"]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
     const bad = results.violations.filter((item) => item.impact === "serious" || item.impact === "critical");
