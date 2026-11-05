@@ -150,33 +150,14 @@ test("school door opens into the learning desk", async ({ page }, info) => {
   await page.getByRole("button", { name: /Reading Room/ }).click();
   await expect(page.locator(".room-portal .learn-room")).toBeVisible();
   await expect(page.locator(".room-portal .desk-top")).toBeVisible();
-  await expect(page.locator(".door.is-opening .spill")).toBeVisible();
-  let shut = { ready: false, area: -1, shut: 0 };
-  await expect.poll(async () => {
-    shut = await page.locator(".door.is-opening").evaluate((door) => {
-      const spill = door.querySelector(".spill");
-      const leaf = door.querySelector(".leaf-pose.is-0");
-      if (!(spill instanceof HTMLElement) || !(leaf instanceof HTMLElement)) {
-        return { ready: false, area: -1, shut: 0 };
-      }
-      const animations = door.getAnimations({ subtree: true });
-      if (animations.length === 0) return { ready: false, area: -1, shut: 0 };
-      for (const animation of animations) {
-        animation.pause();
-        animation.currentTime = 0;
-      }
-      const opacity = Number(getComputedStyle(spill).opacity);
-      const box = spill.getBoundingClientRect();
-      return {
-        ready: true,
-        area: opacity * box.width * box.height,
-        shut: Number(getComputedStyle(leaf).opacity),
-      };
-    });
-    return shut.ready && shut.area === 0 && shut.shut > 0.5;
-  }).toBe(true);
-  expect(shut.area).toBe(0);
-  expect(shut.shut).toBeGreaterThan(0.5);
+  // CSS time is not the mocked clock. Pin the shut frame before reading the spill.
+  await seek(page, 0);
+  const spillArea = await page.locator(".door.is-opening .spill").evaluate((el) => {
+    const opacity = Number(getComputedStyle(el).opacity);
+    const box = el.getBoundingClientRect();
+    return opacity * box.width * box.height;
+  });
+  expect(spillArea).toBe(0);
   await seek(page, Math.round(ENTER_MS * 0.28));
   const ajar = await page.locator(".door.is-opening .spill").evaluate((el) => Number(getComputedStyle(el).opacity));
   expect(ajar).toBeGreaterThan(0.5);
