@@ -156,8 +156,12 @@ test.describe("milestone 1 live path", () => {
           await page.keyboard.press("Tab");
           await expect(page.locator(".agent-desk[data-agent='ceo']")).toBeFocused();
           await page.keyboard.press("Tab");
+          await expect(page.getByRole("switch", { name: "Pause CEO" })).toBeFocused();
+          await page.keyboard.press("Tab");
           await expect(desk).toBeFocused();
           await page.keyboard.press("Enter");
+          await expect(page.locator(".desk-grid")).toHaveAttribute("data-focus", "atelier");
+          await page.keyboard.press("Space");
         } else {
           await desk.click();
         }

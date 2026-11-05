@@ -59,6 +59,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const [boardReturn, setBoardReturn] = useState<TabKey>("ceo");
   const [expanding, setExpanding] = useState<string | null>(null);
   const [sheetId, setSheetId] = useState<string | null>(null);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<Drawer>(
     surface?.place === "library" || surface?.place === "team" ? surface.place : null,
   );
@@ -115,7 +116,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     deskFocus.current = null;
     const node = document.querySelector<HTMLButtonElement>(`.agent-desk[data-agent="${CSS.escape(id)}"]`);
     node?.focus({ preventScroll: true });
-  }, [tab, drawer, sheetId]);
+  }, [tab, drawer, sheetId, focusedId]);
 
   useEffect(() => {
     if (!sheetId || tab !== "overview" || drawer) return;
@@ -139,6 +140,18 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   }, [sheetId, tab, drawer, pending]);
 
   useEffect(() => {
+    if (!focusedId || sheetId || tab !== "overview" || drawer || pending) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      deskFocus.current = focusedId;
+      setFocusedId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusedId, sheetId, tab, drawer, pending]);
+
+  useEffect(() => {
     return () => {
       if (expandTimer.current !== null) window.clearTimeout(expandTimer.current);
     };
@@ -157,6 +170,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     setNotice(null);
     setFromDesks(false);
     setFromBoard(false);
+    setFocusedId(null);
     setDraft("");
     if (goto.place === "overview") {
       setDrawer(null);
@@ -234,6 +248,16 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     if (!body || target === "overview") return;
     appendFounderLine(team.id, body, target);
     setDraft("");
+  };
+
+  const focusTile = (agentId: string) => {
+    clearTimer(expandTimer);
+    setExpanding(null);
+    setSheetId(null);
+    setPending(null);
+    setNotice(null);
+    setPose("desk");
+    setFocusedId(agentId);
   };
 
   const closeSheet = () => {
@@ -423,6 +447,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
           setFromDesks(false);
           setFromBoard(false);
           setSheetId(null);
+          setFocusedId(null);
           setPose("desk");
           setExpanding(null);
           const control = preview ? null : document.getElementById(`team-tab-${tabs[next].id}`);
@@ -446,6 +471,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
                 setFromDesks(false);
                 setFromBoard(false);
                 setSheetId(null);
+                setFocusedId(null);
                 setPose("desk");
                 setExpanding(null);
               }}
@@ -471,6 +497,8 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
             panelId={preview ? undefined : "study-panel"}
             labelledBy={preview ? undefined : "team-tab-overview"}
             onOpen={openDesk}
+            onFocusTile={focusTile}
+            focusedId={focusedId}
             onOpenMail={openMail}
             sheet={
               sheetRecord ? (
