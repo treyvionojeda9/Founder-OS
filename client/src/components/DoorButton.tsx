@@ -9,6 +9,7 @@ import {
   doorLeafBack,
   doorLeafEdge,
   doorSide,
+  doorGlowPad,
   doorSpec,
   doorSpill,
   doorWash,
@@ -75,6 +76,7 @@ export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps
     "--dolly-ms": `${ENTER_MS - DOLLY_MS}ms`,
     "--enter-ms": `${ENTER_MS}ms`,
     "--pool-w": `${lightPoolA[0].length * scale}px`,
+    "--pool-shift": `${-doorGlowPad.top * scale}px`,
     "--edge": `${depth}px`,
   } as CSSProperties;
 
@@ -201,7 +203,7 @@ export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps
       <span className="contact-shadow">
         <Sprite rows={contactShadow} scale={scale} title="" />
       </span>
-      <span className="door-name">{door.name}</span>
+      <span className="door-name type-meta">{door.name}</span>
     </button>
   );
 }

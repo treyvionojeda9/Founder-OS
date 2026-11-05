@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { paintVignette, paintWarmLight } from "../hall/pixelLight";
+import { paintWarmLight } from "../hall/pixelLight";
 
-function usePixelCanvas(kind: "vignette" | "warm") {
+function useWarmCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -19,23 +19,17 @@ function usePixelCanvas(kind: "vignette" | "warm") {
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      if (kind === "warm") paintWarmLight(ctx, width, height, 6);
-      else paintVignette(ctx, width, height, 6);
+      paintWarmLight(ctx, width, height, 6);
     };
     draw();
     window.addEventListener("resize", draw);
     return () => window.removeEventListener("resize", draw);
-  }, [kind]);
+  }, []);
 
   return ref;
 }
 
-export function Vignette() {
-  const ref = usePixelCanvas("vignette");
-  return <canvas ref={ref} className="vignette" aria-hidden="true" />;
-}
-
 export function WarmCover({ className, phase }: { className?: string; phase?: string }) {
-  const ref = usePixelCanvas("warm");
+  const ref = useWarmCanvas();
   return <canvas ref={ref} className={className} data-phase={phase} aria-hidden="true" />;
 }

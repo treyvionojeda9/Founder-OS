@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { DoorButton } from "../components/DoorButton";
-import { Vignette } from "../components/HallLight";
 import { SectionToggle } from "../components/SectionToggle";
 import { Sprite } from "../design/Sprite";
 import { flame } from "../design/sprites";
@@ -69,13 +68,12 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
 
   return (
     <>
-      <Vignette />
       <div className="hall">
         <aside className="rail">
           <Sprite rows={flame} scale={4} title="Spark of Freedom flame" />
           <h1 className="wordmark">Spark of Freedom</h1>
           <p className="rail-copy">A quiet hall for the work you author and the study you keep.</p>
-          <Link className="text-link" to="/settings">
+          <Link className="text-link hall-fixture type-meta" to="/settings">
             Settings
           </Link>
         </aside>
@@ -86,7 +84,7 @@ export function Home({ doors = fixtureDoors }: HomeProps) {
               <h1 className="wordmark">Spark of Freedom</h1>
             </div>
             {showToggle ? <h2 className="stage-title">{section === "work" ? "Work" : "School"}</h2> : null}
-            <Link className="text-link stage-settings" to="/settings">
+            <Link className="text-link stage-settings hall-fixture type-meta" to="/settings">
               Settings
             </Link>
           </header>

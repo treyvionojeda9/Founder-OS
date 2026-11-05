@@ -48,6 +48,7 @@ export function SectionToggle({ section, onChange }: SectionToggleProps) {
         aria-selected={section === "work"}
         aria-controls="hall-panel"
         tabIndex={section === "work" ? 0 : -1}
+        className="type-meta"
         onClick={() => onChange("work", false)}
       >
         Work
@@ -60,6 +61,7 @@ export function SectionToggle({ section, onChange }: SectionToggleProps) {
         aria-selected={section === "school"}
         aria-controls="hall-panel"
         tabIndex={section === "school" ? 0 : -1}
+        className="type-meta"
         onClick={() => onChange("school", false)}
       >
         School
