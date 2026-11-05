@@ -16,6 +16,7 @@ import {
 } from "../design/sprites";
 import type { SpriteGrid } from "../design/sprites";
 import { Link } from "react-router-dom";
+import { typeScale } from "../design/type";
 
 function Pair({
   title,
@@ -46,7 +47,7 @@ function Pair({
 export function DesignSystem() {
   return (
     <main className="design">
-      <header className="stage-head">
+      <header className="pixel-bar stage-head">
         <h1>Design system</h1>
         <Link className="text-link" to="/home">
           Home
@@ -55,6 +56,13 @@ export function DesignSystem() {
       <div className="design-grid">
         <SwatchColumn />
         <div>
+          <section className="sprite-block" aria-label="Type scale">
+            <h2>Type scale</h2>
+            <p className="type-display">Display {typeScale.display}</p>
+            <p className="type-title">Title {typeScale.title}</p>
+            <p className="type-body">Body {typeScale.body}. Pixel copy on the grid.</p>
+            <p className="type-meta">Meta {typeScale.meta}</p>
+          </section>
           <Pair title="Spark of Freedom" rows={flame} />
           <Pair
             title="Arch door, closed"

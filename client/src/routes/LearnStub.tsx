@@ -151,12 +151,14 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
       data-assignment={path?.assignment ? "true" : "false"}
       data-preview={preview ? "true" : "false"}
     >
-      <header className="study-bar">
-        <button type="button" className="text-link" onClick={() => shut(id)}>
-          Back
-        </button>
-        <p className="study-team">{door?.name ?? "School"}</p>
-      </header>
+      <div className="pixel-bar">
+        <header className="study-bar">
+          <button type="button" className="text-link" onClick={() => shut(id)}>
+            Back
+          </button>
+          <p className="study-team">{door?.name ?? "School"}</p>
+        </header>
+      </div>
       <div className="study-scene">
         <StudyStage
           variant="school"
