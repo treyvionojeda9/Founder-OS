@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Sprite } from "../design/Sprite";
+import { StatusFrame } from "../design/StatusFrame";
+import { STATUS_LEGEND } from "../design/statusFrame";
 import { stapler } from "../design/sprites";
-import { lampArt } from "../study/lampArt";
 import { WorkingLamp } from "../study/WorkingLamp";
 import type { TeamRecord } from "./chatStore";
 
@@ -55,11 +56,9 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
               <h1>Team</h1>
               <p className="board-team">{team.name}</p>
             </header>
-            <p className="board-legend">Lit lamp means working. Dark lamp means idle. A fallen lamp has failed.</p>
+            <p className="board-legend">{STATUS_LEGEND}</p>
             <ul className="plaque-list">
-              {team.agents.map((agent) => {
-                const lamp = lampArt(agent.status);
-                return (
+              {team.agents.map((agent) => (
                   <li key={agent.id}>
                     <button
                       type="button"
@@ -77,13 +76,10 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
                         <span className="plaque-name">{agent.name}</span>
                         {agent.title ? <span className="plaque-title">{agent.title}</span> : null}
                       </span>
-                      <span className="plaque-state status-chip" data-status={agent.status}>
-                        {lamp.caption}
-                      </span>
+                      <StatusFrame className="plaque-state" status={agent.status} still={still} />
                     </button>
                   </li>
-                );
-              })}
+              ))}
             </ul>
             <div className="board-foot">
               <button

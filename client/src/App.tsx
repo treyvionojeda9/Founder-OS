@@ -7,6 +7,7 @@ import { Home } from "./routes/Home";
 import { LearnStub } from "./routes/LearnStub";
 import { SettingsPage } from "./routes/SettingsPage";
 import { Splash } from "./routes/Splash";
+import { StatusFrameDemo } from "./routes/StatusFrameDemo";
 import { TeamRoom } from "./routes/TeamRoom";
 import { SessionProvider } from "./storage/session";
 
@@ -36,6 +37,7 @@ export function App() {
             <Route path="/learn/:id" element={<LearnStub />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/design" element={<DesignSystem />} />
+            <Route path="/status-frame" element={<StatusFrameDemo />} />
           </Route>
         </Routes>
       </BrowserRouter>

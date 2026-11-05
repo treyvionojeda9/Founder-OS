@@ -1,8 +1,9 @@
 import { Sprite } from "../design/Sprite";
-import { faceWashByMark, paperLightPool, deskLightPool, seatMark, seatedByMark } from "../design/sprites/seatedAgent";
+import { StatusFrame } from "../design/StatusFrame";
+import { STATUS_LEGEND } from "../design/statusFrame";
+import { faceWashByMark, paperLightPool, deskLightPool, raisedHand, seatMark, seatedByMark } from "../design/sprites/seatedAgent";
 import { useFormFactor } from "../hooks/useFormFactor";
 import type { TeamAgent } from "../team/chatStore";
-import { lampArt } from "./lampArt";
 import { WorkingLamp } from "./WorkingLamp";
 
 type DeskGridProps = {
@@ -32,7 +33,7 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
       data-count={agents.length}
     >
       <h1 className="overview-title">Overview</h1>
-      <p className="overview-legend">Lit lamp means working. Dark lamp means idle. A fallen lamp has failed.</p>
+      <p className="overview-legend">{STATUS_LEGEND}</p>
       <div className="desk-room" data-scene="row">
         <span className="agent-desk-wall" data-material="plaster" aria-hidden="true" />
         <span className="desk-room-windows" aria-hidden="true">
@@ -72,9 +73,9 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
         </span>
         <ul className="desk-grid-list">
           {agents.map((agent, index) => {
-            const lamp = lampArt(agent.status);
             const mark = seatMark(index);
             const lit = agent.status === "working";
+            const waiting = agent.status === "waiting";
             return (
               <li key={agent.id}>
                 <button
@@ -90,9 +91,14 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
                       <span className="agent-desk-name">{agent.name}</span>
                     </span>
                     <span className="agent-desk-stage">
-                      <span className="agent-seat" data-seat={mark} aria-hidden="true">
+                      <span className="agent-seat" data-seat={mark} data-pose={waiting ? "raised-hand" : "seated"} aria-hidden="true">
                         <span className="agent-figure">
                           <Sprite rows={seatedByMark[mark]} scale={seatScale} title="" />
+                          {waiting ? (
+                            <span className="raised-hand">
+                              <Sprite rows={raisedHand} scale={seatScale} title="" />
+                            </span>
+                          ) : null}
                           {lit ? (
                             <span className="face-pool" data-light-pool="face">
                               <Sprite rows={faceWashByMark[mark]} scale={seatScale} title="" />
@@ -104,9 +110,7 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
                         <span className="agent-desk-lamp">
                           <WorkingLamp status={agent.status} scale={lampScale} still={still} />
                         </span>
-                        <span className="agent-desk-state status-chip" data-status={agent.status}>
-                          {lamp.caption}
-                        </span>
+                        <StatusFrame className="agent-desk-state" status={agent.status} still={still} />
                       </span>
                       <span className="agent-desk-volume">
                         <span className="agent-desk-top" data-material="desk" aria-hidden="true">

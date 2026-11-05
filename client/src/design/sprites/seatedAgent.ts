@@ -76,6 +76,29 @@ export const seatedByMark: Record<SeatMark, SpriteGrid> = {
   collar: seatedCollar,
 };
 
+/**
+ * Waiting pose. The palm sits in the empty cells above the bust's left shoulder
+ * so the same overlay reads on hair, hood, and collar.
+ */
+export const raisedHand: SpriteGrid = [
+  "pppp............",
+  "pppd............",
+  "pp..............",
+  "ww..............",
+  "ww..............",
+  "ww..............",
+  "ww..............",
+  "ww..............",
+  "ww..............",
+  "dd..............",
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+];
+
 /** Stepped warm light. It covers the dark cheek and catches the lamp-side edge. */
 export const faceWashHair: SpriteGrid = [
   "................",

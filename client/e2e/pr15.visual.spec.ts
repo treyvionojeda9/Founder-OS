@@ -142,7 +142,7 @@ test.describe("overview desk scene", () => {
       document.documentElement.style.filter = "grayscale(1)";
     });
     await expect(page.locator(".agent-desk[data-status='working'] .status-chip")).toContainText("Working");
-    await expect(page.locator(".agent-desk[data-status='failed'] .status-chip")).toContainText("Failed");
+    await expect(page.locator(".agent-desk[data-status='failed'] .status-chip")).toContainText("Error");
     await keep(page, "overview-grayscale-tablet-portrait");
   });
 });

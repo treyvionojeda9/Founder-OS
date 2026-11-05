@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { frameSpec } from "../design/statusFrame";
 import { lampArt } from "../study/lampArt";
 import { localDb, noteRepo, sessionSource } from "../storage/services";
 import { SessionProvider } from "../storage/session";
@@ -344,6 +345,10 @@ describe("team board", () => {
         expect(plaque.querySelector("input, textarea, select")).toBeNull();
         expect(plaque.querySelector(".plaque-plate")).not.toBeNull();
         expect(plaque).toHaveTextContent(lamp.caption);
+        const frame = frameSpec(agent.status);
+        expect(plaque.querySelector(".status-frame")).toHaveAttribute("data-status", agent.status);
+        expect(plaque.querySelector(".status-frame")).toHaveAttribute("data-state", frame.state);
+        expect(plaque.querySelector(".status-frame")).toHaveAttribute("data-pattern", frame.pattern);
         if (agent.title) expect(plaque).toHaveTextContent(agent.title);
         expect(plaque.querySelector(`[aria-label="${lamp.title}"]`)).toBeTruthy();
       }
@@ -567,6 +572,9 @@ describe("work library shelf", () => {
     expect(spines[0]?.getAttribute("data-tone")).not.toBe(spines[1]?.getAttribute("data-tone"));
     expect(spines[0]?.querySelector(".spine-title")).toHaveAttribute("data-label", "pixel");
     expect(spines[0]?.querySelector(".spine-line")).toBeTruthy();
+    expect(spines[0]?.querySelector(".status-frame")).toHaveAttribute("data-state", "done");
+    expect(spines[0]?.querySelector(".status-frame")).toHaveAttribute("data-pattern", "corners");
+    expect(spines[1]?.querySelector(".status-frame")).toHaveTextContent("Done");
 
     await user.click(screen.getByRole("button", { name: "A margin I kept." }));
     expect(screen.getByRole("heading", { name: "A margin I kept." })).toBeInTheDocument();

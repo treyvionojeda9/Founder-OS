@@ -145,7 +145,7 @@ test.describe("milestone 1 live path", () => {
         await expect(page.locator(".agent-desk[data-agent='ceo']")).toHaveAttribute("data-status", "working");
         await expect(page.locator(".agent-desk[data-agent='ceo'] .status-chip")).toHaveText("Working");
         await expect(page.locator(".agent-desk[data-agent='atelier'] .status-chip")).toHaveText("Idle");
-        await expect(page.locator(".agent-desk[data-agent='courier'] .status-chip")).toHaveText("Failed");
+        await expect(page.locator(".agent-desk[data-agent='courier'] .status-chip")).toHaveText("Error");
         await shot(page, pass, proj, "06-overview");
         await assertQuiet(page, guard);
       });

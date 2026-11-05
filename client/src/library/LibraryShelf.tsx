@@ -7,15 +7,9 @@ import { useStillFrame } from "../hooks/useStillFrame";
 import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
 import { useSession } from "../storage/session";
-import {
-  bookLabel,
-  booksPerShelf,
-  listShelfNotes,
-  saveShelfNote,
-  shelfBays,
-  spineLines,
-  spineMark,
-} from "./shelfNote";
+import { savedSheetStatus } from "../design/statusFrame";
+import { ShelfSpine } from "./ShelfSpine";
+import { bookLabel, booksPerShelf, listShelfNotes, saveShelfNote, shelfBays, spineMark } from "./shelfNote";
 
 type LibraryShelfProps = {
   teamId: string;
@@ -149,28 +143,17 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
                 const index = notes.indexOf(note);
                 const mark = spineMark(index);
                 const label = bookLabel(note, notes);
-                const lines = spineLines(label);
                 return (
-                  <button
+                  <ShelfSpine
                     key={note.id}
-                    type="button"
-                    className="spine"
-                    data-tone={mark.tone}
-                    data-band={mark.band}
-                    aria-label={label}
+                    id={note.id}
+                    label={label}
+                    tone={mark.tone}
+                    band={mark.band}
+                    status={savedSheetStatus()}
+                    still={still}
                     onClick={() => openNote(note)}
-                  >
-                    <span className="spine-body" aria-hidden="true">
-                      <span className="spine-band" />
-                    </span>
-                    <span className="spine-title" data-label="pixel" aria-hidden="true">
-                      {lines.map((line, lineIndex) => (
-                        <span key={`${lineIndex}-${line}`} className="spine-line">
-                          {line}
-                        </span>
-                      ))}
-                    </span>
-                  </button>
+                  />
                 );
               })}
               {ready && notes.length === 0 && !open && bayIndex === 1 ? (

@@ -230,7 +230,7 @@ test.describe("team plaques and library spines", () => {
     });
     await expect(page.locator(".plaque[data-status='working'] .status-chip")).toContainText("Working");
     await expect(page.locator(".plaque[data-status='idle'] .status-chip")).toContainText("Idle");
-    await expect(page.locator(".plaque[data-status='failed'] .status-chip")).toContainText("Failed");
+    await expect(page.locator(".plaque[data-status='failed'] .status-chip")).toContainText("Error");
     await keep(page, "team-grayscale-tablet-portrait");
 
     await page.evaluate(() => {

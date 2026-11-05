@@ -114,6 +114,32 @@ describe("overview desk scene", () => {
     expect(luma(founderEmber.paper)).toBeGreaterThan(grayscaleGrid(["d"])[0][0] + 40);
   });
 
+  it("raises a hand for waiting and keeps done dark and error fallen", () => {
+    const row: readonly TeamAgent[] = [
+      { id: "porter", name: "Porter", status: "waiting", title: "Hand up" },
+      { id: "quire", name: "Quire", status: "done", title: "Sheet closed" },
+      { id: "shard", name: "Shard", status: "failed", title: "Lamp fallen" },
+    ];
+    render(<DeskGrid agents={row} still expandingId={null} onOpen={() => {}} />);
+
+    expect(document.querySelector(".agent-desk[data-status='waiting'] .agent-seat")).toHaveAttribute("data-pose", "raised-hand");
+    expect(document.querySelector(".agent-desk[data-status='waiting'] .raised-hand")).toBeTruthy();
+    expect(document.querySelector(".agent-desk[data-status='done'] .agent-seat")).toHaveAttribute("data-pose", "seated");
+    expect(document.querySelector(".agent-desk[data-status='done'] .raised-hand")).toBeNull();
+    expect(document.querySelector(".agent-desk[data-status='failed'] .raised-hand")).toBeNull();
+    expect(document.querySelector(".agent-desk[data-status='waiting'] [data-light-pool]")).toBeNull();
+    expect(document.querySelector(".agent-desk[data-status='done'] [data-light-pool]")).toBeNull();
+    expect(document.querySelector(".agent-desk[data-status='failed'] [aria-label='Desk lamp, failed']")).toBeTruthy();
+    expect(document.querySelector(".agent-desk[data-status='waiting'] .status-frame")).toHaveAttribute("data-state", "waiting");
+    expect(document.querySelector(".agent-desk[data-status='waiting'] .status-frame")).toHaveAttribute("data-glyph", "hand");
+    expect(document.querySelector(".agent-desk[data-status='failed'] .status-frame")).toHaveAttribute("data-state", "error");
+    expect(document.querySelector(".agent-desk[data-status='failed'] .status-frame")).toHaveAttribute("data-pattern", "crack");
+    expect(document.querySelector(".agent-desk[data-status='done'] .status-frame")).toHaveAttribute("data-pattern", "corners");
+    expect(screen.getByRole("button", { name: /Porter/ })).toHaveTextContent("Waiting for you");
+    expect(screen.getByRole("button", { name: /Quire/ })).toHaveTextContent("Done");
+    expect(screen.getByRole("button", { name: /Shard/ })).toHaveTextContent("Error");
+  });
+
   it("has no human-vault write path on the desk scene", () => {
     expect(deskSource).not.toMatch(/humanNotes|humanRevisions|saveHumanEdit|fetch\(|vault:\s*"human"/);
   });

@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { StatusFrame } from "../design/StatusFrame";
 import type { AgentStatus } from "../team/chatStore";
-import { lampArt } from "./lampArt";
 import { lampPoolPalette, paintDeskPool, paintPaperWash } from "./lightPool";
 import { usePaperSettle } from "./paperSettle";
 import { WorkingLamp } from "./WorkingLamp";
@@ -170,13 +170,10 @@ function DeskPool({ status, palette }: { status: AgentStatus; palette: "ember" |
 }
 
 function Lamp({ status, scale, still }: { status: AgentStatus; scale: number; still: boolean }) {
-  const lamp = lampArt(status);
   return (
     <figure className="figure lamp-spot">
       <WorkingLamp status={status} scale={scale} still={still} />
-      <figcaption className="status-chip" data-status={status}>
-        {lamp.caption}
-      </figcaption>
+      <StatusFrame status={status} still={still} />
     </figure>
   );
 }
