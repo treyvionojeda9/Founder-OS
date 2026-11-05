@@ -4510,3 +4510,309 @@ input {
 .app .study-scene:has(.overview-sheet) {
   padding: 0;
 }
+
+/* Wall mail slot. A wooden mouth on the wainscot, and an in-tray when it is open. */
+.mail-slot {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  top: calc(100% - var(--floor-rise) - var(--wainscot-rise) + 6px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  pointer-events: none;
+}
+
+.mail-slot > * {
+  pointer-events: auto;
+}
+
+.mail-mouth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  background: transparent;
+  color: var(--paper);
+  border: 0;
+  box-shadow: none;
+}
+
+.mail-mouth:hover,
+.mail-mouth:active {
+  background: transparent;
+  color: var(--paper);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.mail-board {
+  position: relative;
+  width: 168px;
+  display: flex;
+  flex-direction: column;
+  background: var(--wood);
+  border: 4px solid var(--darkwood);
+  box-shadow: 4px 4px 0 var(--night);
+  padding: 10px 10px 6px;
+}
+
+.mail-screw {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--night);
+  box-shadow: inset 2px 2px 0 var(--slate);
+}
+
+.mail-screw[data-corner="nw"] { top: 3px; left: 3px; }
+.mail-screw[data-corner="ne"] { top: 3px; right: 3px; }
+.mail-screw[data-corner="sw"] { bottom: 3px; left: 3px; }
+.mail-screw[data-corner="se"] { bottom: 3px; right: 3px; }
+
+.mail-peek {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  height: 0;
+  overflow: visible;
+}
+
+.mail-peek[data-show="true"] {
+  height: 12px;
+}
+
+.peek-sheet {
+  width: 36px;
+  height: 16px;
+  margin-bottom: -2px;
+  background: var(--paper);
+  border: 3px solid var(--darkwood);
+  box-shadow: 4px 0 0 var(--night);
+}
+
+.peek-sheet-b {
+  width: 22px;
+  height: 12px;
+  margin-bottom: 0;
+}
+
+.mail-gap {
+  height: 10px;
+  margin-top: 2px;
+  background: var(--night);
+  box-shadow: inset 0 3px 0 var(--slate);
+}
+
+.mail-lip {
+  height: 8px;
+  background: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--wood);
+}
+
+.mail-plaque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 168px;
+  min-height: 28px;
+  padding: 4px 6px;
+  background: var(--darkwood);
+  color: var(--paper);
+  border: 3px solid var(--night);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.mail-plaque-glyph,
+.slip-glyph {
+  display: block;
+  flex: none;
+}
+
+.mail-caption {
+  color: var(--paper);
+}
+
+.mail-tray {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(440px, 100%);
+  margin-top: 4px;
+  padding: 12px 12px 10px;
+  border: 4px solid var(--darkwood);
+  box-shadow:
+    inset 0 8px 0 var(--night),
+    6px 6px 0 var(--night);
+}
+
+.mail-tray::after {
+  content: "";
+  display: block;
+  height: 10px;
+  background: var(--darkwood);
+  box-shadow: inset 0 4px 0 var(--wood);
+}
+
+.mail-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mail-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 10px;
+  background: var(--darkwood);
+  color: var(--paper);
+  border: 4px solid var(--wood);
+  box-shadow: none;
+}
+
+.mail-filter[data-pin="true"] {
+  background: var(--wood);
+  color: var(--paper);
+  border-color: var(--night);
+  box-shadow: inset 0 4px 0 var(--night);
+}
+
+.mail-filter[data-pin="true"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: var(--night);
+  box-shadow: 4px 0 0 var(--paper), 0 4px 0 var(--night);
+}
+
+.mail-filter:hover,
+.mail-filter:active {
+  color: var(--paper);
+}
+
+.mail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 72px;
+  padding: 4px;
+  background: transparent;
+}
+
+.mail-list:focus {
+  outline: none;
+}
+
+.mail-list:focus-visible {
+  outline: 3px solid var(--flame);
+  outline-offset: 2px;
+}
+
+.tray-empty {
+  margin: 4px 8px;
+  padding: 14px 10px;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  text-align: center;
+}
+
+.mail-slip {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 52px;
+  padding: 8px 10px 8px 14px;
+  background: var(--paper);
+  color: var(--night);
+  cursor: pointer;
+}
+
+.mail-slip[data-pattern="double"] {
+  box-shadow:
+    inset 0 0 0 4px var(--night),
+    0 0 0 3px var(--paper),
+    0 0 0 7px var(--night);
+}
+
+.mail-slip[data-pattern="corners"] {
+  background:
+    linear-gradient(var(--night), var(--night)) left top / 14px 4px no-repeat,
+    linear-gradient(var(--night), var(--night)) left top / 4px 14px no-repeat,
+    linear-gradient(var(--night), var(--night)) right top / 14px 4px no-repeat,
+    linear-gradient(var(--night), var(--night)) right top / 4px 14px no-repeat,
+    linear-gradient(var(--night), var(--night)) left bottom / 14px 4px no-repeat,
+    linear-gradient(var(--night), var(--night)) left bottom / 4px 14px no-repeat,
+    linear-gradient(var(--night), var(--night)) right bottom / 14px 4px no-repeat,
+    linear-gradient(var(--night), var(--night)) right bottom / 4px 14px no-repeat,
+    var(--paper);
+}
+
+.mail-slip[aria-selected="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: var(--night);
+}
+
+.slip-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.slip-agent,
+.slip-label {
+  overflow-wrap: anywhere;
+}
+
+.slip-agent {
+  color: var(--darkwood);
+}
+
+.slip-label {
+  color: var(--night);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mail-slot[data-still="false"] .mail-tray {
+    animation: mail-tray-drop 160ms steps(4, end);
+  }
+}
+
+@keyframes mail-tray-drop {
+  from { transform: translateY(-16px); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mail-tray {
+    animation: none;
+  }
+}

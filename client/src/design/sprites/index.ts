@@ -23,6 +23,7 @@ import {
   seatedHood,
 } from "./seatedAgent";
 import { glyphCheck, glyphCrack, glyphFlame, glyphFlameLift, glyphHand, glyphRest } from "./statusGlyphs";
+import { mailHand, mailSeal } from "./mailMarks";
 
 export type { SpriteGrid } from "./types";
 export { flame } from "./flame";
@@ -64,6 +65,7 @@ export {
   seatedHood,
 } from "./seatedAgent";
 export { glyphCheck, glyphCrack, glyphFlame, glyphFlameLift, glyphHand, glyphRest } from "./statusGlyphs";
+export { mailHand, mailSeal } from "./mailMarks";
 
 export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "flame", rows: flame },
@@ -117,4 +119,6 @@ export const spriteCatalog: { name: string; rows: SpriteGrid }[] = [
   { name: "face wash collar", rows: faceWashCollar },
   { name: "desk light pool", rows: deskLightPool },
   { name: "paper light pool", rows: paperLightPool },
+  { name: "mail hand", rows: mailHand },
+  { name: "mail seal", rows: mailSeal },
 ];
