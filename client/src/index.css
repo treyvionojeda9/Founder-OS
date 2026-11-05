@@ -3542,6 +3542,97 @@ html:has(.room-portal-layer) body {
   justify-content: center;
 }
 
+.library-room .shelf-bay {
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 0;
+  padding: 6px 8px 0;
+}
+
+.library-room .shelf-bay[data-empty="true"] {
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.shelf-plate {
+  flex: none;
+  width: 168px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  align-self: flex-end;
+  margin: 0 0 6px;
+  padding: 8px;
+  background: var(--darkwood);
+  border: 3px solid var(--wood);
+  box-shadow: inset 0 0 0 3px var(--night);
+}
+
+.shelf-plate-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+.shelf-kind {
+  min-width: 0;
+  color: var(--flame);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.shelf-filter {
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 8px;
+  background: var(--paper);
+  color: var(--night);
+  border: 3px solid var(--ember);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.shelf-filter::placeholder {
+  color: var(--slate);
+}
+
+.shelf-pin {
+  flex: none;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 4px;
+}
+
+.shelf-books {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 132px;
+  overflow-x: auto;
+}
+
+.shelf-books[data-empty="true"] {
+  align-items: center;
+  justify-content: center;
+}
+
+.shelf-none {
+  margin: 0 0 12px;
+  color: var(--paper);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
 .shelf-empty {
   display: flex;
   flex-direction: column;
@@ -3578,6 +3669,7 @@ html:has(.room-portal-layer) body {
   align-items: center;
   justify-content: center;
   align-self: flex-end;
+  flex: none;
   width: 120px;
   height: min(188px, 100%);
   min-height: 156px;
@@ -3585,6 +3677,23 @@ html:has(.room-portal-layer) body {
   background: transparent;
   border-color: transparent;
   color: var(--paper);
+}
+
+.library-room .spine {
+  width: 112px;
+  height: 132px;
+  min-height: 132px;
+  padding: 8px 6px 8px 12px;
+}
+
+.library-room .spine-title {
+  padding: 4px 2px 36px;
+  max-height: 116px;
+}
+
+.library-room .spine-more .spine-title {
+  padding: 8px 4px;
+  max-height: none;
 }
 
 .spine:focus-visible {
@@ -3667,6 +3776,11 @@ html:has(.room-portal-layer) body {
   background: var(--plum);
 }
 
+.spine.spine-more .spine-body {
+  background: var(--slate);
+  box-shadow: inset 0 0 0 4px var(--paper);
+}
+
 .spine .status-frame {
   position: absolute;
   z-index: 2;
@@ -3717,7 +3831,62 @@ html:has(.room-portal-layer) body {
 .case-base {
   display: flex;
   align-items: center;
+  gap: 12px;
   padding-top: 10px;
+}
+
+.shelf-refusal {
+  margin: 0;
+  color: var(--flame);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.overflow-slip {
+  position: absolute;
+  z-index: 6;
+  top: 72px;
+  right: 20px;
+  width: min(320px, calc(100% - 40px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 4px 12px;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--darkwood);
+  box-shadow: 8px 8px 0 var(--night);
+}
+
+.overflow-slip h2 {
+  margin: 0 8px;
+  color: var(--night);
+}
+
+.overflow-titles {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overflow-slip .overflow-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 10px;
+  background: var(--paper);
+  color: var(--night);
+  border: 3px solid var(--wood);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  text-align: left;
 }
 
 .place-sheet {
@@ -4838,7 +5007,9 @@ button:disabled {
 }
 
 .status-spines .shelf-bay {
+  flex-direction: row;
   flex-wrap: wrap;
+  align-items: flex-end;
   min-height: 240px;
 }
 

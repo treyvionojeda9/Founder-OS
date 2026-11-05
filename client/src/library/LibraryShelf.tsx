@@ -1,37 +1,57 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Sprite } from "../design/Sprite";
 import { deskLampOn, forgeNote } from "../design/sprites";
+import { savedSheetStatus } from "../design/statusFrame";
 import { useFormFactor } from "../hooks/useFormFactor";
-import { usePaperSettle } from "../study/paperSettle";
 import { useStillFrame } from "../hooks/useStillFrame";
 import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
 import { useSession } from "../storage/session";
-import { savedSheetStatus } from "../design/statusFrame";
+import { usePaperSettle } from "../study/paperSettle";
 import { ShelfSpine } from "./ShelfSpine";
-import { bookLabel, booksPerShelf, listShelfNotes, saveShelfNote, shelfBays, spineMark } from "./shelfNote";
+import {
+  SHELF_LABEL,
+  buildShelves,
+  canOpenHumanSpine,
+  type ShelfEntry,
+  type ShelfKind,
+} from "./shelfLayout";
+import { bookLabel, booksPerShelf, listShelfNotes, saveShelfNote, spineMark } from "./shelfNote";
+import { isKitPinned, setKitPinned, subscribeShelfPrefs } from "./shelfPrefs";
 
 type LibraryShelfProps = {
   teamId: string;
   preview?: boolean;
 };
 
-type OpenSheet = { kind: "new" } | { kind: "note"; note: Note };
+type OpenSheet =
+  | { kind: "new" }
+  | { kind: "note"; note: Note }
+  | { kind: "overflow"; shelf: ShelfKind; entries: ShelfEntry[] };
+
+const REFUSAL = "Only you can open this sheet.";
 
 export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
   const layout = useFormFactor();
   const still = useStillFrame();
   const session = useSession();
+  const kitPinned = useSyncExternalStore(subscribeShelfPrefs, () => isKitPinned(teamId), () => true);
   const [notes, setNotes] = useState<Note[]>([]);
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState<OpenSheet | null>(null);
   const [draft, setDraft] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState<Partial<Record<ShelfKind, string>>>({});
+  const overflowCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let live = true;
     setReady(false);
+    setQuery({});
+    setOpen(null);
+    setDraft("");
+    setNotice(null);
     listShelfNotes(teamId, noteRepo)
       .then((rows) => {
         if (!live) return;
@@ -60,19 +80,38 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  useEffect(() => {
+    if (open?.kind !== "overflow") return;
+    overflowCloseRef.current?.focus();
+  }, [open]);
+
   const closeSheet = () => {
     setOpen(null);
     setDraft("");
     setNotice(null);
   };
 
+  const refuseEdit = () => {
+    setOpen(null);
+    setDraft("");
+    setNotice(REFUSAL);
+  };
+
   const openNote = (note: Note) => {
+    if (!canOpenHumanSpine(session.principal)) {
+      refuseEdit();
+      return;
+    }
     setOpen({ kind: "note", note });
     setDraft(note.content);
     setNotice(null);
   };
 
   const placeSheet = () => {
+    if (!canOpenHumanSpine(session.principal)) {
+      refuseEdit();
+      return;
+    }
     setOpen({ kind: "new" });
     setDraft("");
     setNotice(null);
@@ -109,9 +148,19 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
     }
   };
 
-  const settle = usePaperSettle(open ? "lifted" : "desk", still);
-  const perRow = booksPerShelf(layout);
-  const bays = shelfBays(notes, perRow);
+  const onFilter = (kind: ShelfKind, value: string) => {
+    setQuery((prev) => ({ ...prev, [kind]: value }));
+    setOpen((current) => (current?.kind === "overflow" && current.shelf === kind ? null : current));
+  };
+
+  const settle = usePaperSettle(open?.kind === "new" || open?.kind === "note" ? "lifted" : "desk", still);
+  const editing = open?.kind === "new" || open?.kind === "note";
+  const shelves = buildShelves({
+    notes,
+    query,
+    kitPinned,
+    capacity: booksPerShelf(layout),
+  });
   const sheetScale = layout === "portrait" ? 3 : 2;
   const heading = open?.kind === "note" ? bookLabel(open.note, notes) : "New sheet";
 
@@ -120,13 +169,15 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
       className="library-room"
       data-ready={ready ? "true" : "false"}
       data-empty={ready && notes.length === 0 ? "true" : "false"}
-      data-open={open ? "true" : "false"}
+      data-open={editing ? "true" : "false"}
+      data-still={still ? "true" : "false"}
+      data-pinned-kit={kitPinned ? "true" : "false"}
       data-vault="human"
       data-material="plaster"
       aria-label="Human shelf"
     >
       <div className="bookcase">
-        {open ? null : (
+        {editing ? null : (
           <header className="library-head">
             <h1>Library</h1>
             <p>Human notes for this team.</p>
@@ -137,48 +188,142 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
         </figure>
         <div className="case-crown" aria-hidden="true" />
         <div className="shelf-bays" data-material="panel">
-          {bays.map((bay, bayIndex) => (
-            <div key={bayIndex} className="shelf-bay" data-empty={bay.length === 0 ? "true" : "false"}>
-              {bay.map((note) => {
-                const index = notes.indexOf(note);
-                const mark = spineMark(index);
-                const label = bookLabel(note, notes);
-                return (
-                  <ShelfSpine
-                    key={note.id}
-                    id={note.id}
-                    label={label}
-                    tone={mark.tone}
-                    band={mark.band}
-                    status={savedSheetStatus()}
-                    still={still}
-                    onClick={() => openNote(note)}
+          {shelves.map((shelf) => {
+            const filtering = (query[shelf.kind] ?? "").trim().length > 0;
+            const bare = shelf.kind === "notes" && ready && notes.length === 0 && !editing;
+            const none = filtering && shelf.visible.length === 0 && shelf.overflow.length === 0;
+            return (
+              <div
+                key={shelf.kind}
+                className="shelf-bay"
+                data-kind={shelf.kind}
+                data-pinned={shelf.pinned ? "true" : "false"}
+                data-overflow={shelf.overflow.length}
+                data-empty={bare ? "true" : "false"}
+              >
+                <div className="shelf-plate">
+                  <div className="shelf-plate-top">
+                    <span className="shelf-kind" data-label="pixel">
+                      {shelf.label}
+                    </span>
+                    {shelf.kind === "kit" ? (
+                      <button
+                        type="button"
+                        className="brass-pin scene-button shelf-pin"
+                        data-pin={kitPinned ? "in" : "out"}
+                        aria-pressed={kitPinned}
+                        aria-label={kitPinned ? "Unpin default kit" : "Pin default kit"}
+                        onClick={() => setKitPinned(teamId, !kitPinned)}
+                      >
+                        <span className="pin-mark" aria-hidden="true">
+                          <span className="pin-head" />
+                          <span className="pin-stem" />
+                        </span>
+                        <span className="scene-caption">{kitPinned ? "Unpin" : "Pin"}</span>
+                      </button>
+                    ) : null}
+                  </div>
+                  <input
+                    className="shelf-filter"
+                    aria-label={`Filter ${shelf.label}`}
+                    placeholder="Narrow"
+                    autoComplete="off"
+                    value={query[shelf.kind] ?? ""}
+                    onChange={(event) => onFilter(shelf.kind, event.target.value)}
                   />
-                );
-              })}
-              {ready && notes.length === 0 && !open && bayIndex === 1 ? (
-                <div className="shelf-empty" role="status">
-                  <p>The shelf is bare.</p>
-                  <p className="shelf-next">Place a sheet.</p>
                 </div>
-              ) : null}
-            </div>
-          ))}
+                <div className="shelf-books" data-empty={bare ? "true" : "false"}>
+                  {shelf.visible.map((entry, index) => {
+                    const mark = spineMark(index);
+                    return (
+                      <ShelfSpine
+                        key={entry.id}
+                        id={entry.id}
+                        label={entry.title}
+                        tone={mark.tone}
+                        band={mark.band}
+                        status={entry.note ? savedSheetStatus() : entry.status}
+                        still={still}
+                        onClick={entry.note ? () => openNote(entry.note as Note) : undefined}
+                      />
+                    );
+                  })}
+                  {shelf.overflow.length > 0 ? (
+                    <button
+                      type="button"
+                      className="spine spine-more"
+                      data-tone="paper"
+                      data-band="broad"
+                      data-overflow={shelf.overflow.length}
+                      aria-label={`+${shelf.overflow.length} more on ${shelf.label}`}
+                      onClick={() => setOpen({ kind: "overflow", shelf: shelf.kind, entries: shelf.overflow })}
+                    >
+                      <span className="spine-body" aria-hidden="true">
+                        <span className="spine-band" />
+                      </span>
+                      <span className="spine-title" data-label="pixel" aria-hidden="true">
+                        <span className="spine-line">+{shelf.overflow.length}</span>
+                      </span>
+                    </button>
+                  ) : null}
+                  {bare ? (
+                    <div className="shelf-empty" role="status">
+                      <p>The shelf is bare.</p>
+                      <p className="shelf-next">Place a sheet.</p>
+                    </div>
+                  ) : null}
+                  {none ? <p className="shelf-none">None on this shelf.</p> : null}
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div className="case-base">
           <button type="button" className="place-sheet" onClick={placeSheet}>
             <Sprite rows={forgeNote} scale={sheetScale} title="" />
             Place a sheet
           </button>
+          {notice && !editing ? (
+            <p className="shelf-refusal" role="status">
+              {notice}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="library-floor" data-material="floor" aria-hidden="true" />
-      {open ? (
+      {open?.kind === "overflow" ? (
+        <div
+          className="overflow-slip"
+          role="region"
+          aria-label={`More on ${SHELF_LABEL[open.shelf]}`}
+          data-still={still ? "true" : "false"}
+          data-pose="shown"
+        >
+          <button type="button" className="set-down" ref={overflowCloseRef} onClick={closeSheet}>
+            Set it down
+          </button>
+          <h2>More on {SHELF_LABEL[open.shelf]}</h2>
+          <ul className="overflow-titles">
+            {open.entries.map((entry) => (
+              <li key={entry.id}>
+                {entry.note ? (
+                  <button type="button" className="overflow-title" onClick={() => openNote(entry.note as Note)}>
+                    {entry.title}
+                  </button>
+                ) : (
+                  <span className="overflow-title">{entry.title}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {editing ? (
         <div
           className="library-paper paper-slot"
           data-pose="lifted"
           data-still={still ? "true" : "false"}
-          data-settle={open && settle ? settle : undefined}
+          data-settle={settle ? settle : undefined}
         >
           <div className="paper is-lit">
             <button type="button" className="set-down" onClick={closeSheet}>
