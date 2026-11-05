@@ -83,6 +83,9 @@ export function readRoomGoto(state: unknown): RoomGoto | null {
 export function fallbackRoom(pathname: string): RoomStamp {
   if (pathname === "/") return { room: "splash", teamId: null, learnId: null };
   if (pathname === "/home") return { room: "work", teamId: null, learnId: null };
+  if (pathname === "/work/overview") return { room: "overview", teamId: "hale-design-lab", learnId: null };
+  if (pathname === "/work/library") return { room: "library", teamId: "hale-design-lab", learnId: null };
+  if (pathname === "/school/path") return { room: "learn", teamId: null, learnId: "reading-room" };
   if (pathname === "/settings") return { room: "settings", teamId: null, learnId: null };
   const team = /^\/team\/([^/]+)/.exec(pathname);
   if (team) return { room: "chat", teamId: decodeURIComponent(team[1]), learnId: null };
@@ -94,6 +97,9 @@ export function fallbackRoom(pathname: string): RoomStamp {
 export function stampMatchesPath(current: RoomStamp, pathname: string): boolean {
   if (pathname === "/") return current.room === "splash";
   if (pathname === "/home") return current.room === "work" || current.room === "school";
+  if (pathname === "/work/overview") return current.room === "overview";
+  if (pathname === "/work/library") return current.room === "library";
+  if (pathname === "/school/path") return current.room === "learn";
   if (pathname === "/settings") return current.room === "settings";
   const team = /^\/team\/([^/]+)/.exec(pathname);
   if (team) {

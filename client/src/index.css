@@ -6661,3 +6661,55 @@ html[data-recede="dim"] .mail-caption {
     animation: none;
   }
 }
+
+.paper:has(.copy-link)::before {
+  content: none;
+}
+
+.copy-link {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  right: 0;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--night);
+}
+
+.copy-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--ember);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.copy-pin {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  background: var(--paper);
+  border: 2px solid var(--night);
+  box-shadow: 0 4px 0 var(--darkwood);
+}
+
+.copy-link[data-pattern="tick"] .copy-pin {
+  background: var(--night);
+  border-color: var(--paper);
+  box-shadow: 4px 0 0 var(--ember);
+}
+
+.copy-link,
+.copy-link .copy-corner,
+.copy-link .copy-pin {
+  animation: none;
+}

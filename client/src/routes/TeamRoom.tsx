@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { agent, forgeNote, founderSeal } from "../design/sprites";
@@ -12,7 +12,9 @@ import type { MailItem } from "../study/mailSlot";
 import { isWorkPaused, pauseSnapshot, subscribeWorkPause } from "../study/deskPause";
 import { OverviewSheet } from "../study/OverviewSheet";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
+import { agentFocus, pickWorkTeam, readDeepRequest, resolveLibraryNote } from "../nav/deepLink";
 import { publishRoom, readRoomGoto, rememberTeam } from "../nav/room";
+import { noteRepo } from "../storage/services";
 import { TeamBoard } from "../team/TeamBoard";
 import {
   appendFounderLine,
@@ -45,7 +47,20 @@ function clearTimer(timer: { current: number | null }) {
 export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps) {
   const params = useParams();
   const location = useLocation();
-  const teamId = teamIdProp ?? params.id ?? "";
+  const request = useMemo(() => {
+    if (preview || teamIdProp) return null;
+    return readDeepRequest(location.pathname, location.search, location.hash);
+  }, [preview, teamIdProp, location.pathname, location.search, location.hash]);
+  const explicitTeam = teamIdProp ?? params.id ?? "";
+  const [noteTeam, setNoteTeam] = useState<string | null>(null);
+  const [noteFocus, setNoteFocus] = useState<string | null>(null);
+  const linkedTeam =
+    request?.surface === "overview"
+      ? pickWorkTeam(request.rawId, request.boundId)
+      : request?.surface === "library"
+        ? (noteTeam ?? pickWorkTeam(null, request.boundId))
+        : "";
+  const teamId = explicitTeam || linkedTeam;
   const team = teamById(teamId);
   const surface = preview ? null : readRoomGoto(location.state);
   const shut = useDoorShut();
@@ -54,17 +69,28 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const agentScale = layout === "portrait" ? 3 : 2;
   const lampScale = layout === "portrait" ? 4 : 3;
   const [tab, setTab] = useState<TabKey>(
-    surface?.place === "overview" || (team?.agents.length ?? 0) === 0 ? "overview" : "ceo",
+    request?.surface === "overview" ||
+      request?.surface === "library" ||
+      surface?.place === "overview" ||
+      (team?.agents.length ?? 0) === 0
+      ? "overview"
+      : "ceo",
   );
   const [seatIntent, setSeatIntent] = useState<"swap" | null>(null);
   const [fromDesks, setFromDesks] = useState(false);
   const [fromBoard, setFromBoard] = useState(false);
   const [boardReturn, setBoardReturn] = useState<TabKey>("ceo");
   const [expanding, setExpanding] = useState<string | null>(null);
-  const [sheetId, setSheetId] = useState<string | null>(null);
+  const [sheetId, setSheetId] = useState<string | null>(
+    request?.surface === "overview" ? agentFocus(teamId, request.rawId) : null,
+  );
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<Drawer>(
-    surface?.place === "library" || surface?.place === "team" ? surface.place : null,
+    request?.surface === "library"
+      ? "library"
+      : surface?.place === "library" || surface?.place === "team"
+        ? surface.place
+        : null,
   );
   const seenGoto = useRef(surface?.seq ?? 0);
   const [draft, setDraft] = useState("");
@@ -186,6 +212,55 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     }
     setDrawer("team");
   }, [location.state, preview]);
+
+  const linkKey = `${location.pathname}${location.search}${location.hash}`;
+  const appliedLink = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (preview || teamIdProp) return;
+    if (appliedLink.current === linkKey) return;
+    appliedLink.current = linkKey;
+    if (!request) return;
+    setPending(null);
+    setNotice(null);
+    clearTimer(expandTimer);
+    setExpanding(null);
+    setFocusedId(null);
+    setPose("desk");
+    setDraft("");
+    if (request.surface === "overview") {
+      const nextTeam = explicitTeam || pickWorkTeam(request.rawId, request.boundId);
+      setDrawer(null);
+      setTab("overview");
+      setSheetId(agentFocus(nextTeam, request.rawId));
+      setNoteFocus(null);
+      return;
+    }
+    if (request.surface === "library") {
+      setDrawer("library");
+      setTab("overview");
+      setSheetId(null);
+    }
+  }, [preview, teamIdProp, linkKey, request, explicitTeam]);
+
+  useEffect(() => {
+    if (preview || teamIdProp || request?.surface !== "library") return;
+    let live = true;
+    const bound = explicitTeam || request.boundId;
+    resolveLibraryNote(request.rawId, bound, noteRepo)
+      .then((found) => {
+        if (!live) return;
+        if (!explicitTeam) setNoteTeam(found.teamId);
+        setNoteFocus(found.noteId);
+      })
+      .catch(() => {
+        if (!live) return;
+        setNoteFocus(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [preview, teamIdProp, request, explicitTeam]);
 
   useLayoutEffect(() => {
     if (preview || !team) return;
@@ -417,6 +492,8 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       data-lamp={lampStatus}
       data-paper={pose}
       data-preview={preview ? "true" : "false"}
+      data-deep={request?.surface ?? "room"}
+      data-deep-focus={showGrid ? (sheetId ?? "none") : "none"}
     >
       <div className="pixel-bar">
       <header className="study-bar">
@@ -492,7 +569,11 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       </div>
       <div className="study-scene">
         {drawer === "library" ? (
-          <LibraryShelf teamId={team.id} preview={preview} />
+          <LibraryShelf
+            teamId={team.id}
+            preview={preview}
+            noteId={request?.surface === "library" ? noteFocus : null}
+          />
         ) : drawer === "team" ? (
           <TeamBoard
             team={team}
@@ -519,6 +600,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
             sheet={
               sheetRecord ? (
                 <OverviewSheet
+                  agentId={sheetRecord.id}
                   status={sheetStatus}
                   paused={sheetPaused}
                   still={still}

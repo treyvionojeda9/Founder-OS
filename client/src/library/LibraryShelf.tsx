@@ -7,6 +7,7 @@ import { useStillFrame } from "../hooks/useStillFrame";
 import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
 import { useSession } from "../storage/session";
+import { CopyLink } from "../nav/CopyLink";
 import { usePaperSettle } from "../study/paperSettle";
 import { EmptyShelf } from "./EmptyShelf";
 import { ShelfSpine } from "./ShelfSpine";
@@ -23,6 +24,8 @@ import { isKitPinned, setKitPinned, subscribeShelfPrefs } from "./shelfPrefs";
 type LibraryShelfProps = {
   teamId: string;
   preview?: boolean;
+  /** Human note to open once the shelf has loaded. Missing ids stay shut. */
+  noteId?: string | null;
 };
 
 type OpenSheet =
@@ -32,7 +35,7 @@ type OpenSheet =
 
 const REFUSAL = "Only you can open this sheet.";
 
-export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
+export function LibraryShelf({ teamId, preview = false, noteId = null }: LibraryShelfProps) {
   const layout = useFormFactor();
   const still = useStillFrame();
   const session = useSession();
@@ -45,6 +48,11 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState<Partial<Record<ShelfKind, string>>>({});
   const overflowCloseRef = useRef<HTMLButtonElement>(null);
+  const openedNote = useRef<string | null>(null);
+
+  useEffect(() => {
+    openedNote.current = null;
+  }, [teamId, noteId]);
 
   useEffect(() => {
     let live = true;
@@ -68,6 +76,17 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
       live = false;
     };
   }, [teamId]);
+
+  useEffect(() => {
+    if (!ready || !noteId || openedNote.current === noteId) return;
+    if (!canOpenHumanSpine(session.principal)) return;
+    const note = notes.find((item) => item.id === noteId && item.vault === "human");
+    if (!note) return;
+    openedNote.current = noteId;
+    setOpen({ kind: "note", note });
+    setDraft(note.content);
+    setNotice(null);
+  }, [ready, noteId, notes, session.principal]);
 
   useEffect(() => {
     if (!open) return;
@@ -175,6 +194,7 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
       data-pinned-kit={kitPinned ? "true" : "false"}
       data-vault="human"
       data-material="plaster"
+      data-focus={open?.kind === "note" ? open.note.id : "none"}
       aria-label="Human shelf"
     >
       <div className="bookcase">
@@ -322,6 +342,7 @@ export function LibraryShelf({ teamId, preview = false }: LibraryShelfProps) {
           data-settle={settle ? settle : undefined}
         >
           <div className="paper is-lit">
+            {open.kind === "note" ? <CopyLink kind="note" id={open.note.id} /> : null}
             <button type="button" className="set-down" onClick={closeSheet}>
               Set it down
             </button>
