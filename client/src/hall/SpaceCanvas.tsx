@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { SPACE_COLS, SPACE_ROWS, blitPixels, paintDeskWash, paintSpaceBackdrop, paintWallWash, type SpaceId } from "./spaceSkin";
+import { paintSpaceLayer, type SpaceId } from "./spaceSkin";
 
 type SpaceCanvasProps = {
   space: SpaceId;
@@ -7,31 +7,21 @@ type SpaceCanvasProps = {
   kind?: "hall" | "wall" | "desk";
 };
 
-function pixelsFor(space: SpaceId, kind: "hall" | "wall" | "desk") {
-  if (kind === "wall") return { pixels: paintWallWash(space), cols: 48, rows: 32 };
-  if (kind === "desk") return { pixels: paintDeskWash(space), cols: 48, rows: 16 };
-  const pixels = paintSpaceBackdrop(space);
-  return { pixels, cols: SPACE_COLS, rows: SPACE_ROWS };
-}
-
 export function SpaceCanvas({ space, live, kind = "hall" }: SpaceCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
-    const { pixels, cols, rows } = pixelsFor(space, kind);
     const paint = () => {
-      canvas.dataset.painted = blitPixels(canvas, pixels, cols, rows) ? "true" : "false";
+      canvas.dataset.painted = paintSpaceLayer(canvas, space, kind) ? "true" : "false";
     };
     paint();
-    const frame = window.requestAnimationFrame(paint);
     window.addEventListener("resize", paint);
     const parent = canvas.parentElement;
     const observer = typeof ResizeObserver !== "undefined" && parent ? new ResizeObserver(paint) : null;
     if (observer && parent) observer.observe(parent);
     return () => {
-      window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", paint);
       observer?.disconnect();
     };

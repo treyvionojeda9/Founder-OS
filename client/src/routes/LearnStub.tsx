@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
 import { assignmentKey, readingBook, readingQuill } from "../design/sprites";
@@ -16,12 +16,14 @@ import type { Note } from "../storage/noteRepository";
 import { noteRepo } from "../storage/services";
 import { useSession } from "../storage/session";
 
+export { primeLearnArt } from "../study/primeLearnArt";
+
 type LearnStubProps = {
   doorId?: string;
   preview?: boolean;
 };
 
-export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProps) {
+export const LearnStub = memo(function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProps) {
   const params = useParams();
   const location = useLocation();
   const request = useMemo(() => {
@@ -336,4 +338,4 @@ export function LearnStub({ doorId: doorIdProp, preview = false }: LearnStubProp
       ) : null}
     </main>
   );
-}
+});

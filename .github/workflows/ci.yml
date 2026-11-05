@@ -20,6 +20,9 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run typecheck && npm test && npx playwright test
+      - run: npm run build
+      - run: npm run bundle-budget
+      - run: npx playwright test --config=playwright.perf.config.ts
 
   api:
     runs-on: ubuntu-latest

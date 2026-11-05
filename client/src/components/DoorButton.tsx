@@ -26,8 +26,7 @@ import { frameFromRig, glimpseDenominator, openingScale, type DoorFrame } from "
 import { ENTER_MS, SWING_MS, doorOpenSchedule, doorPath, type DoorPhase } from "../hall/doorMotion";
 import type { DoorPose } from "../hall/layout";
 import { useStillFrame } from "../hooks/useStillFrame";
-import { LearnStub } from "../routes/LearnStub";
-import { TeamRoom } from "../routes/TeamRoom";
+import { LearnRoomReady, prefetchRoom, TeamRoomReady } from "../routes/loadRooms";
 
 function holdInert(node: HTMLSpanElement | null) {
   if (node) node.inert = true;
@@ -120,9 +119,15 @@ export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps
       data-phase={phase}
       data-door-id={door.id}
       style={{ ...poseStyle, width: px(doorSpec.frameW) }}
-      onPointerEnter={() => setHovered(true)}
+      onPointerEnter={() => {
+        setHovered(true);
+        void prefetchRoom(door.section);
+      }}
       onPointerLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
+      onFocus={() => {
+        setFocused(true);
+        void prefetchRoom(door.section);
+      }}
       onBlur={() => setFocused(false)}
       onClick={activate}
       onKeyDown={onKeyDown}
@@ -165,9 +170,9 @@ export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps
                 >
                   <span className="glimpse-room" style={{ width: viewW, height: viewH }}>
                     {door.section === "work" ? (
-                      <TeamRoom teamId={door.id} preview />
+                      <TeamRoomReady teamId={door.id} preview />
                     ) : (
-                      <LearnStub doorId={door.id} preview />
+                      <LearnRoomReady doorId={door.id} preview />
                     )}
                   </span>
                   <span className="glimpse-lintel" />

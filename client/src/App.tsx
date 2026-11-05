@@ -1,17 +1,18 @@
+import { lazy, Suspense } from "react";
 import { Outlet, Route, BrowserRouter, Routes } from "react-router-dom";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { DoorTransition } from "./hall/DoorTransition";
 import { useFormFactor } from "./hooks/useFormFactor";
-import { DesignSystem } from "./routes/DesignSystem";
 import { Home } from "./routes/Home";
-import { LearnStub } from "./routes/LearnStub";
-import { SettingsPage } from "./routes/SettingsPage";
+import { LearnRoomReady, TeamRoomReady } from "./routes/loadRooms";
 import { Splash } from "./routes/Splash";
-import { StatusFrameDemo } from "./routes/StatusFrameDemo";
-import { TeamRoom } from "./routes/TeamRoom";
 import { ChromeRecede } from "./nav/ChromeRecede";
 import { GotoChrome } from "./nav/GotoChrome";
 import { SessionProvider } from "./storage/session";
+
+const SettingsPage = lazy(() => import("./routes/SettingsPage").then((mod) => ({ default: mod.SettingsPage })));
+const DesignSystem = lazy(() => import("./routes/DesignSystem").then((mod) => ({ default: mod.DesignSystem })));
+const StatusFrameDemo = lazy(() => import("./routes/StatusFrameDemo").then((mod) => ({ default: mod.StatusFrameDemo })));
 
 function Frame() {
   const layout = useFormFactor();
@@ -20,7 +21,9 @@ function Frame() {
       <div className="app" data-layout={layout}>
         <OfflineIndicator />
         <div className="route-content">
-          <Outlet />
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
         </div>
         <GotoChrome />
         <ChromeRecede />
@@ -37,11 +40,11 @@ export function App() {
           <Route element={<Frame />}>
             <Route path="/" element={<Splash />} />
             <Route path="/home" element={<Home />} />
-            <Route path="/team/:id" element={<TeamRoom />} />
-            <Route path="/learn/:id" element={<LearnStub />} />
-            <Route path="/work/overview" element={<TeamRoom />} />
-            <Route path="/work/library" element={<TeamRoom />} />
-            <Route path="/school/path" element={<LearnStub />} />
+            <Route path="/team/:id" element={<TeamRoomReady />} />
+            <Route path="/learn/:id" element={<LearnRoomReady />} />
+            <Route path="/work/overview" element={<TeamRoomReady />} />
+            <Route path="/work/library" element={<TeamRoomReady />} />
+            <Route path="/school/path" element={<LearnRoomReady />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/design" element={<DesignSystem />} />
             <Route path="/status-frame" element={<StatusFrameDemo />} />
