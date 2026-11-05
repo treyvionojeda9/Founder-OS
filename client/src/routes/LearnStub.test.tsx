@@ -3,10 +3,16 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import ponderSource from "../study/ponderNote.ts?raw";
+import inkSource from "../study/ponderInk.ts?raw";
+import pageSource from "../study/InkPage.tsx?raw";
+import pointerSource from "../study/inkPointer.ts?raw";
 import mapSource from "../study/pathMap.ts?raw";
 import mapViewSource from "../study/PathMap.tsx?raw";
 import learnSource from "./LearnStub.tsx?raw";
 import { localDb, noteRepo, sessionSource } from "../storage/services";
+import { WP_STROKE_EXAMPLE } from "../storage/strokes";
+import { keepPonderNote } from "../study/ponderNote";
+import { savePonderInk } from "../study/ponderInk";
 import { SessionProvider } from "../storage/session";
 import { LearnStub } from "./LearnStub";
 
@@ -271,10 +277,101 @@ describe("learning desk", () => {
     expect(mapViewSource).not.toMatch(/saveHumanEdit|saveMachineOutput|humanNotes|machineNotes/);
   });
 
-  it("keeps the quill as a visual rest and does not store stylus ink", () => {
+  it("keeps the quill and stores stylus ink only through the human vault", () => {
     expect(learnSource).toMatch(/data-ink="ready"/);
     expect(learnSource).toMatch(/readingQuill/);
-    expect(learnSource).not.toMatch(/strokes|isValidStroke|WP_STROKE|onPointerDown|pointerdown/);
-    expect(ponderSource).not.toMatch(/strokes|isValidStroke|WP_STROKE/);
+    expect(learnSource).toMatch(/InkPage/);
+    expect(ponderSource).toMatch(/saveHumanEdit/);
+    expect(ponderSource).not.toMatch(/saveMachineOutput|machineNotes/);
+    expect(inkSource).toMatch(/principal !== "human"/);
+    expect(inkSource).toMatch(/isValidStroke/);
+    expect(inkSource).toMatch(/saveHumanEdit/);
+    expect(inkSource).not.toMatch(/saveMachineOutput|machineNotes/);
+    expect(pageSource).toMatch(/getCoalescedEvents/);
+    expect(pageSource).toMatch(/touchAction: "none"/);
+    expect(pageSource).not.toMatch(/saveMachineOutput|machineNotes/);
+    expect(pointerSource).toMatch(/pointerType === "pen"/);
+    expect(pointerSource).toMatch(/pointerType === "mouse"/);
+    expect(pointerSource).toMatch(/"touch"/);
+  });
+
+  it("reloads raw ink beside the typed line", async () => {
+    const typed = await keepPonderNote({
+      doorId: "reading-room",
+      content: "A kept line.",
+      principal: "human",
+      existing: null,
+      repo: noteRepo,
+      createId: () => "HN-KEEPINK1",
+    });
+    expect(typed.ok).toBe(true);
+    if (!typed.ok) return;
+    const saved = await savePonderInk({
+      doorId: "reading-room",
+      strokes: [{ ...WP_STROKE_EXAMPLE, note_id: "HN-KEEPINK1" }],
+      principal: "human",
+      existing: typed.note,
+      repo: noteRepo,
+      ink: noteRepo,
+      createAssetId: () => "INK-KEEPINK1",
+    });
+    expect(saved.ok).toBe(true);
+    const user = userEvent.setup();
+    await readyDesk();
+    await waitFor(() => {
+      expect(document.querySelector(".ink-page")).toHaveAttribute("data-stroke-count", "1");
+    });
+    expect(screen.getByText("A kept line.")).toBeInTheDocument();
+    await user.click(screen.getByRole("heading", { name: "Ponder" }));
+    expect(screen.getByRole("textbox", { name: "Your note" })).toHaveValue("A kept line.");
+  });
+
+  it("refuses machine ink before a vault write", async () => {
+    sessionSource.principal = "machine";
+    const user = userEvent.setup();
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    const saveInk = vi.spyOn(noteRepo, "saveHumanInk");
+    await readyDesk();
+    await user.click(screen.getByRole("heading", { name: "Ponder" }));
+    const ink = await waitFor(() => {
+      const node = document.querySelector(".ink-page");
+      if (!node || node.getAttribute("data-ink-ready") !== "true") throw new Error("ink page not ready");
+      return node;
+    });
+    ink.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        pointerType: "pen",
+        clientX: 12,
+        clientY: 16,
+        button: 0,
+        buttons: 1,
+        pressure: 0.4,
+      }),
+    );
+    ink.dispatchEvent(
+      new PointerEvent("pointerup", {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        pointerType: "pen",
+        clientX: 20,
+        clientY: 28,
+        button: 0,
+        buttons: 0,
+        pressure: 0,
+      }),
+    );
+    await waitFor(() => {
+      expect(ink.getAttribute("data-ink-saved")).toBe("refused");
+    });
+    expect(await screen.findByRole("status")).toHaveTextContent("Only you can keep this ink.");
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(saveInk).not.toHaveBeenCalled();
+    await localDb.open();
+    expect(await localDb.humanNotes.count()).toBe(0);
+    expect(await localDb.humanInk.count()).toBe(0);
   });
 });

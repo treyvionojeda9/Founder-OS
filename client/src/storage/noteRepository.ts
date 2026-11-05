@@ -26,6 +26,21 @@ export type SettingRow = {
   value: string;
 };
 
+/**
+ * Raw ink for one page. strokesJson is the original. previewPng is optional
+ * and never a substitute for the strokes.
+ */
+export type HumanInkAsset = {
+  id: string;
+  noteId: string;
+  pageId: string;
+  strokesJson: string;
+  previewPng?: string;
+  pageWidth: number;
+  pageHeight: number;
+  updatedAt: string;
+};
+
 /** Read at call time so a SessionContext can swap the signed-in principal. */
 export type SessionSource = {
   principal: PrincipalRole;
@@ -45,6 +60,7 @@ export class FounderOSLocalDatabase extends Dexie {
   humanRevisions!: Table<HumanRevision, [string, number]>;
   machineNotes!: Table<Note, string>;
   settings!: Table<SettingRow, string>;
+  humanInk!: Table<HumanInkAsset, string>;
 
   constructor(name = "FounderOSLocalDB") {
     super(name);
@@ -79,6 +95,9 @@ export class FounderOSLocalDatabase extends Dexie {
           await tx.table("humanRevisions").put(revision);
         }
       });
+    this.version(3).stores({
+      humanInk: "id, noteId",
+    });
   }
 }
 
@@ -163,5 +182,24 @@ export class IndexedDBNoteRepository implements NoteRepository {
   async listMachineByProject(projectId: string): Promise<Note[]> {
     await this.db.open();
     return this.db.machineNotes.where("projectId").equals(projectId).toArray();
+  }
+
+  async getHumanInk(id: string): Promise<HumanInkAsset | undefined> {
+    await this.db.open();
+    return this.db.humanInk.get(id);
+  }
+
+  async saveHumanInk(asset: HumanInkAsset, principal?: PrincipalRole): Promise<void> {
+    if (this.actor(principal) !== "human") {
+      throw new Error("SECURITY_BOUNDARY_VIOLATION: Non-human principal cannot write to Human Vault.");
+    }
+    if (!asset.id.startsWith("INK-")) {
+      throw new Error("ID_PREFIX: Ink asset ids must start with INK-.");
+    }
+    if (typeof asset.strokesJson !== "string" || asset.strokesJson.length === 0) {
+      throw new Error("INK_ORIGINAL_REQUIRED: Raw strokes are the original. A preview cannot replace them.");
+    }
+    await this.db.open();
+    await this.db.humanInk.put(asset);
   }
 }

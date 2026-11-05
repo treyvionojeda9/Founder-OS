@@ -1,5 +1,6 @@
 import type { Note, NoteRepository, PrincipalRole } from "../storage/noteRepository";
 import { createHumanNoteId } from "../storage/ulid";
+import { replacePonderBody } from "./ponderContent";
 
 export type KeepRefusal = "empty" | "machine";
 
@@ -31,10 +32,11 @@ export async function keepPonderNote(input: {
   now?: Date;
   createId?: () => string;
 }): Promise<KeepResult> {
-  const content = input.content.trim();
-  if (!content) return { ok: false, reason: "empty" };
+  const body = input.content.trim();
+  if (!body) return { ok: false, reason: "empty" };
   if (input.principal !== "human") return { ok: false, reason: "machine" };
 
+  const content = input.existing ? replacePonderBody(input.existing.content, body) : body;
   const note: Note = {
     id: input.existing?.id ?? (input.createId ?? createHumanNoteId)(),
     projectId: ponderProjectId(input.doorId),
