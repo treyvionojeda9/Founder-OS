@@ -36,9 +36,12 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
       data-still={still ? "true" : "false"}
       data-count={team.agents.length}
       aria-label="Team board"
+      data-material="plaster"
     >
+      <div className="board-wall" data-material="plaster" aria-hidden="true" />
+      <div className="board-wainscot" data-material="wainscot" aria-hidden="true" />
+      <div className="board-floor" data-material="floor" aria-hidden="true" />
       <div className="board-void">
-        <div className="board-wall" aria-hidden="true" />
         <div className="board-hanger">
           <div className="board-face">
             <span className="board-nail nail-a" aria-hidden="true" />

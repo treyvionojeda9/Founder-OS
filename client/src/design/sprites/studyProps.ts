@@ -32,20 +32,21 @@ export const bookStack: SpriteGrid = [
   "......................",
 ];
 
-/** Closed reading book. Navy cover, a sky band, and a paper fore-edge. */
+/** Closed path book. Navy cover, darkwood spine, one sky ribbon, paper edge. */
 export const closedBook: SpriteGrid = [
   "....................",
   "..dddddddddddddddd..",
-  "..dvvvvvvvvvvvvvpd..",
-  "..dvvvvvvvvvvvvvpd..",
-  "..dvbvvvvvvvvvvvpd..",
-  "..dvvvvvvvvvvvvvpd..",
-  "..dvvvvvvvvvvvvvpd..",
-  "..dvbvvvvvvvvvvvpd..",
-  "..dvvvvvvvvvvvvvpd..",
-  "..dvvvvvvvvvvvvvpd..",
-  "..dvvvvvvvvvvvvvpd..",
+  "..ddvvvvvvvvvvvvpd..",
+  "..ddvvvvvvvvvvvvpd..",
+  "..ddvvbbbbvvvvvvpd..",
+  "..ddvvvvvvvvvvvvpd..",
+  "..ddvvvvvvvvvvvvpd..",
+  "..ddvvbbbbvvvvvvpd..",
+  "..ddvvvvvvvvvvvvpd..",
+  "..ddvvvvvvvvvvvvpd..",
+  "..ddvvvvvvvvvvvvpd..",
   "..dddddddddddddddd..",
+  "....................",
   "....................",
 ];
 

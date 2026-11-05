@@ -38,21 +38,22 @@ export function StudyStage({
   return (
     <div className="study-stage" data-variant={variant}>
       <div className="study-world">
-        <div className="back-wall" aria-hidden="true" />
-        <div className="floor-plane" aria-hidden="true" />
+        <div className="back-wall" data-material="plaster" aria-hidden="true" />
+        <div className="wainscot" data-material="wainscot" aria-hidden="true" />
+        <div className="floor-plane" data-material="floor" aria-hidden="true" />
         {behind ? <div className="behind-cast">{behind}</div> : null}
         <div className="desk-rig">
-          <div className="desk-top">
+          <div className="desk-top" data-material="desk">
             <span className="plank plank-a" aria-hidden="true" />
             <span className="plank plank-b" aria-hidden="true" />
             <span className="plank plank-c" aria-hidden="true" />
             <DeskPool status={lampStatus} palette={poolPalette} />
             {onDesk}
           </div>
-          <div className="desk-front" aria-hidden="true">
+          <div className="desk-front" data-material="wainscot" aria-hidden="true">
             {variant === "school" ? (
-              <span className="desk-apron">
-                <span className="apron-rail" />
+              <span className="desk-apron" data-material="desk">
+                <span className="apron-rail" data-accent="school" />
               </span>
             ) : null}
             <span className="desk-leg leg-left" />

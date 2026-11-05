@@ -359,7 +359,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
           pose={pose}
           still={still}
           behind={
-            <figure className="figure ceo-stand">
+            <figure className="figure ceo-stand agent-stand">
               <Sprite rows={agent} scale={agentScale} title={figureName} />
               <figcaption>{figureName}</figcaption>
             </figure>

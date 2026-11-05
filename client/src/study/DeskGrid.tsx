@@ -24,6 +24,7 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
       aria-labelledby={labelledBy}
       data-still={still ? "true" : "false"}
       data-count={agents.length}
+      data-material="plaster"
     >
       <h1 className="overview-title">Overview</h1>
       <p className="overview-legend">Lit lamp means working. Dark lamp means idle. A fallen lamp has failed.</p>
@@ -41,9 +42,10 @@ export function DeskGrid({ agents, still, expandingId, panelId, labelledBy, onOp
                 onClick={() => onOpen(agent.id)}
               >
                 <span className="agent-desk-room">
-                  <span className="agent-desk-wall" aria-hidden="true" />
-                  <span className="agent-desk-floor" aria-hidden="true" />
-                  <span className="agent-desk-top" aria-hidden="true" />
+                  <span className="agent-desk-wall" data-material="plaster" aria-hidden="true" />
+                  <span className="agent-desk-wainscot" data-material="wainscot" aria-hidden="true" />
+                  <span className="agent-desk-floor" data-material="floor" aria-hidden="true" />
+                  <span className="agent-desk-top" data-material="desk" aria-hidden="true" />
                   <span className="agent-desk-sheet" aria-hidden="true" />
                   <span className="agent-desk-lamp">
                     <Sprite rows={lamp.rows} scale={lampScale} title={lamp.title} />
