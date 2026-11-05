@@ -144,8 +144,12 @@ function RoomPortal({ reveal }: { reveal: Reveal }) {
     "--shut-ms": `${SHUT_MS}ms`,
   } as CSSProperties;
   return (
-    <div className={reveal.mode === "shut" ? "room-portal-layer is-shut" : "room-portal-layer"} aria-hidden="true">
-      <div className={reveal.mode === "shut" ? "room-portal is-shut" : "room-portal"} style={style} data-mode={reveal.mode}>
+    <div
+      className={reveal.mode === "shut" ? "room-portal-layer is-shut" : "room-portal-layer"}
+      style={style}
+      aria-hidden="true"
+    >
+      <div className={reveal.mode === "shut" ? "room-portal is-shut" : "room-portal"} data-mode={reveal.mode}>
         {reveal.kind === "learn" ? (
           <LearnStub doorId={reveal.doorId} preview />
         ) : (

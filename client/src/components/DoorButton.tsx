@@ -6,8 +6,8 @@ import {
   doorInterior,
   doorJamb,
   doorLeaf,
-  doorLeafBack,
-  doorLeafEdge,
+  doorLeafAjar,
+  doorLeafOpen,
   doorSide,
   doorGlowPad,
   doorSpec,
@@ -15,13 +15,14 @@ import {
   doorWash,
   jambHeight,
   leafLogoSlot,
+  footGlow,
   lightPoolA,
   lightPoolB,
   sideHeight,
 } from "../design/sprites/doorFaces";
 import type { Door } from "../fixtures/doors";
 import { frameFromRig, type DoorFrame } from "../hall/doorFrame";
-import { DOLLY_MS, ENTER_MS, doorOpenSchedule, type DoorPhase } from "../hall/doorMotion";
+import { ENTER_MS, SWING_MS, doorOpenSchedule, type DoorPhase } from "../hall/doorMotion";
 import type { DoorPose } from "../hall/layout";
 import { useStillFrame } from "../hooks/useStillFrame";
 
@@ -72,9 +73,10 @@ export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps
     "--yaw": `${pose.yaw}deg`,
     "--z": `${pose.z}px`,
     "--drop": `${pose.drop}px`,
-    "--swing-ms": `${DOLLY_MS}ms`,
-    "--dolly-ms": `${ENTER_MS - DOLLY_MS}ms`,
+    "--swing-ms": `${SWING_MS}ms`,
+    "--dolly-ms": `${ENTER_MS - SWING_MS}ms`,
     "--enter-ms": `${ENTER_MS}ms`,
+    "--cell": `${scale}px`,
     "--pool-w": `${lightPoolA[0].length * scale}px`,
     "--pool-shift": `${-doorGlowPad.top * scale}px`,
     "--edge": `${depth}px`,
@@ -187,21 +189,26 @@ export function DoorButton({ door, scale, pose, onOpen, onArm }: DoorButtonProps
                 height: px(doorSpec.leafH),
               }}
             >
-              <span className="leaf-front">
+              <span className="leaf-pose is-0">
                 <Sprite rows={doorLeaf} scale={scale} title="" layers={layers} />
               </span>
-              <span className="leaf-back">
-                <Sprite rows={doorLeafBack} scale={scale} title="" />
+              <span className="leaf-pose is-1">
+                <Sprite rows={doorLeafAjar} scale={scale} title="" />
               </span>
-              <span className="leaf-edge">
-                <Sprite rows={doorLeafEdge} scale={scale} title="" />
+              <span className="leaf-pose is-2">
+                <Sprite rows={doorLeafOpen} scale={scale} title="" />
               </span>
             </span>
           </span>
         </span>
       </span>
-      <span className="contact-shadow">
-        <Sprite rows={contactShadow} scale={scale} title="" />
+      <span className="under-door" aria-hidden="true">
+        <span className="foot-glow">
+          <Sprite rows={footGlow} scale={scale} title="" />
+        </span>
+        <span className="contact-shadow">
+          <Sprite rows={contactShadow} scale={scale} title="" />
+        </span>
       </span>
       <span className="door-name type-meta">{door.name}</span>
     </button>

@@ -1,5 +1,6 @@
 import { copyFileSync, mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { PAPER_SETTLE_MS } from "../src/study/paperSettle";
 
 /**
  * Milestone 1 walkthrough at the PR #18 tip.
@@ -274,8 +275,9 @@ test.describe("milestone 1 live path", () => {
         await expect(page.getByRole("button", { name: "Keep this note" })).toBeVisible();
         await shot(page, pass, proj, "14-ponder-lift");
         await assertQuiet(page, guard);
+        await paperSettled(page, "lifted");
         await page.getByRole("button", { name: "Set it down" }).click();
-        await expect(learn).toHaveAttribute("data-paper", "desk");
+        await paperSettled(page, "desk");
 
         const book = page.getByRole("button", { name: "Open the current path" });
         await book.click();
@@ -410,6 +412,30 @@ async function assertQuiet(page: Page, guard: { errors: string[]; failed: string
 
 async function settled(page: Page) {
   await expect(page.locator(".room-portal-layer")).toHaveCount(0);
+}
+
+/** Lift and set-down play for PAPER_SETTLE_MS. Read the pose only after that motion stops. */
+async function paperSettled(page: Page, pose: "desk" | "lifted") {
+  const learn = page.locator(".route-content .learn-room");
+  const slot = learn.locator(".paper-slot");
+  const timeout = PAPER_SETTLE_MS + 400;
+  await expect(learn).toHaveAttribute("data-paper", pose, { timeout });
+  if ((await slot.getAttribute("data-still")) === "true") return;
+  await slot.evaluate(async (el) => {
+    const finished = () =>
+      Promise.all(
+        el
+          .getAnimations()
+          .filter((animation) => animation.playState === "running")
+          .map((animation) => animation.finished.catch(() => undefined)),
+      );
+    await finished();
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    await finished();
+  });
+  await expect(slot).not.toHaveAttribute("data-settle", { timeout });
 }
 
 async function pressBack(page: Page, keys: boolean) {

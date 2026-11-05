@@ -5,6 +5,7 @@ import {
   REVEAL_MS,
   SEQUENCE_MS,
   SHUT_MS,
+  SWING_MS,
   doorOpenSchedule,
   doorPath,
   prefersStillFrames,
@@ -18,10 +19,12 @@ describe("door open schedule", () => {
     expect(steps[0].at).toBe(0);
     expect(steps[1].at).toBe(DOLLY_MS);
     expect(steps[2].at).toBe(ENTER_MS);
-    expect(ENTER_MS).toBeGreaterThan(DOLLY_MS);
+    expect(SWING_MS).toBeLessThan(DOLLY_MS);
+    expect(DOLLY_MS).toBeLessThan(ENTER_MS);
+    expect(SWING_MS / ENTER_MS).toBeCloseTo(0.4, 5);
     expect(SEQUENCE_MS).toBe(ENTER_MS + REVEAL_MS);
-    expect(SEQUENCE_MS).toBeGreaterThanOrEqual(700);
-    expect(SEQUENCE_MS).toBeLessThanOrEqual(900);
+    expect(ENTER_MS).toBeLessThanOrEqual(420);
+    expect(SEQUENCE_MS).toBeLessThanOrEqual(450);
     const enter = steps.findIndex((step) => step.phase === "enter");
     expect(enter).toBe(steps.length - 1);
   });
@@ -34,8 +37,8 @@ describe("door open schedule", () => {
     expect(prefersStillFrames(true, false)).toBe(true);
     expect(prefersStillFrames(false, true)).toBe(true);
     expect(prefersStillFrames(false, false)).toBe(false);
-    expect(SHUT_MS).toBeGreaterThan(400);
-    expect(SHUT_MS).toBeLessThan(ENTER_MS);
+    expect(SHUT_MS).toBeLessThanOrEqual(ENTER_MS);
+    expect(SHUT_MS).toBeLessThanOrEqual(450);
   });
 
   it("sends work doors to a team page and school doors to a curriculum page", () => {

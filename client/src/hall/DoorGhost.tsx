@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { Sprite } from "../design/Sprite";
-import { doorFrame, doorLeaf, doorLeafBack, doorLeafEdge, doorSpec } from "../design/sprites/doorFaces";
+import { doorFrame, doorLeaf, doorLeafAjar, doorLeafOpen, doorSpec } from "../design/sprites/doorFaces";
 import type { DoorFrame } from "./doorFrame";
 import { SHUT_MS } from "./doorMotion";
 
@@ -33,14 +33,14 @@ export function DoorGhost({ frame }: { frame: DoorFrame }) {
             height: px(doorSpec.leafH),
           }}
         >
-          <span className="leaf-front">
+          <span className="leaf-pose is-0">
             <Sprite rows={doorLeaf} scale={scale} title="" />
           </span>
-          <span className="leaf-back">
-            <Sprite rows={doorLeafBack} scale={scale} title="" />
+          <span className="leaf-pose is-1">
+            <Sprite rows={doorLeafAjar} scale={scale} title="" />
           </span>
-          <span className="leaf-edge">
-            <Sprite rows={doorLeafEdge} scale={scale} title="" />
+          <span className="leaf-pose is-2">
+            <Sprite rows={doorLeafOpen} scale={scale} title="" />
           </span>
         </span>
       </div>

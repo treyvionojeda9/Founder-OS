@@ -56,29 +56,49 @@ function paintFrame(): SpriteGrid {
   const innerBottom = openingY + doorSpec.openingH - 1;
   const outerX0 = innerX0 - 3;
   const outerX1 = innerX1 + 3;
+  const front: boolean[][] = Array.from({ length: frameH }, () => Array<boolean>(frameW).fill(false));
+  const hole: boolean[][] = Array.from({ length: frameH }, () => Array<boolean>(frameW).fill(false));
 
   for (let y = 0; y < frameH; y += 1) {
     for (let x = 0; x < frameW; x += 1) {
       const outer = inArch(x, y, outerX0, outerX1, spring, 1) && y <= innerBottom + 2;
       const inner = inArch(x, y, innerX0, innerX1, spring, innerTop) && y <= innerBottom;
-      if (!outer || inner) continue;
-      const nearInner =
-        inArch(x + 1, y, innerX0, innerX1, spring, innerTop) ||
-        inArch(x - 1, y, innerX0, innerX1, spring, innerTop) ||
-        inArch(x, y + 1, innerX0, innerX1, spring, innerTop) ||
-        inArch(x, y - 1, innerX0, innerX1, spring, innerTop);
-      const lit = x <= outerX0 + 1;
-      rows[y][x] = nearInner ? "w" : lit ? "w" : "d";
+      if (inner) hole[y][x] = true;
+      if (outer && !inner) front[y][x] = true;
     }
   }
 
-  const key = Math.round((outerX0 + outerX1) / 2);
-  if (rows[2]?.[key] && rows[2][key] !== ".") rows[2][key] = "e";
-  if (rows[2]?.[key - 1] && rows[2][key - 1] !== ".") rows[2][key - 1] = "f";
+  for (let y = 0; y < frameH; y += 1) {
+    let left = -1;
+    let right = -1;
+    for (let x = 0; x < frameW; x += 1) {
+      if (!front[y][x]) continue;
+      if (left < 0) left = x;
+      right = x;
+    }
+    if (left < 0 || right < 0) continue;
+    for (let x = left; x <= right; x += 1) {
+      if (!front[y][x]) continue;
+      const fromLeft = x - left;
+      const fromRight = right - x;
+      const nearHole = Boolean(hole[y]?.[x - 1] || hole[y]?.[x + 1] || hole[y - 1]?.[x] || hole[y + 1]?.[x]);
+      if (fromLeft === 0) rows[y][x] = "f";
+      else if (fromLeft === 1 && fromRight > 2) rows[y][x] = "e";
+      else if (fromRight <= 2 || nearHole) rows[y][x] = "d";
+      else rows[y][x] = "w";
+    }
+    for (let k = 1; k <= 2; k += 1) {
+      const x = right + k;
+      if (x < frameW && !front[y][x] && !hole[y][x]) rows[y][x] = "d";
+    }
+  }
 
-  for (let x = outerX0; x <= outerX1; x += 1) {
-    if (rows[innerBottom + 1]) rows[innerBottom + 1][x] = x % 4 === 0 ? "e" : "d";
-    if (rows[innerBottom + 2]) rows[innerBottom + 2][x] = "d";
+  for (let y = 0; y < frameH; y += 1) {
+    for (let x = 0; x < frameW; x += 1) {
+      if (!hole[y][x]) continue;
+      const lip = x === innerX0 || x === innerX1 || !hole[y - 1]?.[x] || !hole[y + 1]?.[x];
+      if (lip) rows[y][x] = "d";
+    }
   }
 
   return join(rows);
@@ -125,6 +145,12 @@ function paintLeaf(): SpriteGrid {
   rows[knobY][knobX + 1] = "f";
   rows[knobY + 1][knobX] = "d";
   rows[knobY + 1][knobX + 1] = "e";
+  for (let y = 0; y < leafH; y += 1) {
+    rows[y][0] = "e";
+    if (rows[y][1] === "d") rows[y][1] = "w";
+    rows[y][leafW - 2] = "d";
+    rows[y][leafW - 1] = "d";
+  }
   return join(rows);
 }
 
@@ -144,8 +170,8 @@ function paintEdge(): SpriteGrid {
   const rows = blank(depth, leafH, "d");
   for (let y = 0; y < leafH; y += 1) {
     rows[y][0] = "d";
-    rows[y][depth - 1] = "w";
-    if (y % 4 === 0) rows[y][1] = "w";
+    if (depth > 2) rows[y][1] = "w";
+    rows[y][depth - 1] = y % 3 === 0 ? "f" : "e";
   }
   return join(rows);
 }
@@ -162,15 +188,10 @@ function paintJamb(): SpriteGrid {
   return join(rows);
 }
 
+/** Night void. The frame's darkwood lip is the recessed reveal in front of this. */
 function paintInterior(): SpriteGrid {
   const { openingW, openingH } = doorSpec;
-  const rows = blank(openingW, openingH, "n");
-  for (let y = 0; y < openingH; y += 1) {
-    for (let x = 0; x < openingW; x += 1) {
-      if ((x + y) % 7 === 0) rows[y][x] = "s";
-    }
-  }
-  return join(rows);
+  return join(blank(openingW, openingH, "n"));
 }
 
 /** Stepped flame, ember, then wood. The gap shows light, not a Bayer checker. */
@@ -251,18 +272,36 @@ function paintPool(shift: number): SpriteGrid {
   return join(rows);
 }
 
-/** Solid darkwood threshold with a slate lip. No dithered oval. */
+/**
+ * Short stepped contact under the sill. Narrower than the door so the
+ * arch floats in the night instead of standing on a floor.
+ */
 function paintContact(): SpriteGrid {
-  const width = 26;
-  const height = 3;
+  const width = 16;
+  const height = 4;
   const rows = blank(width, height);
+  const reach = [3, 6, 7, 4];
   const cx = (width - 1) / 2;
   for (let y = 0; y < height; y += 1) {
-    const reach = 1 - y * 0.14;
     for (let x = 0; x < width; x += 1) {
-      const dx = Math.abs(x - cx) / (width * 0.5);
-      if (dx > reach) continue;
-      rows[y][x] = y === height - 1 ? "s" : "d";
+      if (Math.abs(x - cx) > reach[y]) continue;
+      rows[y][x] = y < 2 ? "d" : "s";
+    }
+  }
+  return join(rows);
+}
+
+/** Small ember pool under the contact, same stepped shape, no wood. */
+function paintFoot(): SpriteGrid {
+  const width = 20;
+  const height = 3;
+  const rows = blank(width, height);
+  const reach = [3, 8, 5];
+  const cx = (width - 1) / 2;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (Math.abs(x - cx) > reach[y]) continue;
+      rows[y][x] = y === 0 && Math.abs(x - cx) <= 1 ? "f" : "e";
     }
   }
   return join(rows);
@@ -299,8 +338,36 @@ function paintSide(): SpriteGrid {
   return join(rows);
 }
 
+/**
+ * Nearest-neighbor hinge swing. The front face keeps whole pixels and the
+ * edge face steps out; empty cells on the right are the gap.
+ */
+function projectLeaf(frontColumns: number, edgeColumns: number): SpriteGrid {
+  const front = paintLeaf();
+  const edge = paintEdge();
+  const height = front.length;
+  const width = front[0]?.length ?? 0;
+  const edgeW = edge[0]?.length ?? 1;
+  const rows = blank(width, height);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < frontColumns && x < width; x += 1) {
+      const src = Math.min(width - 1, Math.floor((x * width) / frontColumns));
+      rows[y][x] = front[y]?.[src] ?? "w";
+    }
+    for (let e = 0; e < edgeColumns; e += 1) {
+      const x = frontColumns + e;
+      if (x >= width) break;
+      const src = Math.min(edgeW - 1, Math.floor((e * edgeW) / edgeColumns));
+      rows[y][x] = edge[y]?.[src] ?? "d";
+    }
+  }
+  return join(rows);
+}
+
 export const doorFrame = paintFrame();
 export const doorLeaf = paintLeaf();
+export const doorLeafAjar = projectLeaf(14, 3);
+export const doorLeafOpen = projectLeaf(5, 5);
 export const doorLeafBack = paintLeafBack();
 export const doorLeafEdge = paintEdge();
 export const doorJamb = paintJamb();
@@ -309,6 +376,7 @@ export const doorSpill = paintSpill();
 export const lightPoolA = paintPool(0);
 export const lightPoolB = paintPool(2);
 export const contactShadow = paintContact();
+export const footGlow = paintFoot();
 export const doorWash = paintWash();
 export const doorSide = paintSide();
 

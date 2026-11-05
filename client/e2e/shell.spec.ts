@@ -1,10 +1,33 @@
 import { mkdirSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { DOLLY_MS, ENTER_MS } from "../src/hall/doorMotion";
 
 mkdirSync("/tmp/founder-os-e2e", { recursive: true });
 
 const shot = (name: string) => `/tmp/founder-os-e2e/${name}.png`;
+
+/** Hold the hall clock so swing and dolly stay readable. The route waits until enter. */
+async function holdHall(page: Page) {
+  await page.clock.install({ time: new Date("2026-10-29T12:00:00Z") });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/home");
+  await expect(page.getByRole("button", { name: /Hale Design Lab/ })).toBeVisible();
+  await page.clock.pauseAt(await page.evaluate(() => Date.now()));
+}
+
+async function expectSwingThenDolly(page: Page, name: RegExp, url: RegExp, proj?: string) {
+  const door = page.getByRole("button", { name });
+  await expect(door).toHaveAttribute("data-phase", "swing");
+  await expect(page).toHaveURL(/\/home$/);
+  if (proj) await page.screenshot({ path: shot(`door-open-swing-${proj}`) });
+  await page.clock.runFor(DOLLY_MS);
+  await expect(door).toHaveAttribute("data-phase", "dolly");
+  await expect(page).toHaveURL(/\/home$/);
+  if (proj) await page.screenshot({ path: shot(`door-open-dolly-${proj}`) });
+  await page.clock.runFor(ENTER_MS - DOLLY_MS);
+  await expect(page).toHaveURL(url);
+}
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -67,51 +90,36 @@ test("splash, work hall, school hall, and a work door", async ({ page }, info) =
 
 test("door opens, then the route changes", async ({ page }, info) => {
   const proj = info.project.name;
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/home");
+  await holdHall(page);
   await page.getByRole("button", { name: /Hale Design Lab/ }).click();
-  const opening = page.getByRole("button", { name: /Hale Design Lab/ });
-  await expect(opening).toHaveAttribute("data-phase", "swing");
-  await expect(page).toHaveURL(/\/home$/);
-  await page.screenshot({ path: shot(`door-open-swing-${proj}`) });
-  await expect(opening).toHaveAttribute("data-phase", "dolly");
-  await expect(page).toHaveURL(/\/home$/);
-  await page.screenshot({ path: shot(`door-open-dolly-${proj}`) });
-  await expect(page).toHaveURL(/\/team\/hale-design-lab$/, { timeout: 4000 });
+  await expectSwingThenDolly(page, /Hale Design Lab/, /\/team\/hale-design-lab$/, proj);
   await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
 });
 
 test("enter and space on a focused door run the open sequence", async ({ page }, info) => {
   test.skip(info.project.name !== "desktop", "keyboard once");
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/home");
+  await holdHall(page);
   await page.locator(".stage-settings, .rail .text-link").first().focus();
   await page.keyboard.press("Tab");
   const door = page.getByRole("button", { name: /Hale Design Lab/ });
   await expect(door).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(door).toHaveAttribute("data-phase", "swing");
-  await expect(page).toHaveURL(/\/home$/);
-  await expect(page).toHaveURL(/\/team\/hale-design-lab$/, { timeout: 4000 });
+  await expectSwingThenDolly(page, /Hale Design Lab/, /\/team\/hale-design-lab$/);
 
+  await page.clock.resume();
   await page.goto("/home");
+  await expect(page.getByRole("button", { name: /Cloud Agent Team/ })).toBeVisible();
+  await page.clock.pauseAt(await page.evaluate(() => Date.now()));
   await page.getByRole("button", { name: /Cloud Agent Team/ }).focus();
   await page.keyboard.press("Space");
-  const cloud = page.getByRole("button", { name: /Cloud Agent Team/ });
-  await expect(cloud).toHaveAttribute("data-phase", "swing");
-  await expect(page).toHaveURL(/\/home$/);
-  await expect(page).toHaveURL(/\/team\/cloud-agent-team$/, { timeout: 4000 });
+  await expectSwingThenDolly(page, /Cloud Agent Team/, /\/team\/cloud-agent-team$/);
 });
 
 test("a tap runs the open sequence", async ({ page }, info) => {
   test.skip(info.project.name !== "tablet-portrait", "pen-sized touch");
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/home");
-  const door = page.getByRole("button", { name: /Hale Design Lab/ });
-  await door.tap();
-  await expect(door).toHaveAttribute("data-phase", "swing");
-  await expect(page).toHaveURL(/\/home$/);
-  await expect(page).toHaveURL(/\/team\/hale-design-lab$/, { timeout: 4000 });
+  await holdHall(page);
+  await page.getByRole("button", { name: /Hale Design Lab/ }).tap();
+  await expectSwingThenDolly(page, /Hale Design Lab/, /\/team\/hale-design-lab$/);
 });
 
 test("a school door opens the learning stub", async ({ page }) => {

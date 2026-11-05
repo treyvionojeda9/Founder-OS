@@ -11,7 +11,10 @@ import {
   deskLampOn,
   doorFrame,
   doorLeaf,
+  doorLeafAjar,
+  doorLeafOpen,
   doorSpill,
+  footGlow,
   lightPoolA,
   spriteCatalog,
 } from "./sprites";
@@ -107,5 +110,41 @@ describe("sprite grids", () => {
     expect(doorSpec.leafX).toBeGreaterThanOrEqual(doorSpec.openingX);
     expect(doorSpec.leafX + doorSpec.leafW).toBeLessThanOrEqual(doorSpec.openingX + doorSpec.openingW);
     expect(doorSpec.leafY).toBeGreaterThanOrEqual(doorSpec.spring);
+  });
+
+  it("gives the arch a lit edge, a dark side, and a recessed reveal", () => {
+    const row = doorFrame[doorSpec.spring + 4] ?? "";
+    const cells = [...row];
+    const left = cells.findIndex((ch) => ch !== ".");
+    let right = -1;
+    for (let i = cells.length - 1; i >= 0; i -= 1) {
+      if (cells[i] !== ".") {
+        right = i;
+        break;
+      }
+    }
+    expect(left).toBeGreaterThanOrEqual(0);
+    expect(row[left]).toBe("f");
+    expect(row[right]).toBe("d");
+    expect(row[doorSpec.openingX]).toBe("d");
+    expect(row[doorSpec.openingX + doorSpec.openingW - 1]).toBe("d");
+    const leafRow = doorLeaf[8] ?? "";
+    expect(leafRow[0]).toBe("e");
+    expect(leafRow[leafRow.length - 1]).toBe("d");
+    const painted = (row: string) => [...row].filter((ch) => ch !== ".").length;
+    const ajar = doorLeafAjar[8] ?? "";
+    const open = doorLeafOpen[8] ?? "";
+    expect(painted(ajar)).toBeLessThan(painted(leafRow));
+    expect(painted(open)).toBeLessThan(painted(ajar));
+    expect(ajar.startsWith("e")).toBe(true);
+    expect(open.startsWith("e")).toBe(true);
+    const night = grayscaleGrid(["n"])[0][0];
+    const rim = grayscaleGrid(["f"])[0][0];
+    const side = grayscaleGrid(["d"])[0][0];
+    expect(rim).toBeGreaterThan(side);
+    expect(side).toBeGreaterThan(night);
+    const foot = footGlow.join("");
+    expect(new Set(foot)).toEqual(new Set([".", "e", "f"]));
+    expect(foot).toMatch(/fff|eee/);
   });
 });
