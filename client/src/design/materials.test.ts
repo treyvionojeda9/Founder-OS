@@ -32,9 +32,10 @@ describe("room materials", () => {
     expect(studyRoomFill.floor).toBe("floor");
   });
 
-  it("keeps school accent on the book and the apron rail", () => {
-    expect([...schoolAccentSurfaces]).toEqual(["book", "apron-rail"]);
+  it("keeps school accent off the reading desk", () => {
+    expect([...schoolAccentSurfaces]).toEqual([]);
     expect(css).not.toMatch(/school-slate/);
+    expect(css).not.toMatch(/\.apron-rail\s*\{[^}]*navy/);
     expect(css).not.toMatch(/\.agent-desk-floor\s*\{[^}]*plum/);
     expect(css).not.toMatch(/10px 0 0 var\(--plum\)/);
   });

@@ -35,7 +35,7 @@ export const bookStack: SpriteGrid = [
 /**
  * Closed path book beside the writing sheet.
  * Navy cover and sky ribbon are school accents. Spine, board, and page edges stay in Founder Ember.
- * No blue outside that set.
+ * No blue outside that set. The reading desk uses `readingBook` instead.
  */
 export const closedBook: SpriteGrid = [
   "......................",
@@ -56,19 +56,58 @@ export const closedBook: SpriteGrid = [
   "......................",
 ];
 
+/**
+ * Path book on the reading desk. Plum cover, ember ribbon, paper edge.
+ * Founder Ember only — the school-accent `closedBook` stays in the catalog.
+ */
+export const readingBook: SpriteGrid = [
+  "......................",
+  "..dddddddddddddddddd..",
+  "..dddmmmmmmmmmmmmmpd..",
+  "..dddmmmmmmmmmmmmmpd..",
+  "..dddmmmeeeemmmmmmpd..",
+  "..dddmmmmmmmmmmmmmpd..",
+  "..dddmmmmmmmmmmmmmpd..",
+  "..dddmmmeeeemmmmmmpd..",
+  "..dddmmmmmmmmmmmmmpd..",
+  "..dddmmmmmmmmmmmmmpd..",
+  "..dddmmmmmmmmmmmmmpd..",
+  "..dddddddddddddddddd..",
+  "..pppppppppppppppppp..",
+  "..dddddddddddddddddd..",
+  "......................",
+  "......................",
+];
+
+/** Quill resting on the ponder sheet. Paper, wood, and ember. No school accent. */
+export const readingQuill: SpriteGrid = [
+  ".........p..",
+  "........pd..",
+  ".......pdp..",
+  "......pdp...",
+  ".....pde....",
+  "....pde.....",
+  "...pde......",
+  "..ddd.......",
+  ".dwd........",
+  "md..........",
+  "d...........",
+  "............",
+];
+
 /** Key left on the desk when a fixture assignment is waiting. */
 export const assignmentKey: SpriteGrid = [
   "..............",
-  "...iiiiii.....",
-  "...i....i.....",
-  "...i.pp.i.....",
-  "...i....i.....",
-  "...iiiiii.....",
-  ".....ii.......",
-  ".....ii.i.....",
-  ".....iiii.....",
-  ".....ii.......",
-  ".....iiii.....",
+  "...nnnnnn.....",
+  "...n....n.....",
+  "...n.pp.n.....",
+  "...n....n.....",
+  "...nnnnnn.....",
+  ".....nn.......",
+  ".....nn.n.....",
+  ".....nnnn.....",
+  ".....nn.......",
+  ".....nnnn.....",
   "..............",
 ];
 

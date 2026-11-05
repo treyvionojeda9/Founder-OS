@@ -69,6 +69,12 @@ describe("learning desk", () => {
     expect(document.querySelector(".apron-rail")).toHaveAttribute("data-accent", "school");
     expect(document.querySelector(".desk-pool")).toHaveAttribute("data-pool", "working");
     expect(document.querySelector(".desk-pool")).toHaveAttribute("data-pool-palette", "ember");
+    expect(document.querySelector(".window-sill")).toBeTruthy();
+    expect(document.querySelectorAll(".window-star").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".wall-bay").length).toBeGreaterThanOrEqual(3);
+    expect(document.querySelectorAll(".floor-board").length).toBeGreaterThan(4);
+    expect(document.querySelectorAll(".desk-leg")).toHaveLength(2);
+    expect(document.querySelector(".reading-shadow")).toBeTruthy();
     expect(screen.getByRole("img", { name: "Desk lamp, lit" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Assignment key" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open the current path" })).toBeInTheDocument();
@@ -213,7 +219,7 @@ describe("learning desk", () => {
 
   it("keeps the quill as a visual rest and does not store stylus ink", () => {
     expect(learnSource).toMatch(/data-ink="ready"/);
-    expect(learnSource).toMatch(/logoQuill/);
+    expect(learnSource).toMatch(/readingQuill/);
     expect(learnSource).not.toMatch(/strokes|isValidStroke|WP_STROKE|onPointerDown|pointerdown/);
     expect(ponderSource).not.toMatch(/strokes|isValidStroke|WP_STROKE/);
   });
