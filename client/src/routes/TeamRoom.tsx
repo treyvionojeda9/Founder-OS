@@ -8,6 +8,8 @@ import { useFormFactor } from "../hooks/useFormFactor";
 import { useStillFrame } from "../hooks/useStillFrame";
 import { LibraryShelf } from "../library/LibraryShelf";
 import { DeskGrid } from "../study/DeskGrid";
+import { isWorkPaused, pauseSnapshot, subscribeWorkPause } from "../study/deskPause";
+import { OverviewSheet } from "../study/OverviewSheet";
 import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
 import { TeamBoard } from "../team/TeamBoard";
 import {
@@ -52,6 +54,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const [fromBoard, setFromBoard] = useState(false);
   const [boardReturn, setBoardReturn] = useState<TabKey>("ceo");
   const [expanding, setExpanding] = useState<string | null>(null);
+  const [sheetId, setSheetId] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<Drawer>(null);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<MachineLine["action"] | null>(null);
@@ -63,11 +66,13 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const deskFocus = useRef<string | null>(null);
   const knownAgent =
     !!team && tab !== "overview" && team.agents.some((item) => item.id === tab) ? tab : "ceo";
+  const paperAgent = tab === "overview" && sheetId ? sheetId : knownAgent;
   const lines = useSyncExternalStore(
     subscribeChat,
-    () => linesForAgent(teamId, knownAgent),
-    () => linesForAgent(teamId, knownAgent),
+    () => linesForAgent(teamId, paperAgent),
+    () => linesForAgent(teamId, paperAgent),
   );
+  const pauseKey = useSyncExternalStore(subscribeWorkPause, pauseSnapshot, () => "");
 
   useEffect(() => {
     if (!pending) return;
@@ -99,11 +104,32 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
 
   useEffect(() => {
     const id = deskFocus.current;
-    if (!id || tab !== "overview" || drawer) return;
+    if (!id || tab !== "overview" || drawer || sheetId) return;
     deskFocus.current = null;
     const node = document.querySelector<HTMLButtonElement>(`.agent-desk[data-agent="${CSS.escape(id)}"]`);
     node?.focus({ preventScroll: true });
-  }, [tab, drawer]);
+  }, [tab, drawer, sheetId]);
+
+  useEffect(() => {
+    if (!sheetId || tab !== "overview" || drawer) return;
+    document.querySelector<HTMLButtonElement>(".overview-sheet .set-down")?.focus({ preventScroll: true });
+  }, [sheetId, tab, drawer]);
+
+  useEffect(() => {
+    if (!sheetId || tab !== "overview" || drawer || pending) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      deskFocus.current = sheetId;
+      clearTimer(expandTimer);
+      setExpanding(null);
+      setSheetId(null);
+      setPose("desk");
+      setPending(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sheetId, tab, drawer, pending]);
 
   useEffect(() => {
     return () => {
@@ -149,6 +175,11 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const panelTitle = selected === "overview" ? "Overview" : `${agentName} chat`;
   const composerLabel = selected === "ceo" ? "Message the CEO" : `Message ${agentName}`;
   const composerId = preview || !onChat ? undefined : selected === "ceo" ? "ceo-composer" : `composer-${selected}`;
+  const sheetRecord = sheetId ? team.agents.find((item) => item.id === sheetId) : undefined;
+  const sheetPaused = sheetRecord ? pauseKey.split("|").includes(`${team.id}:${sheetRecord.id}`) : false;
+  const sheetName = sheetRecord?.name ?? "Agent";
+  const sheetStatus: AgentStatus = sheetRecord?.status ?? "idle";
+  const sheetComposerId = !sheetRecord || preview ? undefined : `composer-${sheetRecord.id}`;
 
   const settle = (choice: "approve" | "decline") => {
     setPending(null);
@@ -158,29 +189,33 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const send = (event: FormEvent) => {
     event.preventDefault();
     const body = draft.trim();
-    if (!body || selected === "overview") return;
-    appendFounderLine(team.id, body, selected);
+    const target = sheetId && selected === "overview" ? sheetId : selected;
+    if (!body || target === "overview") return;
+    appendFounderLine(team.id, body, target);
+    setDraft("");
+  };
+
+  const closeSheet = () => {
+    clearTimer(expandTimer);
+    setExpanding(null);
+    if (sheetId) deskFocus.current = sheetId;
+    setSheetId(null);
+    setPose("desk");
+    setPending(null);
     setDraft("");
   };
 
   const openDesk = (agentId: string) => {
-    const land = () => {
-      clearTimer(expandTimer);
-      setExpanding(null);
-      setFromDesks(true);
-      setFromBoard(false);
-      setTab(agentId);
-      setDrawer(null);
-      setPose("desk");
-      setNotice(null);
-    };
-    if (still) {
-      land();
-      return;
-    }
-    setExpanding(agentId);
-    if (expandTimer.current !== null) window.clearTimeout(expandTimer.current);
-    expandTimer.current = window.setTimeout(land, 280);
+    clearTimer(expandTimer);
+    setExpanding(null);
+    setSheetId(agentId);
+    setFromDesks(false);
+    setFromBoard(false);
+    setDrawer(null);
+    setPose("desk");
+    setNotice(null);
+    setPending(null);
+    setDraft("");
   };
 
   const openTeam = () => {
@@ -203,6 +238,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       clearTimer(expandTimer);
       setExpanding(null);
       setFromBoard(true);
+      setSheetId(null);
       setTab(agentId);
       setDrawer(null);
       setPose("desk");
@@ -247,6 +283,10 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       setNotice(null);
       clearTimer(expandTimer);
       setExpanding(null);
+      return;
+    }
+    if (sheetId && selected === "overview") {
+      closeSheet();
       return;
     }
     if (fromDesks && selected !== "overview") {
@@ -331,6 +371,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
           setDrawer(null);
           setFromDesks(false);
           setFromBoard(false);
+          setSheetId(null);
           setPose("desk");
           setExpanding(null);
           const control = preview ? null : document.getElementById(`team-tab-${tabs[next].id}`);
@@ -353,6 +394,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
                 setDrawer(null);
                 setFromDesks(false);
                 setFromBoard(false);
+                setSheetId(null);
                 setPose("desk");
                 setExpanding(null);
               }}
@@ -370,12 +412,49 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
           <TeamBoard team={team} still={still} expandingId={expanding} onOpen={openPlaque} />
         ) : showGrid ? (
           <DeskGrid
+            teamId={team.id}
             agents={team.agents}
             still={still}
             expandingId={expanding}
+            covered={!!sheetRecord}
             panelId={preview ? undefined : "study-panel"}
             labelledBy={preview ? undefined : "team-tab-overview"}
             onOpen={openDesk}
+            sheet={
+              sheetRecord ? (
+                <OverviewSheet
+                  status={sheetStatus}
+                  paused={sheetPaused}
+                  still={still}
+                  lampScale={lampScale}
+                  onSetDown={closeSheet}
+                >
+                  <div className="paper-log" tabIndex={0} aria-label="Paper chat">
+                    <h1>{`${sheetName} chat`}</h1>
+                    <ChatSheet
+                      lines={lines}
+                      notice={notice}
+                      onReview={(action) => {
+                        setNotice(null);
+                        setPending(action);
+                      }}
+                    />
+                  </div>
+                  <form className="paper-form" onSubmit={send} onClick={(event) => event.stopPropagation()}>
+                    <label className="composer-label" htmlFor={sheetComposerId}>
+                      {`Message ${sheetName}`}
+                      <textarea
+                        id={sheetComposerId}
+                        rows={layout === "portrait" ? 3 : 2}
+                        value={draft}
+                        onChange={(event) => setDraft(event.target.value)}
+                      />
+                    </label>
+                    <button type="submit">Send</button>
+                  </form>
+                </OverviewSheet>
+              ) : null
+            }
           />
         ) : (
         <StudyStage

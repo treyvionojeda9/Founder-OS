@@ -36,7 +36,7 @@ export function StatusFrameDemo() {
       <section className="status-block" aria-label="Overview desks">
         {statusFrameAgents.map((agent) => (
           <div key={agent.id} className="status-desk">
-            <DeskGrid agents={[agent]} still={still} expandingId={null} onOpen={() => {}} />
+            <DeskGrid teamId="status-frame" agents={[agent]} still={still} expandingId={null} onOpen={() => {}} />
           </div>
         ))}
       </section>

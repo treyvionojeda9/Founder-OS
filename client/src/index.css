@@ -1271,6 +1271,7 @@ html:has(.room-portal-layer) body {
 }
 
 .desk-grid {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
@@ -1306,6 +1307,15 @@ html:has(.room-portal-layer) body {
   image-rendering: pixelated;
 }
 
+.desk-floor-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5%;
+  z-index: 2;
+  display: grid;
+}
+
 .desk-grid-list {
   list-style: none;
   margin: 0;
@@ -1315,10 +1325,8 @@ html:has(.room-portal-layer) body {
   grid-auto-columns: minmax(0, 1fr);
   grid-template-rows: auto;
   gap: 16px;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 5%;
+  position: relative;
+  grid-area: 1 / 1;
   z-index: 1;
 }
 
@@ -1850,6 +1858,7 @@ html:has(.room-portal-layer) body {
 .agent-desk-plaque {
   order: 2;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 40px;
@@ -1864,10 +1873,13 @@ html:has(.room-portal-layer) body {
 }
 
 .agent-desk-name {
+  display: block;
+  width: 100%;
   font-family: var(--font-pixel);
   font-size: var(--type-body);
   line-height: var(--leading-body);
   color: var(--paper);
+  text-align: center;
 }
 
 .agent-desk .status-chip {
@@ -1880,6 +1892,135 @@ html:has(.room-portal-layer) body {
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
+}
+
+.desk-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 4px solid var(--night);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+
+.desk-stamp-task,
+.desk-stamp-hold {
+  color: var(--paper);
+}
+
+.lamp-chains {
+  position: relative;
+  z-index: 6;
+  grid-area: 1 / 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  height: 100%;
+  margin: 0;
+  padding: 18px 12px 0;
+  pointer-events: none;
+}
+
+.lamp-chain {
+  pointer-events: auto;
+  justify-self: start;
+  align-self: start;
+  box-sizing: border-box;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  margin-left: 10px;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  color: var(--paper);
+  border: 4px solid transparent;
+  box-shadow: none;
+  transition: none;
+}
+
+.chain-link {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: var(--ember);
+  box-shadow: 0 2px 0 var(--darkwood);
+}
+
+.lamp-chain[data-pattern="pulled"] {
+  border-style: dashed;
+  border-color: var(--paper);
+  background: var(--night);
+  transform: translateY(8px);
+}
+
+.lamp-chain[data-pattern="pulled"] .chain-link {
+  background: var(--night);
+  box-shadow: inset 0 0 0 2px var(--paper);
+}
+
+.overview-sheet.study-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  height: auto;
+  perspective: none;
+  overflow: hidden;
+  background-color: var(--night);
+  background-image: var(--mat-plaster);
+}
+
+.overview-sheet-lamp {
+  position: absolute;
+  z-index: 5;
+  top: 8px;
+  left: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  max-width: calc(100% - 24px);
+}
+
+.overview-sheet .paper-slot[data-pose="expanded"] {
+  left: 12px;
+  right: 12px;
+  top: 128px;
+  bottom: 12px;
+  width: auto;
+  height: auto;
+  transform: none;
+}
+
+.overview-sheet[data-still="false"] .paper-slot[data-pose="expanded"] {
+  animation: sheet-expand 280ms steps(4, end);
+}
+
+@keyframes sheet-expand {
+  0% {
+    transform: translateY(16px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.app[data-layout="portrait"] .overview-sheet .paper-slot[data-pose="expanded"] {
+  top: 168px;
 }
 
 .study-stage {
@@ -2141,6 +2282,10 @@ html:has(.room-portal-layer) body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .lamp-chain[data-still="false"] {
+    transition: transform 160ms steps(3, end);
+  }
+
   .paper-slot[data-settle="lift"]:not([data-still="true"]) {
     animation: paper-lift-settle 240ms steps(3, end);
   }
@@ -2556,12 +2701,16 @@ html:has(.room-portal-layer) body {
   .paper-slot,
   .agent-desk,
   .library-paper,
-  .plaque {
+  .plaque,
+  .lamp-chain,
+  .overview-sheet {
     transition: none;
   }
 
   .paper-slot,
-  .lamp-frame {
+  .lamp-frame,
+  .overview-sheet,
+  .overview-sheet .paper-slot {
     animation: none;
   }
 
@@ -2612,12 +2761,16 @@ html:has(.room-portal-layer) body {
   .paper-slot,
   .agent-desk,
   .library-paper,
-  .plaque {
+  .plaque,
+  .lamp-chain,
+  .overview-sheet {
     transition: none;
   }
 
   .paper-slot,
-  .lamp-frame {
+  .lamp-frame,
+  .overview-sheet,
+  .overview-sheet .paper-slot {
     animation: none;
   }
 
@@ -4352,4 +4505,8 @@ input {
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
+}
+
+.app .study-scene:has(.overview-sheet) {
+  padding: 0;
 }

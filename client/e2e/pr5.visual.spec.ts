@@ -71,7 +71,9 @@ test.describe("overview desks", () => {
     await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
     await expect(page.locator(".machine-line").first()).toContainText("generated · not verified");
     await expect(page.getByRole("img", { name: "Desk lamp, dark" })).toBeVisible();
-    await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "desk");
+    await expect(page.locator(".paper-slot")).toHaveAttribute("data-pose", "expanded");
+    await expect(page.locator(".overview-sheet")).toBeVisible();
+    await expect(page.locator(".desk-grid")).toHaveAttribute("data-sheet", "open");
     if (proj === "tablet-portrait") await keep(page, "agent-chat-tablet-portrait");
 
     await page.getByRole("button", { name: "Back" }).click();
@@ -118,8 +120,9 @@ test("reduced motion cuts the desk open to one frame", async ({ page }, info) =>
   await expect(page.locator(".desk-grid")).toHaveAttribute("data-still", "true");
   await page.getByRole("button", { name: "Courier" }).click();
   await expect(page.getByRole("heading", { name: "Courier chat" })).toBeVisible();
-  await expect(page.locator(".agent-desk")).toHaveCount(0);
-  expect(await page.locator(".study-stage").evaluate((el) => el.getAnimations().length)).toBe(0);
+  await expect(page.locator(".overview-sheet")).toHaveAttribute("data-still", "true");
+  await expect(page.locator(".desk-grid")).toHaveAttribute("data-count", "3");
+  expect(await page.locator(".overview-sheet").evaluate((el) => el.getAnimations({ subtree: true }).length)).toBe(0);
 });
 
 test("axe has no serious or critical issues on the desk grid", async ({ page }, info) => {

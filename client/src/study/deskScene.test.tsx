@@ -6,8 +6,11 @@ import { grayscaleGrid } from "../design/spriteGrid";
 import { deskLightPool, faceWashByMark, paperLightPool, seatedByMark, seatMarks } from "../design/sprites/seatedAgent";
 import { statusChip } from "../design/type";
 import type { TeamAgent } from "../team/chatStore";
+import { formatDeskTime } from "./deskStamp";
 import { DeskGrid } from "./DeskGrid";
 import deskSource from "./DeskGrid.tsx?raw";
+import pauseSource from "./deskPause.ts?raw";
+import sheetSource from "./OverviewSheet.tsx?raw";
 import { lampArt } from "./lampArt";
 
 const agents: readonly TeamAgent[] = [
@@ -24,7 +27,7 @@ describe("overview desk scene", () => {
   it("engraves a name plaque and parks the status token beside the lamp", async () => {
     const user = userEvent.setup();
     const opened: string[] = [];
-    render(<DeskGrid agents={agents} still expandingId={null} onOpen={(id) => opened.push(id)} />);
+    render(<DeskGrid teamId="hale-design-lab" agents={agents} still expandingId={null} onOpen={(id) => opened.push(id)} />);
 
     const room = document.querySelector(".desk-room");
     expect(room).toHaveAttribute("data-scene", "row");
@@ -57,10 +60,24 @@ describe("overview desk scene", () => {
 
     await user.click(screen.getByRole("button", { name: /Atelier/ }));
     expect(opened).toEqual(["atelier"]);
+
+    const ceo = document.querySelector(".agent-desk[data-agent='ceo'] .desk-stamp");
+    expect(ceo).toHaveAttribute("data-task", "Publish the forge note");
+    expect(ceo?.querySelector(".desk-stamp-agent")).toHaveTextContent("CEO");
+    expect(ceo?.querySelector(".desk-stamp-task")).toHaveTextContent("Publish the forge note");
+    expect(ceo?.querySelector("time")).toHaveAttribute("dateTime", "2026-10-29T08:14:00Z");
+    expect(ceo?.querySelector("time")).toHaveTextContent(formatDeskTime("2026-10-29T08:14:00Z"));
+    const atelier = document.querySelector(".agent-desk[data-agent='atelier'] .desk-stamp");
+    expect(atelier).toHaveAttribute("data-task", "idle");
+    expect(atelier?.querySelector(".desk-stamp-task")).toHaveTextContent("idle");
+    expect(atelier?.querySelector("time")).toHaveAttribute("dateTime", "2026-10-29T08:20:00Z");
+    const courier = document.querySelector(".agent-desk[data-agent='courier'] .desk-stamp");
+    expect(courier).toHaveAttribute("data-task", "The lamp is out");
+    expect(courier?.querySelector("time")).toHaveAttribute("dateTime", "2026-10-29T08:22:00Z");
   });
 
   it("seats one figure per desk and pools lamp light only while working", () => {
-    render(<DeskGrid agents={agents} still expandingId={null} onOpen={() => {}} />);
+    render(<DeskGrid teamId="hale-design-lab" agents={agents} still expandingId={null} onOpen={() => {}} />);
 
     const seats = document.querySelectorAll(".agent-seat");
     expect(seats).toHaveLength(agents.length);
@@ -120,7 +137,7 @@ describe("overview desk scene", () => {
       { id: "quire", name: "Quire", status: "done", title: "Sheet closed" },
       { id: "shard", name: "Shard", status: "failed", title: "Lamp fallen" },
     ];
-    render(<DeskGrid agents={row} still expandingId={null} onOpen={() => {}} />);
+    render(<DeskGrid teamId="status-frame" agents={row} still expandingId={null} onOpen={() => {}} />);
 
     expect(document.querySelector(".agent-desk[data-status='waiting'] .agent-seat")).toHaveAttribute("data-pose", "raised-hand");
     expect(document.querySelector(".agent-desk[data-status='waiting'] .raised-hand")).toBeTruthy();
@@ -141,6 +158,34 @@ describe("overview desk scene", () => {
   });
 
   it("has no human-vault write path on the desk scene", () => {
-    expect(deskSource).not.toMatch(/humanNotes|humanRevisions|saveHumanEdit|fetch\(|vault:\s*"human"/);
+    const forbidden = /humanNotes|humanRevisions|machineNotes|saveHumanEdit|saveMachineOutput|fetch\(|vault:\s*"human"/;
+    expect(deskSource).not.toMatch(forbidden);
+    expect(pauseSource).not.toMatch(forbidden);
+    expect(sheetSource).not.toMatch(forbidden);
+  });
+
+  it("pulls the lamp chain without opening the desk or approving", async () => {
+    const user = userEvent.setup();
+    const opened: string[] = [];
+    render(<DeskGrid teamId="hale-design-lab" agents={agents} still expandingId={null} onOpen={(id) => opened.push(id)} />);
+    const chain = screen.getByRole("switch", { name: "Pause CEO" });
+    expect(chain).toHaveAttribute("data-pattern", "hanging");
+    expect(chain).toHaveAttribute("aria-checked", "false");
+    await user.click(chain);
+    expect(opened).toEqual([]);
+    expect(screen.getByRole("switch", { name: "Resume CEO" })).toHaveAttribute("data-pattern", "pulled");
+    const desk = document.querySelector(".agent-desk[data-agent='ceo']");
+    expect(desk).toHaveAttribute("data-status", "working");
+    expect(desk).toHaveAttribute("data-paused", "true");
+    expect(desk).toHaveAttribute("data-work", "halted");
+    expect(desk?.querySelector(".status-frame")).toHaveAttribute("data-state", "working");
+    expect(desk?.querySelector(".status-frame")).toHaveTextContent("Working");
+    expect(desk?.querySelector("[data-light-pool]")).toBeNull();
+    expect(desk?.querySelector(".lamp-flame")).toHaveAttribute("data-flicker", "still");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("switch", { name: "Resume CEO" }));
+    expect(document.querySelector(".agent-desk[data-agent='ceo']")).toHaveAttribute("data-paused", "false");
+    expect(document.querySelectorAll(".agent-desk[data-agent='ceo'] [data-light-pool]")).toHaveLength(3);
+    expect(opened).toEqual([]);
   });
 });
