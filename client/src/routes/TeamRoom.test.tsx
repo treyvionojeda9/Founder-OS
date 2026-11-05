@@ -1,9 +1,10 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { lampArt } from "../study/lampArt";
-import { localDb, noteRepo } from "../storage/services";
+import { localDb, noteRepo, sessionSource } from "../storage/services";
+import { SessionProvider } from "../storage/session";
 import { listTeams, resetChatForTests } from "../team/chatStore";
 import { TeamRoom } from "./TeamRoom";
 
@@ -28,15 +29,18 @@ afterEach(async () => {
   resetChatForTests();
   vi.restoreAllMocks();
   window.matchMedia = originalMatchMedia;
+  sessionSource.principal = "human";
   localDb.close();
   await localDb.delete();
 });
 
 function renderRoom(id = "hale-design-lab") {
   return render(
-    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <TeamRoom teamId={id} />
-    </MemoryRouter>,
+    <SessionProvider>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <TeamRoom teamId={id} />
+      </MemoryRouter>
+    </SessionProvider>,
   );
 }
 
@@ -87,14 +91,13 @@ describe("CEO paper chat", () => {
     expect(await localDb.humanNotes.count()).toBe(0);
   });
 
-  it("keeps Library and Team as stubs", async () => {
+  it("keeps Team as a stub", async () => {
     const user = userEvent.setup();
     renderRoom();
-    await user.click(screen.getByRole("button", { name: "Library" }));
-    expect(screen.getByText(/Library is a stub/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Close" }));
     await user.click(screen.getByRole("button", { name: "Team" }));
     expect(screen.getByText(/Team is a stub/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.getByRole("heading", { name: "CEO chat" })).toBeInTheDocument();
   });
 
   it("lifts the desk paper and sets it back down", async () => {
@@ -196,5 +199,169 @@ describe("team overview desks", () => {
     expect(screen.getByText(/lamp is out/)).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Desk lamp, failed" })).toBeInTheDocument();
     expect(document.querySelector(".agent-desk")).not.toBeInTheDocument();
+  });
+});
+
+describe("work library shelf", () => {
+  async function openLibrary() {
+    const user = userEvent.setup();
+    renderRoom();
+    await user.click(screen.getByRole("button", { name: "Library" }));
+    await waitFor(() => {
+      expect(document.querySelector(".library-room")).toHaveAttribute("data-ready", "true");
+    });
+    return user;
+  }
+
+  it("shows an empty human shelf and Back returns to the CEO study", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const user = await openLibrary();
+    expect(screen.getByRole("heading", { name: "Library" })).toBeInTheDocument();
+    expect(screen.getByText("The shelf is bare.")).toBeInTheDocument();
+    expect(screen.getByText("Human notes for this team.")).toBeInTheDocument();
+    expect(document.querySelector(".library-room")).toHaveAttribute("data-vault", "human");
+    expect(screen.queryByText(/Library is a stub/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/machine shelf/i)).not.toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "CEO chat" })).toBeInTheDocument();
+    expect(document.querySelector(".library-room")).not.toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("lists human notes, opens one, and saves an edit", async () => {
+    await noteRepo.saveHumanEdit(
+      {
+        id: "HN-OLDER",
+        projectId: "work:hale-design-lab",
+        vault: "human",
+        content: "Lamp hours on the forge.",
+        revision: 1,
+        updatedAt: "2026-10-29T09:00:00.000Z",
+      },
+      "human",
+    );
+    await noteRepo.saveHumanEdit(
+      {
+        id: "HN-NEWER",
+        projectId: "work:hale-design-lab",
+        vault: "human",
+        content: "A margin I kept.",
+        revision: 1,
+        updatedAt: "2026-10-29T10:00:00.000Z",
+      },
+      "human",
+    );
+    await noteRepo.saveMachineOutput(
+      {
+        id: "MN-SHELFMACHINE0000000001",
+        projectId: "work:hale-design-lab",
+        vault: "machine",
+        content: "A machine draft that must stay off the shelf.",
+        revision: 1,
+        updatedAt: "2026-10-29T13:00:00.000Z",
+      },
+      "machine",
+    );
+
+    const user = await openLibrary();
+    expect(screen.getByRole("button", { name: "A margin I kept." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Lamp hours on the forge." })).toBeInTheDocument();
+    expect(screen.queryByText("A machine draft that must stay off the shelf.")).not.toBeInTheDocument();
+    expect(screen.queryByText("The shelf is bare.")).not.toBeInTheDocument();
+    const spines = document.querySelectorAll(".spine");
+    expect(spines[0]?.getAttribute("data-band")).not.toBe(spines[1]?.getAttribute("data-band"));
+
+    await user.click(screen.getByRole("button", { name: "A margin I kept." }));
+    expect(screen.getByRole("heading", { name: "A margin I kept." })).toBeInTheDocument();
+    const box = screen.getByRole("textbox", { name: "Your note" });
+    expect(box).toHaveValue("A margin I kept.");
+    await user.clear(box);
+    await user.type(box, "A margin I rewrote.");
+    await user.click(screen.getByRole("button", { name: "Save this note" }));
+    expect(await screen.findByText("Saved on the shelf.")).toBeInTheDocument();
+
+    const kept = await localDb.humanNotes.get("HN-NEWER");
+    expect(kept).toMatchObject({
+      vault: "human",
+      projectId: "work:hale-design-lab",
+      content: "A margin I rewrote.",
+      revision: 2,
+    });
+    expect(await localDb.machineNotes.count()).toBe(1);
+    expect((await localDb.machineNotes.toArray())[0]?.content).toBe("A machine draft that must stay off the shelf.");
+
+    await user.click(screen.getByRole("button", { name: "Set it down" }));
+    expect(screen.getByRole("heading", { name: "Library" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "A margin I rewrote." })).toBeInTheDocument();
+  });
+
+  it("places a new sheet only when a person saves it", async () => {
+    const user = await openLibrary();
+    await user.click(screen.getByRole("button", { name: "Place a sheet" }));
+    await user.click(screen.getByRole("button", { name: "Save this note" }));
+    expect(await screen.findByText("Write a line before you save it.")).toBeInTheDocument();
+    expect(await localDb.humanNotes.count()).toBe(0);
+
+    await user.type(screen.getByRole("textbox", { name: "Your note" }), "Filed from the shelf.");
+    await user.click(screen.getByRole("button", { name: "Save this note" }));
+    expect(await screen.findByText("Saved on the shelf.")).toBeInTheDocument();
+    const kept = await localDb.humanNotes.toArray();
+    expect(kept).toHaveLength(1);
+    expect(kept[0]?.id.startsWith("HN-")).toBe(true);
+    expect(kept[0]).toMatchObject({ vault: "human", projectId: "work:hale-design-lab", content: "Filed from the shelf." });
+    expect(await localDb.machineNotes.count()).toBe(0);
+  });
+
+  it("refuses a machine principal before any human vault write", async () => {
+    await noteRepo.saveHumanEdit(
+      {
+        id: "HN-READ",
+        projectId: "work:hale-design-lab",
+        vault: "human",
+        content: "Read this. Do not overwrite it.",
+        revision: 1,
+        updatedAt: "2026-10-29T09:00:00.000Z",
+      },
+      "human",
+    );
+    sessionSource.principal = "machine";
+    const saveHuman = vi.spyOn(noteRepo, "saveHumanEdit");
+    const user = await openLibrary();
+    await user.click(screen.getByRole("button", { name: "Read this. Do not overwrite it." }));
+    await user.type(screen.getByRole("textbox", { name: "Your note" }), " Extra.");
+    await user.click(screen.getByRole("button", { name: "Save this note" }));
+    expect(await screen.findByText("Only you can write on this sheet.")).toBeInTheDocument();
+    expect(saveHuman).not.toHaveBeenCalled();
+    expect(await localDb.humanNotes.get("HN-READ")).toMatchObject({
+      content: "Read this. Do not overwrite it.",
+      revision: 1,
+    });
+  });
+
+  it("returns to Overview when the shelf was opened from the desks", async () => {
+    preferStillFrames();
+    const user = userEvent.setup();
+    renderRoom();
+    await user.click(screen.getByRole("tab", { name: "Overview" }));
+    await user.click(screen.getByRole("button", { name: "Library" }));
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Library" })).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
+    expect(document.querySelector(".desk-grid")).toHaveAttribute("data-count", "3");
+    expect(document.querySelector(".library-room")).not.toBeInTheDocument();
+  });
+
+  it("cuts the open sheet to one frame when motion is reduced", async () => {
+    preferStillFrames();
+    const user = await openLibrary();
+    await user.click(screen.getByRole("button", { name: "Place a sheet" }));
+    const paper = document.querySelector(".library-paper");
+    expect(paper).toHaveAttribute("data-still", "true");
+    expect(paper).toHaveAttribute("data-pose", "lifted");
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("heading", { name: "Library" })).toBeInTheDocument();
+    expect(document.querySelector(".library-paper")).not.toBeInTheDocument();
   });
 });
