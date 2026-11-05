@@ -1116,16 +1116,18 @@ html:has(.room-portal-layer) body {
 .desk-grid {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 4px 2px 12px;
+  gap: 8px;
+  padding: 4px 0 0;
 }
 
 .overview-title,
 .overview-legend {
   color: var(--paper);
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .overview-legend {
@@ -1134,31 +1136,59 @@ html:has(.room-portal-layer) body {
   line-height: var(--leading-body);
 }
 
+/* One shared study hall. Desks sit on the floor in a single row. */
+.desk-room {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border: 4px solid var(--darkwood);
+  background: var(--night);
+}
+
 .desk-grid-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 12px;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
+  gap: 16px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5%;
+  z-index: 1;
+}
+
+.desk-grid-list > li {
+  min-width: 0;
+  display: flex;
 }
 
 .agent-desk {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   align-items: stretch;
-  gap: 8px;
   width: 100%;
+  min-width: 0;
   min-height: 48px;
-  padding: 8px;
-  background: var(--night);
+  padding: 0;
+  background: transparent;
   color: var(--paper);
-  border: 4px solid var(--darkwood);
+  border: 0;
+  box-shadow: none;
   text-align: left;
 }
 
-.agent-desk[data-status="working"] {
-  box-shadow: inset 0 0 0 4px var(--ember);
+.agent-desk:hover,
+.agent-desk:active {
+  background: transparent;
+  color: var(--paper);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .agent-desk[data-expanding="true"] {
@@ -1171,13 +1201,11 @@ html:has(.room-portal-layer) body {
   transition: none;
 }
 
-.agent-desk-room {
-  position: relative;
+.agent-desk-bay {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 260px;
-  background: var(--night);
-  border: 4px solid var(--darkwood);
-  overflow: hidden;
+  min-width: 0;
 }
 
 .agent-desk-wall {
@@ -1185,18 +1213,75 @@ html:has(.room-portal-layer) body {
   left: 0;
   right: 0;
   top: 0;
-  height: 34%;
+  bottom: clamp(200px, 36%, 300px);
   z-index: 0;
+}
+
+.desk-room-windows {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 20px;
+  height: 104px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 16px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.desk-room-window {
+  position: relative;
+  border: 4px solid var(--wood);
+  background: var(--night);
+  box-shadow: inset 0 0 0 4px var(--slate);
+}
+
+.desk-room-window::before,
+.desk-room-window::after {
+  content: "";
+  position: absolute;
+  background: var(--darkwood);
+}
+
+.desk-room-window::before {
+  left: 50%;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  margin-left: -2px;
+}
+
+.desk-room-window::after {
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  height: 4px;
+  margin-top: -2px;
 }
 
 .agent-desk-wainscot {
   position: absolute;
   left: 0;
   right: 0;
-  top: 16%;
-  height: 36%;
+  top: auto;
+  height: min(220px, 30%);
+  bottom: clamp(200px, 36%, 300px);
   z-index: 0;
-  border-top: 4px solid var(--wood);
+  pointer-events: none;
+}
+
+.desk-room-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: calc(clamp(200px, 36%, 300px) + min(220px, 30%));
+  height: 8px;
+  background: var(--wood);
+  box-shadow: 0 4px 0 var(--darkwood);
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -1205,27 +1290,49 @@ html:has(.room-portal-layer) body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 52%;
-  z-index: 0;
+  height: clamp(200px, 36%, 300px);
+  z-index: 1;
   border-top: 4px solid var(--darkwood);
 }
 
+.agent-desk-lamp-row {
+  order: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 4% 0 6%;
+  margin-bottom: -14px;
+  position: relative;
+  z-index: 2;
+}
+
+.agent-desk-lamp {
+  flex: none;
+  line-height: 0;
+}
+
 .agent-desk-top {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: 20%;
+  order: 2;
+  position: relative;
   height: 36px;
+  margin: 0 4%;
   border: 4px solid var(--darkwood);
   box-shadow: inset 0 -4px 0 var(--darkwood);
   z-index: 1;
 }
 
+.agent-desk[data-status="working"] .agent-desk-top {
+  box-shadow:
+    inset 0 4px 0 var(--ember),
+    inset 0 -4px 0 var(--darkwood);
+}
+
 .agent-desk-top::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 8%;
+  right: 8%;
   top: 100%;
   height: 8px;
   background: var(--darkwood);
@@ -1234,10 +1341,10 @@ html:has(.room-portal-layer) body {
 
 .agent-desk-sheet {
   position: absolute;
-  right: 16%;
-  bottom: 30%;
-  width: 42px;
-  height: 28px;
+  right: 8%;
+  top: -16px;
+  width: 36px;
+  height: 24px;
   background: var(--paper);
   border: 3px solid var(--darkwood);
   z-index: 2;
@@ -1254,20 +1361,20 @@ html:has(.room-portal-layer) body {
   clip-path: polygon(100% 0, 0 0, 100% 100%);
 }
 
-.agent-desk-lamp {
-  position: absolute;
-  left: 14%;
-  bottom: 26%;
-  z-index: 3;
-}
-
-.agent-desk-plate {
+.agent-desk-plaque {
+  order: 3;
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 48px;
-  padding: 0 4px 2px;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin: 8px 10% 0;
+  padding: 10px 8px;
+  background: var(--darkwood);
+  border: 4px solid var(--wood);
+  box-shadow:
+    inset 0 0 0 4px var(--night),
+    0 8px 0 var(--darkwood);
+  text-align: center;
 }
 
 .agent-desk-name {
@@ -1277,11 +1384,16 @@ html:has(.room-portal-layer) body {
   color: var(--paper);
 }
 
+.agent-desk .status-chip {
+  flex: none;
+  margin-top: 16px;
+  box-shadow: 3px 3px 0 var(--darkwood);
+}
+
 .agent-desk-state {
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
-  color: var(--paper);
 }
 
 .study-stage {
@@ -1723,12 +1835,20 @@ html:has(.room-portal-layer) body {
 
 .app[data-layout="landscape"] .desk-grid-list,
 .app[data-layout="desktop"] .desk-grid-list {
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
 }
 
-.app[data-layout="landscape"] .agent-desk-room,
-.app[data-layout="desktop"] .agent-desk-room {
-  height: 280px;
+.app[data-layout="portrait"] .agent-desk-wainscot {
+  top: 148px;
+  height: auto;
+  bottom: clamp(200px, 36%, 300px);
+}
+
+.app[data-layout="portrait"] .desk-room-rail {
+  top: 140px;
+  bottom: auto;
 }
 
 .app[data-layout="landscape"] .paper-slot[data-pose="desk"],
@@ -2846,6 +2966,10 @@ input {
   background-image: var(--mat-plaster);
 }
 
+.desk-room .agent-desk-wall {
+  background-size: 32px 32px;
+}
+
 [data-material="wainscot"] {
   background-color: var(--darkwood);
   background-image: var(--mat-wainscot);
@@ -2871,4 +2995,10 @@ input {
 .app .study-scene:has(.library-room),
 .app .study-scene:has(.team-board) {
   padding: 0;
+}
+
+.app .study-scene:has(.desk-grid) {
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
