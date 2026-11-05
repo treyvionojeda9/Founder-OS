@@ -4,6 +4,7 @@ import { localDb, noteRepo } from "../storage/services";
 import {
   appendFounderLine,
   isMachineLine,
+  linesForAgent,
   listTeams,
   resetChatForTests,
   teamById,
@@ -39,6 +40,33 @@ describe("team chat store", () => {
     const hale = teamById("hale-design-lab");
     expect(hale?.agents.map((agent) => agent.status)).toEqual(["working", "idle", "failed"]);
     expect(transcriptFor("hale-design-lab").some((line) => isMachineLine(line) && line.action)).toBe(true);
+  });
+
+  it("gives every desk its own stamped machine lines and keeps founder chat off the vault", () => {
+    for (const team of listTeams()) {
+      for (const agent of team.agents) {
+        const lines = linesForAgent(team.id, agent.id);
+        const machine = lines.filter(isMachineLine);
+        expect(machine.length).toBeGreaterThan(0);
+        for (const line of machine) {
+          expect(line.agentId).toBe(agent.id);
+          expect(line.record).toBe("machine");
+          expect(line.source.length).toBeGreaterThan(0);
+          expect(line.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+        }
+      }
+    }
+
+    const atelier = appendFounderLine("hale-design-lab", "Leave the swatch on this desk.", "atelier");
+    expect(atelier.record).toBe("chat");
+    expect(atelier.agentId).toBe("atelier");
+    expect(linesForAgent("hale-design-lab", "atelier").some((line) => line.body === "Leave the swatch on this desk.")).toBe(
+      true,
+    );
+    expect(linesForAgent("hale-design-lab", "ceo").some((line) => line.body === "Leave the swatch on this desk.")).toBe(
+      false,
+    );
+    expect(linesForAgent("hale-design-lab", "ceo").some((line) => line.body.includes("forge note"))).toBe(true);
   });
 
   it("appends a founder line without touching the human vault table", async () => {
