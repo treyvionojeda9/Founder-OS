@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { Sprite } from "../design/Sprite";
 import { StatusFrame } from "../design/StatusFrame";
 import { STATUS_LEGEND } from "../design/statusFrame";
@@ -12,6 +12,8 @@ import { SpaceWash } from "../hall/SpaceWash";
 import { EmptyDesk } from "./EmptyDesk";
 import { MailTray } from "./MailTray";
 import type { MailItem } from "./mailSlot";
+import { PipelineRooms } from "./PipelineRooms";
+import { deskInStage, stageForStatus, type PipelineStageId } from "./pipelineRooms";
 import { WorkingLamp } from "./WorkingLamp";
 
 type DeskGridProps = {
@@ -32,6 +34,8 @@ type DeskGridProps = {
   onOpenMail?: (item: MailItem) => void;
   /** Vacant floor only. Opens the existing Team swap slip. */
   onSeat?: () => void;
+  /** Stage rooms under the desks. The status-frame gallery leaves this off. */
+  pipeline?: boolean;
 };
 
 const FLOOR_DEPTHS = ["7", "6", "5", "4", "3", "2", "1", "0"] as const;
@@ -50,6 +54,7 @@ export function DeskGrid({
   focusedId = null,
   onOpenMail,
   onSeat,
+  pipeline: showPipeline = true,
 }: DeskGridProps) {
   const layout = useFormFactor();
   const arrange = layout === "desktop" ? "tiles" : "strip";
@@ -59,6 +64,8 @@ export function DeskGrid({
   const poolScale = 3;
   const roomRef = useRef<HTMLDivElement>(null);
   const tilesRef = useRef<HTMLFieldSetElement>(null);
+  const pipelineRef = useRef<HTMLDivElement>(null);
+  const [pipeline, setPipeline] = useState<PipelineStageId | null>(null);
   const openTimer = useRef<number | null>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
   const pauseKey = useSyncExternalStore(subscribeWorkPause, pauseSnapshot, () => "");
@@ -70,9 +77,14 @@ export function DeskGrid({
     if (covered) room.setAttribute("inert", "");
     else room.removeAttribute("inert");
     const tilesNode = tilesRef.current;
-    if (!tilesNode) return;
-    if (covered) tilesNode.setAttribute("inert", "");
-    else tilesNode.removeAttribute("inert");
+    if (tilesNode) {
+      if (covered) tilesNode.setAttribute("inert", "");
+      else tilesNode.removeAttribute("inert");
+    }
+    const rooms = pipelineRef.current;
+    if (!rooms) return;
+    if (covered) rooms.setAttribute("inert", "");
+    else rooms.removeAttribute("inert");
   }, [covered]);
 
   useEffect(() => {
@@ -128,6 +140,7 @@ export function DeskGrid({
       data-focus={focusedId ?? "none"}
       data-space="work"
       data-lighting="ember"
+      data-pipeline={showPipeline ? (pipeline ?? "all") : undefined}
       style={arrange === "tiles" ? { ["--tile-count" as string]: String(tiles) } : undefined}
     >
       <h1 className="overview-title" hidden={covered}>
@@ -142,6 +155,7 @@ export function DeskGrid({
         ref={roomRef}
         aria-hidden={covered ? true : undefined}
       >
+        <div className="desk-hall">
         <span className="agent-desk-wall" data-material="plaster" aria-hidden="true">
           <SpaceWash space="work" part="wall" />
         </span>
@@ -198,13 +212,22 @@ export function DeskGrid({
             const waiting = agent.status === "waiting";
             const stamp = deskStampFor(agent, linesForAgent(teamId, agent.id));
             const focused = focusedId === agent.id;
+            const stage = stageForStatus(agent.status);
+            const inStage = deskInStage(agent.status, showPipeline ? pipeline : null);
             return (
-              <li key={agent.id} data-agent={agent.id} data-focused={focused ? "true" : "false"}>
+              <li
+                key={agent.id}
+                data-agent={agent.id}
+                data-focused={focused ? "true" : "false"}
+                data-stage={showPipeline ? stage : undefined}
+                data-stage-match={showPipeline ? (inStage ? "true" : "false") : undefined}
+              >
                 <button
                   type="button"
                   className="agent-desk"
                   data-agent={agent.id}
                   data-status={agent.status}
+                  data-stage={showPipeline ? stage : undefined}
                   data-paused={paused ? "true" : "false"}
                   data-work={paused ? "halted" : "live"}
                   data-focused={focused ? "true" : "false"}
@@ -306,6 +329,16 @@ export function DeskGrid({
         </div>
         </div>
         <MailTray teamId={teamId} agents={agents} still={still} onOpen={onOpenMail ?? (() => {})} />
+        </div>
+        {showPipeline ? (
+          <PipelineRooms
+            ref={pipelineRef}
+            agents={agents}
+            still={still}
+            filter={pipeline}
+            onFilter={setPipeline}
+          />
+        ) : null}
       </div>
       {canFocus && agents.length > 1 ? (
         <fieldset ref={tilesRef} className="tile-count" data-reach="local" aria-label="Desk tiles">

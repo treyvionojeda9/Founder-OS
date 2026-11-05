@@ -1306,9 +1306,19 @@ html:has(.room-portal-layer) body {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border: 4px solid var(--darkwood);
   background: var(--night);
   image-rendering: pixelated;
+}
+
+/* The painted hall keeps its own box. The pipeline band sits inside the room, on the near edge. */
+.desk-hall {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .desk-floor-row {
@@ -6184,5 +6194,263 @@ html[data-recede="dim"] .mail-caption {
   .pixel-bar a.text-link {
     transition: none;
     animation: none;
+  }
+}
+
+/* Pipeline rooms. Outline pattern carries the stage. Tokens use the StatusFrame glyph. */
+.pipeline-rooms {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 8px;
+  background: var(--night);
+  border-top: 4px solid var(--darkwood);
+  image-rendering: pixelated;
+}
+
+.pipeline-room {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+  min-height: 96px;
+  padding: 6px;
+  background-color: var(--night);
+  color: var(--paper);
+  border: 4px solid var(--paper);
+  box-shadow: 4px 4px 0 var(--slate);
+  text-align: center;
+}
+
+.pipeline-room:hover {
+  background-color: var(--slate);
+}
+
+.pipeline-room:active {
+  background-color: var(--plum);
+}
+
+.pipeline-room[aria-pressed="true"],
+.pipeline-room[aria-pressed="true"]:hover {
+  background-color: var(--ember);
+}
+
+.pipeline-room[aria-pressed="true"] .pipeline-room-name {
+  color: var(--night);
+  box-shadow: inset 0 -6px 0 var(--night);
+}
+
+.pipeline-room[data-pattern="solid"] {
+  border-style: solid;
+}
+
+.pipeline-room[data-pattern="dash"] {
+  border-style: dashed;
+}
+
+.pipeline-room[data-pattern="double"] {
+  border: 3px solid var(--paper);
+  box-shadow:
+    inset 0 0 0 3px var(--night),
+    inset 0 0 0 6px var(--paper),
+    4px 4px 0 var(--slate);
+}
+
+.pipeline-room[data-pattern="corners"] {
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper));
+  background-repeat: no-repeat;
+  background-size: 16px 4px, 4px 16px, 16px 4px, 4px 16px, 16px 4px, 4px 16px, 16px 4px, 4px 16px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+  background-origin: border-box;
+  background-clip: border-box;
+}
+
+.pipeline-window {
+  display: block;
+  width: 28px;
+  height: 14px;
+  margin: 0 auto;
+  background:
+    linear-gradient(var(--darkwood), var(--darkwood)) center / 3px 100% no-repeat,
+    linear-gradient(var(--darkwood), var(--darkwood)) center / 100% 3px no-repeat,
+    var(--slate);
+  border: 3px solid var(--darkwood);
+}
+
+.pipeline-room-name {
+  display: block;
+  color: var(--paper);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.pipeline-floor {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: end;
+  align-items: end;
+  justify-content: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 4px 4px 4px 10px;
+  border-top: 4px solid var(--darkwood);
+}
+
+.pipeline-floor::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  top: 0;
+  background: var(--darkwood);
+}
+
+.pipeline-token {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: end;
+  gap: 2px;
+  padding: 2px;
+  background: var(--darkwood);
+  image-rendering: pixelated;
+}
+
+.pipeline-token[data-pattern="solid"] {
+  outline: 3px solid var(--paper);
+  outline-offset: 0;
+}
+
+.pipeline-token[data-pattern="dash"] {
+  outline: 3px dashed var(--paper);
+  outline-offset: 0;
+}
+
+.pipeline-token[data-pattern="double"] {
+  outline: 3px solid var(--paper);
+  box-shadow:
+    inset 0 0 0 2px var(--darkwood),
+    inset 0 0 0 4px var(--paper);
+}
+
+.pipeline-token[data-pattern="corners"] {
+  background-image:
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame)),
+    linear-gradient(var(--flame), var(--flame));
+  background-size: 8px 3px, 3px 8px, 8px 3px, 3px 8px;
+  background-position: left top, left top, right bottom, right bottom;
+  background-repeat: no-repeat;
+  background-color: var(--darkwood);
+}
+
+.pipeline-token[data-pattern="crack"] {
+  outline: 3px dotted var(--paper);
+  border-bottom: 3px solid var(--wood);
+  outline-offset: 0;
+}
+
+.pipeline-glyph {
+  display: grid;
+  line-height: 0;
+}
+
+.pipeline-glyph .glyph-frame {
+  grid-area: 1 / 1;
+}
+
+.pipeline-rooms[data-frames="2"] .pipeline-token {
+  animation: pipeline-place 280ms steps(2, end) both;
+}
+
+.pipeline-token[data-frames="2"] .glyph-frame {
+  opacity: 0;
+}
+
+.pipeline-token[data-frames="2"] .glyph-frame[data-frame="0"] {
+  opacity: 1;
+  animation: status-glyph-hold 880ms steps(2, end) infinite;
+}
+
+.pipeline-token[data-frames="2"] .glyph-frame[data-frame="1"] {
+  animation: status-glyph-lift 880ms steps(2, end) infinite;
+}
+
+@keyframes pipeline-place {
+  from {
+    transform: translateX(-12px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.desk-grid[data-pipeline]:not([data-pipeline="all"]) .desk-grid-list > li[data-stage-match="false"] {
+  opacity: 0.32;
+}
+
+.desk-grid[data-pipeline="intake"] .desk-grid-list > li[data-stage-match="true"] .agent-desk-plaque {
+  outline: 4px solid var(--paper);
+  outline-offset: 2px;
+}
+
+.desk-grid[data-pipeline="working"] .desk-grid-list > li[data-stage-match="true"] .agent-desk-plaque {
+  outline: 4px dashed var(--paper);
+  outline-offset: 2px;
+}
+
+.desk-grid[data-pipeline="waiting"] .desk-grid-list > li[data-stage-match="true"] .agent-desk-plaque {
+  outline: 4px double var(--paper);
+  outline-offset: 2px;
+}
+
+.desk-grid[data-pipeline="done"] .desk-grid-list > li[data-stage-match="true"] .agent-desk-plaque {
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper)),
+    linear-gradient(var(--paper), var(--paper));
+  background-repeat: no-repeat;
+  background-size: 14px 4px, 4px 14px, 14px 4px, 4px 14px, 14px 4px, 4px 14px, 14px 4px, 4px 14px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+}
+
+@media (max-width: 640px) {
+  .pipeline-rooms {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .pipeline-room {
+    flex: 0 0 148px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  .pipeline-rooms .pipeline-token,
+  .pipeline-rooms .glyph-frame {
+    animation: none;
+    transform: none;
   }
 }
