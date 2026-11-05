@@ -2,7 +2,15 @@ import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent }
 import { Sprite } from "../design/Sprite";
 import { mailHand, mailSeal } from "../design/sprites/mailMarks";
 import { subscribeChat, type TeamAgent } from "../team/chatStore";
-import { filterMailItems, mailItemsFor, mailMark, mailSlotName, stepMailIndex, type MailItem } from "./mailSlot";
+import {
+  filterMailItems,
+  mailItemsFor,
+  mailMark,
+  mailSlotName,
+  mailSlotVisibleLabel,
+  stepMailIndex,
+  type MailItem,
+} from "./mailSlot";
 
 type MailTrayProps = {
   teamId: string;
@@ -127,7 +135,7 @@ export function MailTray({ teamId, agents, still, onOpen }: MailTrayProps) {
           <span className="mail-plaque-glyph" aria-hidden="true">
             <Sprite rows={items.some((item) => item.kind === "waiting") ? mailHand : mailSeal} scale={2} title="" />
           </span>
-          <span className="mail-count">{items.length}</span> <span className="mail-caption">Needs you</span>
+          <span className="mail-caption">{mailSlotVisibleLabel(items.length)}</span>
         </span>
       </button>
       {open ? (
