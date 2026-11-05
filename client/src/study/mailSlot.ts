@@ -102,7 +102,21 @@ export function stepMailIndex(index: number, count: number, direction: 1 | -1): 
   return next;
 }
 
-/** Starts with the plaque text (`{count} Needs you`) so the accessible name matches what is on the wood. */
+/** Words painted on the slot. The accessible name has to contain this phrase. */
+export const MAIL_SLOT_CAPTION = "Needs you";
+
+export function mailSlotVisibleLabel(count: number): string {
+  return `${count} ${MAIL_SLOT_CAPTION}`;
+}
+
+/**
+ * Accessible name for the slot mouth.
+ * It starts with the visible plaque (`2 Needs you`) so the name is not a mismatch,
+ * then announces the mail slot and how many items need you.
+ */
 export function mailSlotName(count: number): string {
-  return `${count} Needs you, mail slot`;
+  const visible = mailSlotVisibleLabel(count);
+  if (count === 0) return `${visible}, mail slot, nothing needs you`;
+  if (count === 1) return `${visible}, mail slot, 1 needs you`;
+  return `${visible}, mail slot, ${count} need you`;
 }
