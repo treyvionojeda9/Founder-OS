@@ -58,6 +58,19 @@ export function MailTray({ teamId, agents, still, onOpen }: MailTrayProps) {
     mouthRef.current?.focus();
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      // The ledger, an approval stamp, and a native dialog sit above the tray.
+      if (document.querySelector(".command-ledger, .approval-overlay, .board-overlay, dialog[open]")) return;
+      event.preventDefault();
+      close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   const toggle = () => {
     if (open) {
       close();

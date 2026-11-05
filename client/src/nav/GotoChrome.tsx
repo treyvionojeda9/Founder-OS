@@ -97,6 +97,8 @@ export function GotoChrome() {
   };
 
   const run = (entry: LedgerItem) => {
+    const sheet = document.querySelector("dialog.command-ledger");
+    if (sheet instanceof HTMLDialogElement && sheet.open && typeof sheet.close === "function") sheet.close();
     setOpen(false);
     const action = entry.action;
     window.setTimeout(() => {
@@ -168,9 +170,28 @@ export function GotoChrome() {
 
       if (!openRef.current || typing) return;
       const rows = itemsRef.current;
+      if (event.key === "Tab") {
+        const root = document.querySelector(".command-ledger");
+        if (!(root instanceof HTMLElement)) return;
+        const items = [...root.querySelectorAll<HTMLElement>("button, a[href], input, textarea, select, [tabindex]:not([tabindex='-1'])")].filter(
+          (el) => !el.hasAttribute("disabled") && el.tabIndex >= 0,
+        );
+        if (items.length === 0) {
+          event.preventDefault();
+          return;
+        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const index = items.indexOf(document.activeElement as HTMLElement);
+        const next = event.shiftKey ? items[(index <= 0 ? items.length : index) - 1] : items[(index + 1) % items.length];
+        next?.focus();
+        return;
+      }
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopImmediatePropagation();
+        const node = document.querySelector("dialog.command-ledger");
+        if (node instanceof HTMLDialogElement && node.open && typeof node.close === "function") node.close();
         setOpen(false);
         return;
       }
@@ -206,12 +227,27 @@ export function GotoChrome() {
       }
     };
     window.addEventListener(LEDGER_EVENT, onLedger);
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     return () => {
       window.removeEventListener(LEDGER_EVENT, onLedger);
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
     };
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const node = listRef.current?.closest("dialog");
+    if (!(node instanceof HTMLDialogElement)) return;
+    try {
+      if (!node.open) node.showModal();
+    } catch {
+      node.setAttribute("open", "");
+    }
+    node.dataset.modal = node.open ? "true" : "false";
+    return () => {
+      if (node.open && typeof node.close === "function") node.close();
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -219,12 +255,15 @@ export function GotoChrome() {
   const heading = roomHeading(stamp.room);
 
   return (
-    <div
+    <dialog
       className="command-ledger"
-      role="dialog"
       aria-modal="true"
       aria-label="Command ledger"
       data-ledger="open"
+      onCancel={(event) => {
+        event.preventDefault();
+        setOpen(false);
+      }}
       data-room={stamp.room}
       data-still={still ? "true" : "false"}
       data-frames={still ? "1" : "4"}
@@ -272,6 +311,6 @@ export function GotoChrome() {
           })}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

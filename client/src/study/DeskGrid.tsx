@@ -97,12 +97,19 @@ export function DeskGrid({
   }, []);
 
   useEffect(() => {
+    if (!covered) return;
+    setDrawerId(null);
+    setDrawerCursor(-1);
+  }, [covered]);
+
+  useEffect(() => {
     if (!drawerId || covered) return;
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      const target = event.target;
-      if (target instanceof Element && target.closest(".mail-slot[data-open='true'], .command-ledger")) return;
-      if (document.querySelector(".command-ledger")) return;
+      // Mail, the ledger, and a modal sheet are the top overlay. They take Escape first.
+      if (document.querySelector(".mail-slot[data-open='true'], .command-ledger, .approval-overlay, .board-overlay, dialog[open]")) {
+        return;
+      }
       event.preventDefault();
       event.stopImmediatePropagation();
       const id = drawerId;
