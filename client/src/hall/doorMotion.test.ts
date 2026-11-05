@@ -8,6 +8,7 @@ import {
   doorOpenSchedule,
   doorPath,
   prefersStillFrames,
+  roomFromPath,
 } from "./doorMotion";
 
 describe("door open schedule", () => {
@@ -40,5 +41,12 @@ describe("door open schedule", () => {
   it("sends work doors to a team page and school doors to a curriculum page", () => {
     expect(doorPath({ id: "hale-design-lab", section: "work" })).toBe("/team/hale-design-lab");
     expect(doorPath({ id: "reading-room", section: "school" })).toBe("/learn/reading-room");
+  });
+
+  it("routes team and school paths through the same portal kinds", () => {
+    expect(roomFromPath("/team/hale-design-lab")).toEqual({ kind: "team", id: "hale-design-lab" });
+    expect(roomFromPath("/learn/reading-room")).toEqual({ kind: "learn", id: "reading-room" });
+    expect(roomFromPath("/home")).toBeNull();
+    expect(roomFromPath("/settings")).toBeNull();
   });
 });

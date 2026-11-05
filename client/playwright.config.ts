@@ -25,22 +25,22 @@ export default defineConfig({
   projects: [
     {
       name: "tablet-portrait",
-      testIgnore: /door-video/,
+      testIgnore: /video\.spec/,
       use: { ...tablet, viewport: { width: 800, height: 1280 } },
     },
     {
       name: "tablet-landscape",
-      testIgnore: /door-video/,
+      testIgnore: /video\.spec/,
       use: { ...tablet, viewport: { width: 1280, height: 800 } },
     },
     {
       name: "desktop",
-      testIgnore: /door-video/,
+      testIgnore: /video\.spec/,
       use: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, hasTouch: false },
     },
     {
       name: "desktop-video",
-      testMatch: /door-video\.spec\.ts/,
+      testMatch: /video\.spec\.ts/,
       use: {
         viewport: { width: 1440, height: 900 },
         deviceScaleFactor: 1,

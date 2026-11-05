@@ -87,4 +87,34 @@ describe("CEO paper chat", () => {
     await user.click(screen.getByRole("button", { name: "Team" }));
     expect(screen.getByText(/Team is a stub/)).toBeInTheDocument();
   });
+
+  it("lifts the desk paper and sets it back down", async () => {
+    const user = userEvent.setup();
+    renderRoom();
+    const slot = () => document.querySelector(".paper-slot");
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+    expect(document.querySelector(".desk-top")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Forge note" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "CEO" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("heading", { name: "CEO chat" }));
+    expect(slot()).toHaveAttribute("data-pose", "lifted");
+    await user.click(screen.getByRole("button", { name: "Set it down" }));
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+
+    screen.getByRole("tabpanel").focus();
+    await user.keyboard("{Enter}");
+    expect(slot()).toHaveAttribute("data-pose", "lifted");
+    await user.keyboard("{Escape}");
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+
+    screen.getByRole("tabpanel").focus();
+    await user.keyboard(" ");
+    expect(slot()).toHaveAttribute("data-pose", "lifted");
+    await user.keyboard("{Escape}");
+    expect(slot()).toHaveAttribute("data-pose", "desk");
+
+    await user.click(screen.getByRole("textbox", { name: "Message the CEO" }));
+    expect(slot()).toHaveAttribute("data-pose", "lifted");
+  });
 });

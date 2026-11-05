@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useParams } from "react-router-dom";
 import { Sprite } from "../design/Sprite";
-import { founderEmber } from "../design/palette";
-import { agent, deskLampFailed, deskLampOff, deskLampOn } from "../design/sprites";
+import { agent, forgeNote } from "../design/sprites";
 import { useDoorShut } from "../hall/doorApi";
 import { useFormFactor } from "../hooks/useFormFactor";
+import { useStillFrame } from "../hooks/useStillFrame";
+import { PaperWash, StudyStage, type PaperPose } from "../study/StudyStage";
 import {
   appendFounderLine,
   formatMachineTime,
@@ -33,6 +34,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const team = teamById(teamId);
   const shut = useDoorShut();
   const layout = useFormFactor();
+  const still = useStillFrame();
   const agentScale = layout === "portrait" ? 3 : 2;
   const lampScale = layout === "portrait" ? 4 : 3;
   const lines = useSyncExternalStore(subscribeChat, () => transcriptFor(teamId), () => transcriptFor(teamId));
@@ -41,6 +43,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<MachineLine["action"] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [pose, setPose] = useState<PaperPose>("desk");
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -57,6 +60,16 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
       node.removeAttribute("open");
     };
   }, [pending]);
+
+  useEffect(() => {
+    if (pose !== "lifted") return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || pending) return;
+      setPose("desk");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pose, pending]);
 
   if (!team) {
     return (
@@ -100,13 +113,32 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     setDraft("");
   };
 
+  const lift = () => setPose("lifted");
+
+  const onPaperClick = (event: MouseEvent) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest("button, a, textarea, input, select, label")) return;
+    lift();
+  };
+
+  const onPaperKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest("button, textarea, input, select, a")) return;
+    if (target !== event.currentTarget && !target.classList.contains("paper-log")) return;
+    event.preventDefault();
+    lift();
+  };
+
   const tabs: { id: string; label: string }[] = [
     ...team.agents.map((agent) => ({ id: agent.id, label: agent.name })),
     { id: "overview", label: "Overview" },
   ];
 
   return (
-    <main className="study" data-lamp={lampStatus} data-preview={preview ? "true" : "false"}>
+    <main className="study" data-lamp={lampStatus} data-paper={pose} data-preview={preview ? "true" : "false"}>
       <header className="study-bar">
         <button type="button" className="text-link" onClick={() => shut(team.id)}>
           Back
@@ -166,78 +198,96 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
         })}
       </div>
       <div className="study-scene">
-        <div className="desk">
-          <div className="figures">
-            <Lamp status={lampStatus} scale={lampScale} />
-            <PaperGlow status={lampStatus} />
-            <figure className="figure">
+        <StudyStage
+          lampStatus={lampStatus}
+          lampScale={lampScale}
+          pose={pose}
+          still={still}
+          behind={
+            <figure className="figure ceo-stand">
               <Sprite rows={agent} scale={agentScale} title="CEO" />
               <figcaption>CEO</figcaption>
             </figure>
-          </div>
-          <div
-            className={lampStatus === "working" ? "paper is-lit" : "paper"}
-            onClick={() => {
-              if (onCeo) composerRef.current?.focus();
-            }}
-          >
+          }
+          onDesk={
+            <figure className="figure note-spot">
+              <Sprite rows={forgeNote} scale={layout === "portrait" ? 4 : 3} title="Forge note" />
+            </figure>
+          }
+          paper={
             <div
-              className="paper-log"
-              id={preview ? undefined : "study-panel"}
-              role="tabpanel"
-              aria-labelledby={!preview && !drawer ? `team-tab-${selected}` : undefined}
-              tabIndex={0}
-              aria-label="Paper chat"
+              className={lampStatus === "working" ? "paper is-lit" : "paper"}
+              onClick={onPaperClick}
+              onKeyDown={onPaperKeyDown}
             >
-              <h1>{panelTitle}</h1>
-              {drawer ? (
-                <p className="placeholder-copy">{drawerCopy(drawer)}</p>
-              ) : selected === "overview" ? (
-                <p className="placeholder-copy">
-                  Overview is a placeholder. Desks and lamps for the whole team are the next room.
-                </p>
-              ) : selected !== "ceo" ? (
-                <p className="placeholder-copy">
-                  {team.agents.find((agent) => agent.id === selected)?.name} is a placeholder. This agent has no desk
-                  in this pass.
-                </p>
-              ) : (
-                <ChatSheet
-                  lines={lines}
-                  notice={notice}
-                  onReview={(action) => {
-                    setNotice(null);
-                    setPending(action);
+              <PaperWash status={lampStatus} />
+              {pose === "lifted" ? (
+                <button
+                  type="button"
+                  className="set-down"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setPose("desk");
                   }}
-                />
-              )}
-              {drawer ? (
-                <button type="button" className="text-link sheet-close" onClick={() => setDrawer(null)}>
-                  Close
+                >
+                  Set it down
                 </button>
               ) : null}
-            </div>
-            {onCeo ? (
-              <form
-                className="paper-form"
-                onSubmit={send}
-                onClick={(event) => event.stopPropagation()}
+              <div
+                className="paper-log"
+                id={preview ? undefined : "study-panel"}
+                role="tabpanel"
+                aria-labelledby={!preview && !drawer ? `team-tab-${selected}` : undefined}
+                tabIndex={0}
+                aria-label="Paper chat"
               >
-                <label className="composer-label" htmlFor={preview ? undefined : "ceo-composer"}>
-                  Message the CEO
-                  <textarea
-                    id={preview ? undefined : "ceo-composer"}
-                    ref={composerRef}
-                    rows={layout === "portrait" ? 3 : 2}
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
+                <h1>{panelTitle}</h1>
+                {drawer ? (
+                  <p className="placeholder-copy">{drawerCopy(drawer)}</p>
+                ) : selected === "overview" ? (
+                  <p className="placeholder-copy">
+                    Overview is a placeholder. Desks and lamps for the whole team are the next room.
+                  </p>
+                ) : selected !== "ceo" ? (
+                  <p className="placeholder-copy">
+                    {team.agents.find((agent) => agent.id === selected)?.name} is a placeholder. This agent has no desk
+                    in this pass.
+                  </p>
+                ) : (
+                  <ChatSheet
+                    lines={lines}
+                    notice={notice}
+                    onReview={(action) => {
+                      setNotice(null);
+                      setPending(action);
+                    }}
                   />
-                </label>
-                <button type="submit">Send</button>
-              </form>
-            ) : null}
-          </div>
-        </div>
+                )}
+                {drawer ? (
+                  <button type="button" className="text-link sheet-close" onClick={() => setDrawer(null)}>
+                    Close
+                  </button>
+                ) : null}
+              </div>
+              {onCeo ? (
+                <form className="paper-form" onSubmit={send} onClick={(event) => event.stopPropagation()}>
+                  <label className="composer-label" htmlFor={preview ? undefined : "ceo-composer"}>
+                    Message the CEO
+                    <textarea
+                      id={preview ? undefined : "ceo-composer"}
+                      ref={composerRef}
+                      rows={layout === "portrait" ? 3 : 2}
+                      value={draft}
+                      onChange={(event) => setDraft(event.target.value)}
+                      onFocus={lift}
+                    />
+                  </label>
+                  <button type="submit">Send</button>
+                </form>
+              ) : null}
+            </div>
+          }
+        />
       </div>
       {!preview && pending ? (
         <dialog ref={dialogRef} className="approval" aria-labelledby="approval-title" aria-modal="true">
@@ -310,64 +360,4 @@ function ChatSheet({
       ) : null}
     </div>
   );
-}
-
-function Lamp({ status, scale }: { status: AgentStatus; scale: number }) {
-  const rows = status === "working" ? deskLampOn : status === "failed" ? deskLampFailed : deskLampOff;
-  const title =
-    status === "working" ? "Desk lamp, lit" : status === "failed" ? "Desk lamp, failed" : "Desk lamp, dark";
-  return (
-    <figure className="figure">
-      <Sprite rows={rows} scale={scale} title={title} />
-      <figcaption>{status === "working" ? "Working" : status === "failed" ? "Failed" : "Idle"}</figcaption>
-    </figure>
-  );
-}
-
-function PaperGlow({ status }: { status: AgentStatus }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    paintGlow(canvas, status);
-  }, [status]);
-  return <canvas ref={ref} className="paper-glow sprite" aria-hidden="true" />;
-}
-
-function paintGlow(canvas: HTMLCanvasElement, status: AgentStatus) {
-  const cols = 18;
-  const rows = 12;
-  const scale = 6;
-  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
-  canvas.width = cols * scale * dpr;
-  canvas.height = rows * scale * dpr;
-  canvas.style.width = `${cols * scale}px`;
-  canvas.style.height = `${rows * scale}px`;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, cols * scale, rows * scale);
-  for (let y = 0; y < rows; y += 1) {
-    for (let x = 0; x < cols; x += 1) {
-      const dx = x / (cols - 1);
-      const dy = y / (rows - 1);
-      const radius = Math.hypot(dx, dy);
-      let color: string | null = null;
-      if (status === "working") {
-        if (radius > 1) continue;
-        if ((x * 3 + y * 5) % 4 === 0 && radius > 0.4) continue;
-        color = radius < 0.42 ? founderEmber.flame : founderEmber.ember;
-      } else if (status === "failed") {
-        const spark = (x === 2 && y === 3) || (x === 4 && y === 2) || (x === 3 && y === 5);
-        if (!spark) continue;
-        color = founderEmber.plum;
-      } else if (y === rows - 1 && x < 3) {
-        color = founderEmber.darkwood;
-      }
-      if (!color) continue;
-      ctx.fillStyle = color;
-      ctx.fillRect(x * scale, y * scale, scale, scale);
-    }
-  }
 }
