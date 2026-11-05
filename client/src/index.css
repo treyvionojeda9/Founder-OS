@@ -7692,24 +7692,34 @@ html[data-recede="dim"] .mail-caption {
   .overview-desk .desk-top .fitted-sheet[data-pose="desk"] {
     top: 2px;
     bottom: auto;
-    /* 40% clears the bust. On a narrow tile that still meets the status chip, so never start inside it. */
-    left: max(40%, 120px);
-    right: 6%;
+    /* The lamp is 48px. 52px keeps a gutter. 14% stays inside the back-edge clip.
+       The head sits above the top, so the sheet can use the wood beside the lamp.
+       Body type only fit "I can" / "The" here; the meta face is the next pixel step. */
+    left: max(18%, 52px);
+    right: 14%;
     width: auto;
     height: auto;
-    /* Border sits inside the max-height. Two line boxes need the 8px frame as well. */
-    max-height: calc(2 * var(--leading-body) + 8px);
+    /* Border sits inside the max-height. Two meta line boxes need the 8px frame as well. */
+    max-height: calc(2 * var(--leading-meta) + 8px);
   }
 
   .overview-desk .overview-line {
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    max-height: calc(2 * var(--leading-body));
+    max-height: calc(2 * var(--leading-meta));
+    font-size: var(--type-meta);
+    line-height: var(--leading-meta);
   }
 
   .overview-desk .overview-paper {
-    max-height: calc(2 * var(--leading-body) + 8px);
-    padding: 0 6px;
+    max-height: calc(2 * var(--leading-meta) + 8px);
+    /* The fold is one pixel cell. Padding keeps the first line out from under it. */
+    padding: 0 10px 0 4px;
+  }
+
+  .overview-desk .overview-paper::before {
+    width: 10px;
+    height: 10px;
   }
 
   /* The apron used to hang off the rig and cut the plaque title. Keep it in the rig. */

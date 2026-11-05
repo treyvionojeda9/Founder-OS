@@ -538,6 +538,53 @@ async function assertFitted(page: Page) {
   await assertTextVisible(page);
 }
 
+/**
+ * First painted line on the overview sheet, ignoring the clamped tail.
+ * Pass 4 at 1024×640 / 3 tiles painted "I can" / "The" / "The"
+ * (the sheet reads "I can publis…", "The desk i…", "The lamp i…").
+ * N = 16 is the shortest 4-word fixture prefix ("The lamp is out.") and
+ * is past that failure: "I can publis" is 12, "I can" is 5, "The" is 3.
+ */
+const MIN_FIRST_LINE_CHARS = 16;
+const MIN_FIRST_LINE_WORDS = 4;
+
+async function assertFirstLinesReadable(page: Page) {
+  const lines = await page.locator(".agent-desk").evaluateAll((desks) =>
+    desks.map((desk) => {
+      const line = desk.querySelector(".overview-line");
+      const agent = desk.getAttribute("data-agent") ?? "desk";
+      const text = line?.textContent ?? "";
+      const node = line?.firstChild;
+      if (!line || !node || node.nodeType !== Node.TEXT_NODE) return { agent, raw: "", chars: 0, words: 0 };
+      const host = line.getBoundingClientRect();
+      const range = document.createRange();
+      let firstTop = Number.POSITIVE_INFINITY;
+      const chars: { ch: string; top: number }[] = [];
+      for (let index = 0; index < text.length; index += 1) {
+        range.setStart(node, index);
+        range.setEnd(node, index + 1);
+        const rect = range.getBoundingClientRect();
+        if (rect.width < 0.5 || rect.height < 0.5) continue;
+        const mid = rect.top + rect.height / 2;
+        if (mid < host.top - 1 || mid > host.bottom + 1) continue;
+        if (rect.top < firstTop) firstTop = rect.top;
+        chars.push({ ch: text[index] ?? "", top: rect.top });
+      }
+      const raw = chars
+        .filter((item) => Math.abs(item.top - firstTop) < 2)
+        .map((item) => item.ch)
+        .join("")
+        .trim();
+      return { agent, raw, chars: raw.length, words: raw.split(/\s+/).filter(Boolean).length };
+    }),
+  );
+  expect(lines.length).toBeGreaterThanOrEqual(3);
+  for (const line of lines) {
+    expect(line.chars, JSON.stringify(line)).toBeGreaterThanOrEqual(MIN_FIRST_LINE_CHARS);
+    expect(line.words, JSON.stringify(line)).toBeGreaterThanOrEqual(MIN_FIRST_LINE_WORDS);
+  }
+}
+
 async function applyTiles(page: Page, count: number) {
   const radio = page.getByRole("radio", { name: `${count} tiles` });
   if ((await radio.count()) > 0) {
@@ -600,6 +647,7 @@ test.describe("overview desks match the fitted desk", () => {
       for (const count of [2, 3, 4]) {
         await applyTiles(page, count);
         await assertFitted(page);
+        if (size.width === 1024 && size.height === 640 && count === 3) await assertFirstLinesReadable(page);
       }
       if (size.width !== 1024) continue;
       await applyTiles(page, 3);
