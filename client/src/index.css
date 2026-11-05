@@ -3418,7 +3418,11 @@ html:has(.room-portal-layer) body {
   color: var(--night);
   border: 4px solid var(--darkwood);
   padding: 20px;
-  max-width: min(520px, calc(100vw - 32px));
+  margin: auto;
+  width: min(640px, calc(100vw - 24px));
+  max-width: min(640px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
 }
 
 .path-panel::backdrop {
@@ -3453,6 +3457,238 @@ html:has(.room-portal-layer) body {
   font-family: var(--font-pixel);
   font-size: var(--type-meta);
   line-height: var(--leading-meta);
+}
+
+/* Path map. Paper ground, school dots, thin ink and ember threads. */
+.path-map-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin: 4px 0 12px;
+}
+
+.path-map {
+  position: relative;
+  box-sizing: content-box;
+  flex: none;
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--school-slate) 1px, transparent 1px);
+  background-size: 8px 8px;
+  border: 4px solid var(--ink);
+  image-rendering: pixelated;
+}
+
+.path-links {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: visible;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.path-thread {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-dashoffset: 0;
+  shape-rendering: crispEdges;
+}
+
+.path-thread-ink {
+  stroke: var(--ink);
+}
+
+.path-thread-ember {
+  stroke: var(--ember);
+  stroke-dasharray: 8 6;
+}
+
+.path-node {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 8px 8px 14px;
+  overflow: hidden;
+  text-align: left;
+  white-space: normal;
+  background-color: var(--paper);
+  background-image: none;
+  color: var(--ink);
+  border: 4px solid var(--darkwood);
+  box-shadow: 4px 4px 0 var(--navy);
+}
+
+.path-node::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--sky);
+  pointer-events: none;
+}
+
+.path-node-mark,
+.path-node-title {
+  position: relative;
+  z-index: 1;
+  display: block;
+  max-width: 100%;
+  color: var(--ink);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.path-node:hover,
+.path-node:active,
+.path-node:focus-visible {
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.path-node:active {
+  translate: 0 2px;
+}
+
+.path-node[data-pattern="corners"] {
+  border: 4px solid transparent;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--night), var(--night)),
+    linear-gradient(var(--night), var(--night)),
+    linear-gradient(var(--night), var(--night)),
+    linear-gradient(var(--night), var(--night)),
+    linear-gradient(var(--night), var(--night)),
+    linear-gradient(var(--night), var(--night)),
+    linear-gradient(var(--night), var(--night)),
+    linear-gradient(var(--night), var(--night));
+  background-repeat: no-repeat;
+  background-size: 16px 4px, 4px 16px, 16px 4px, 4px 16px, 16px 4px, 4px 16px, 16px 4px, 4px 16px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+}
+
+.path-node[data-pattern="dotted"] {
+  border: 4px dotted var(--navy);
+  background-color: var(--paper);
+  background-image: none;
+}
+
+.path-node[data-pattern="double"] {
+  border: 4px solid var(--ink);
+  background-color: var(--paper);
+  background-image: none;
+  box-shadow:
+    inset 0 0 0 4px var(--paper),
+    inset 0 0 0 8px var(--night),
+    4px 4px 0 var(--ember);
+}
+
+.path-assignment {
+  color: var(--night);
+}
+
+.path-sheet {
+  position: relative;
+  padding: 16px 16px 16px 22px;
+  background: var(--paper);
+  color: var(--night);
+  border: 4px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--navy);
+}
+
+.path-sheet::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background: var(--ember);
+  pointer-events: none;
+}
+
+.path-sheet-kicker {
+  margin-bottom: 8px;
+  color: var(--navy);
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+}
+
+.path-sheet h3 {
+  color: var(--night);
+}
+
+.path-sheet p {
+  color: var(--night);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.path-sheet .sheet-down {
+  margin-top: 12px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .path-map[data-frames="2"] .path-thread-ember {
+    animation: path-link-crawl 720ms steps(2, end) infinite;
+  }
+
+  .path-map[data-frames="2"] .path-node[data-pattern="double"] {
+    animation: path-focus-ring 880ms steps(2, end) infinite;
+  }
+}
+
+.path-map[data-frames="1"] .path-thread,
+.path-map[data-frames="1"] .path-node {
+  animation: none;
+}
+
+@keyframes path-link-crawl {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+@keyframes path-focus-ring {
+  0%,
+  49% {
+    border-color: var(--ink);
+    box-shadow:
+      inset 0 0 0 4px var(--paper),
+      inset 0 0 0 8px var(--night),
+      4px 4px 0 var(--ember);
+  }
+  50%,
+  100% {
+    border-color: var(--night);
+    box-shadow:
+      inset 0 0 0 4px var(--paper),
+      inset 0 0 0 8px var(--ink),
+      4px 4px 0 var(--ember);
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  .path-map .path-thread,
+  .path-map .path-node {
+    animation: none;
+  }
 }
 
 .library-room {
