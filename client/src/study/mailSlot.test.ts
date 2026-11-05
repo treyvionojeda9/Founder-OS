@@ -9,8 +9,8 @@ import {
   filterMailItems,
   mailItemsFor,
   mailMark,
-  MAIL_SLOT_CAPTION,
   mailSlotName,
+  mailSlotVisibleLabel,
   stepMailIndex,
 } from "./mailSlot";
 
@@ -42,11 +42,12 @@ describe("mail slot slips", () => {
     expect(mailItemsFor("hale-design-lab")).toBe(hale);
   });
 
-  it("names the slot with the plaque words first", () => {
-    expect(mailSlotName(2)).toBe("2 Needs you, mail slot");
-    expect(mailSlotName(1)).toBe("1 Needs you, mail slot");
-    expect(mailSlotName(0)).toBe("0 Needs you, mail slot");
-    expect(mailSlotName(2).startsWith(`2 ${MAIL_SLOT_CAPTION}`)).toBe(true);
+  it("starts the slot name with the visible plaque and still announces the count", () => {
+    expect(mailSlotVisibleLabel(2)).toBe("2 Needs you");
+    expect(mailSlotName(2)).toBe("2 Needs you, mail slot, 2 need you");
+    expect(mailSlotName(2).startsWith(mailSlotVisibleLabel(2))).toBe(true);
+    expect(mailSlotName(1)).toBe("1 Needs you, mail slot, 1 needs you");
+    expect(mailSlotName(0)).toBe("0 Needs you, mail slot, nothing needs you");
   });
 
   it("steps J down and K up and stops at the ends", () => {
