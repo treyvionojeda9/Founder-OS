@@ -21,7 +21,17 @@ afterEach(async () => {
 
 describe("team chat store", () => {
   it("stamps every machine line and keeps founder lines as chat history", () => {
+    const quiet = teamById("quiet-bench");
+    expect(quiet?.name).toBe("Quiet Bench");
+    expect(quiet?.agents).toEqual([]);
+    expect(quiet?.tools).toEqual([]);
+    expect(quiet?.transcript).toEqual([]);
+
     for (const team of listTeams()) {
+      if (team.agents.length === 0) {
+        expect(transcriptFor(team.id)).toEqual([]);
+        continue;
+      }
       const lines = transcriptFor(team.id);
       const machine = lines.filter(isMachineLine);
       expect(machine.length).toBeGreaterThan(0);
@@ -56,6 +66,7 @@ describe("team chat store", () => {
       }
     }
     for (const team of listTeams()) {
+      if (team.agents.length === 0) continue;
       expect(team.tools.length).toBeGreaterThan(0);
       for (const tool of team.tools) expect(tool).not.toMatch(/https?:|\/api\//);
     }

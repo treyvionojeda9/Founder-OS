@@ -3,6 +3,7 @@ import { Sprite } from "../design/Sprite";
 import { StatusFrame } from "../design/StatusFrame";
 import { STATUS_LEGEND } from "../design/statusFrame";
 import { stapler } from "../design/sprites";
+import { EmptyDesk } from "../study/EmptyDesk";
 import { WorkingLamp } from "../study/WorkingLamp";
 import {
   getBoardPrefs,
@@ -24,6 +25,9 @@ type TeamBoardProps = {
   still: boolean;
   expandingId: string | null;
   onOpen: (agentId: string) => void;
+  /** Open the existing swap slip once, then clear it. Does not hire. */
+  seatIntent?: "swap" | null;
+  onSeatIntentHandled?: () => void;
 };
 
 type Overlay =
@@ -50,7 +54,14 @@ function shownTitle(teamId: string, agent: TeamAgent, prefs: BoardPrefs): string
  * Roster plaques and the stapler tray.
  * Swap, Edit, pins, and tool labels stay in local marks. They do not approve and they do not leave the board.
  */
-export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) {
+export function TeamBoard({
+  team,
+  still,
+  expandingId,
+  onOpen,
+  seatIntent = null,
+  onSeatIntentHandled,
+}: TeamBoardProps) {
   const lampScale = 3;
   const staplerScale = 3;
   const prefs = useSyncExternalStore(subscribeBoardPrefs, getBoardPrefs, getBoardPrefs);
@@ -69,7 +80,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
     setOverlay(null);
     const returnTo = opener.current;
     opener.current = null;
-    returnTo?.focus();
+    if (returnTo?.isConnected) returnTo.focus();
   };
 
   useEffect(() => {
@@ -88,6 +99,14 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [slip, overlay]);
+
+  useEffect(() => {
+    if (seatIntent !== "swap") return;
+    const first = seatOrder(team.agents, getBoardPrefs().pins[team.id] ?? [])[0];
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setOverlay({ kind: "swap", agentId: first?.id ?? "" });
+    onSeatIntentHandled?.();
+  }, [seatIntent, team.agents, team.id, onSeatIntentHandled]);
 
   useEffect(() => {
     if (!overlay) return;
@@ -166,6 +185,17 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
             </header>
             <p className="board-legend">{STATUS_LEGEND}</p>
             <ul className="plaque-list">
+              {ordered.length === 0 ? (
+                <li className="plaque-seat" data-empty="true">
+                  <EmptyDesk
+                    still={still}
+                    onSeat={() => {
+                      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+                      setOverlay({ kind: "swap", agentId: "" });
+                    }}
+                  />
+                </li>
+              ) : null}
               {ordered.map((agent) => {
                 const pinned = (prefs.pins[team.id] ?? []).includes(agent.id);
                 const name = shownName(team.id, agent, prefs);
@@ -329,7 +359,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
           </div>
         </div>
       </div>
-      {overlay && overlayAgent ? (
+      {overlay && (overlayAgent || overlay.kind === "swap") ? (
         <div
           ref={overlayRef}
           className="board-overlay"
@@ -354,7 +384,7 @@ export function TeamBoard({ team, still, expandingId, onOpen }: TeamBoardProps) 
                     type="button"
                     data-swap-with={other.id}
                     onClick={() => {
-                      if (markSwap(team.id, overlayAgent.id, other.id)) setNote(MARKED);
+                      if (overlayAgent && markSwap(team.id, overlayAgent.id, other.id)) setNote(MARKED);
                       closeOverlay();
                     }}
                   >

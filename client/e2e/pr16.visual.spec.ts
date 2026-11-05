@@ -153,7 +153,8 @@ test.describe("team plaques and library spines", () => {
     await expect(page.locator(".library-room")).toHaveAttribute("data-ready", "true");
     await expect(page.locator(".library-room")).toHaveAttribute("data-vault", "human");
     await expect(page.getByText("The shelf is bare.")).toBeVisible();
-    await expect(page.locator(".shelf-next")).toHaveText("Place a sheet.");
+    await expect(page.getByRole("button", { name: "Add a note" })).toBeVisible();
+    await expect(page.locator(".dust-spine")).toHaveCount(3);
     await expect(page.getByRole("button", { name: "Place a sheet" })).toBeVisible();
 
     const book = await page.locator(".bookcase").boundingBox();

@@ -53,7 +53,10 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
   const still = useStillFrame();
   const agentScale = layout === "portrait" ? 3 : 2;
   const lampScale = layout === "portrait" ? 4 : 3;
-  const [tab, setTab] = useState<TabKey>(surface?.place === "overview" ? "overview" : "ceo");
+  const [tab, setTab] = useState<TabKey>(
+    surface?.place === "overview" || (team?.agents.length ?? 0) === 0 ? "overview" : "ceo",
+  );
+  const [seatIntent, setSeatIntent] = useState<"swap" | null>(null);
   const [fromDesks, setFromDesks] = useState(false);
   const [fromBoard, setFromBoard] = useState(false);
   const [boardReturn, setBoardReturn] = useState<TabKey>("ceo");
@@ -307,6 +310,11 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
     setNotice(null);
   };
 
+  const seatAgent = () => {
+    openTeam();
+    setSeatIntent("swap");
+  };
+
   const openPlaque = (agentId: string) => {
     const land = () => {
       clearTimer(expandTimer);
@@ -486,7 +494,14 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
         {drawer === "library" ? (
           <LibraryShelf teamId={team.id} preview={preview} />
         ) : drawer === "team" ? (
-          <TeamBoard team={team} still={still} expandingId={expanding} onOpen={openPlaque} />
+          <TeamBoard
+            team={team}
+            still={still}
+            expandingId={expanding}
+            onOpen={openPlaque}
+            seatIntent={seatIntent}
+            onSeatIntentHandled={() => setSeatIntent(null)}
+          />
         ) : showGrid ? (
           <DeskGrid
             teamId={team.id}
@@ -500,6 +515,7 @@ export function TeamRoom({ teamId: teamIdProp, preview = false }: TeamRoomProps)
             onFocusTile={focusTile}
             focusedId={focusedId}
             onOpenMail={openMail}
+            onSeat={seatAgent}
             sheet={
               sheetRecord ? (
                 <OverviewSheet

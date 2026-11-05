@@ -8,6 +8,7 @@ import { linesForAgent, type TeamAgent } from "../team/chatStore";
 import { pauseSnapshot, subscribeWorkPause, toggleWorkPause } from "./deskPause";
 import { deskStampFor } from "./deskStamp";
 import { setTileCount, subscribeDeskTiles, TILE_COUNTS, TILE_TAP_MS, tileCount, type TileCount } from "./deskTiles";
+import { EmptyDesk } from "./EmptyDesk";
 import { MailTray } from "./MailTray";
 import type { MailItem } from "./mailSlot";
 import { WorkingLamp } from "./WorkingLamp";
@@ -28,6 +29,8 @@ type DeskGridProps = {
   focusedId?: string | null;
   /** Open a needs-you slip. The tray does not approve it. */
   onOpenMail?: (item: MailItem) => void;
+  /** Vacant floor only. Opens the existing Team swap slip. */
+  onSeat?: () => void;
 };
 
 const FLOOR_DEPTHS = ["7", "6", "5", "4", "3", "2", "1", "0"] as const;
@@ -45,6 +48,7 @@ export function DeskGrid({
   onFocusTile,
   focusedId = null,
   onOpenMail,
+  onSeat,
 }: DeskGridProps) {
   const layout = useFormFactor();
   const arrange = layout === "desktop" ? "tiles" : "strip";
@@ -116,6 +120,7 @@ export function DeskGrid({
       aria-labelledby={labelledBy}
       data-still={still ? "true" : "false"}
       data-count={agents.length}
+      data-empty={agents.length === 0 ? "true" : "false"}
       data-sheet={covered ? "open" : "shut"}
       data-arrange={arrange}
       data-tiles={arrange === "tiles" ? String(tiles) : undefined}
@@ -136,7 +141,7 @@ export function DeskGrid({
       >
         <span className="agent-desk-wall" data-material="plaster" aria-hidden="true" />
         <span className="desk-room-windows" aria-hidden="true">
-          {agents.map((agent) => (
+          {(agents.length > 0 ? agents : [{ id: "vacant" }]).map((agent) => (
             <span key={agent.id} className="desk-room-window">
               <span className="window-reveal">
                 <span className="window-glass">
@@ -153,7 +158,7 @@ export function DeskGrid({
         </span>
         <span className="agent-desk-wainscot" data-material="wainscot" aria-hidden="true">
           <span className="wall-bays">
-            {agents.map((agent) => (
+            {(agents.length > 0 ? agents : [{ id: "vacant" }]).map((agent) => (
               <span key={agent.id} className="wall-bay">
                 <span className="wall-cubby" />
                 <span className="wall-shelf" />
@@ -176,6 +181,11 @@ export function DeskGrid({
           data-strip={arrange === "strip" ? "snap" : undefined}
         >
         <ul className="desk-grid-list">
+          {agents.length === 0 ? (
+            <li data-empty="true">
+              <EmptyDesk still={still} onSeat={onSeat ?? (() => {})} />
+            </li>
+          ) : null}
           {agents.map((agent, index) => {
             const mark = seatMark(index);
             const paused = pauseKey.split("|").includes(`${teamId}:${agent.id}`);
