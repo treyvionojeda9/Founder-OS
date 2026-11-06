@@ -74,7 +74,7 @@ test.describe("milestone 1 live path", () => {
 
         if (keys) {
           await page.keyboard.press("Tab");
-          await expect(page.getByRole("link", { name: "Settings" })).toBeFocused();
+          await expect(page.locator(".rail .hall-fixture")).toBeFocused();
           await page.keyboard.press("Tab");
           await expect(page.getByRole("button", { name: "Open Hale Design Lab" })).toBeFocused();
           await page.keyboard.press("Tab");

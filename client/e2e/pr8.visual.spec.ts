@@ -29,9 +29,9 @@ test.describe("work team board", () => {
     await land(page, proj);
     await expect(page.getByRole("heading", { name: "Team" })).toBeVisible();
     await expect(page.getByText("Hale Design Lab").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /CEO/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Atelier/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Courier/ })).toBeVisible();
+    await expect(page.locator(".study").getByRole("button", { name: /CEO/ })).toBeVisible();
+    await expect(page.locator(".study").getByRole("button", { name: /Atelier/ })).toBeVisible();
+    await expect(page.locator(".study").getByRole("button", { name: /Courier/ })).toBeVisible();
     await expect(page.getByText("Founder")).toBeVisible();
     await expect(page.getByText("Swatch keeper")).toBeVisible();
     await expect(page.getByText("Errand runner")).toBeVisible();
@@ -65,7 +65,7 @@ test.describe("work team board", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("menu", { name: "Fixture tools" })).toHaveCount(0);
 
-    await page.getByRole("button", { name: /Atelier/ }).click();
+    await page.locator(".study").getByRole("button", { name: /Atelier/ }).click();
     await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
     await expect(page.locator(".machine-line").first()).toContainText("generated · not verified");
     await expect(page.getByRole("img", { name: "Desk lamp, dark" })).toBeVisible();
@@ -112,9 +112,9 @@ test("grayscale board stays readable", async ({ page }, info) => {
   await page.evaluate(() => {
     document.documentElement.style.filter = "grayscale(1)";
   });
-  await expect(page.getByRole("button", { name: /CEO/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Atelier/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Courier/ })).toBeVisible();
+  await expect(page.locator(".study").getByRole("button", { name: /CEO/ })).toBeVisible();
+  await expect(page.locator(".study").getByRole("button", { name: /Atelier/ })).toBeVisible();
+  await expect(page.locator(".study").getByRole("button", { name: /Courier/ })).toBeVisible();
   await expect(page.locator(".plaque[data-status='working']")).toContainText("Working");
   await expect(page.locator(".plaque[data-status='idle']")).toContainText("Idle");
   await expect(page.locator(".plaque[data-status='failed']")).toContainText("Error");
@@ -138,7 +138,7 @@ test("axe has no serious or critical issues on the board, the slip, or the chat"
   expect(slipBad, JSON.stringify(slipBad, null, 2)).toEqual([]);
 
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: /Courier/ }).click();
+  await page.locator(".study").getByRole("button", { name: /Courier/ }).click();
   await expect(page.getByRole("heading", { name: "Courier chat" })).toBeVisible();
   const chat = await new AxeBuilder({ page }).analyze();
   const chatBad = chat.violations.filter((item) => item.impact === "serious" || item.impact === "critical");

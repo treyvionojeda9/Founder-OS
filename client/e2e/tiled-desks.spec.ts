@@ -62,7 +62,7 @@ test.describe("tiled desks", () => {
     await expect(grid).toHaveAttribute("data-still", "true");
     await expect(grid).toHaveAttribute("data-focus", "none");
     await expect(page.locator(".agent-desk")).toHaveCount(3);
-    await expect(page.locator(".status-frame")).toHaveCount(3);
+    await expect(page.locator(".study .status-frame")).toHaveCount(3);
     await expect(page.locator(".desk-stamp")).toHaveCount(3);
     await expect(page.locator(".lamp-chain")).toHaveCount(3);
     await expect(page.locator(".mail-slot")).toBeVisible();
