@@ -778,9 +778,10 @@ test.describe("overview desks match the fitted desk", () => {
     await page.goto("/team/hale-design-lab");
     await page.getByRole("tab", { name: "Overview" }).click();
     await expect(page.locator(".agent-desk[data-agent='ceo'] .overview-paper")).toBeVisible();
-    // install() keeps time moving. The far pose lasts 32ms, which is shorter than click()
-    // on a busy runner, so the stage was already "near" when this assertion ran.
-    await page.clock.pauseAt(await page.evaluate(() => Date.now()));
+    // install() keeps time moving, and the far pose is 32ms. Pause before the click.
+    // pauseAt refuses a time already behind the clock, so the target sits ahead of the sample.
+    const now = await page.evaluate(() => Date.now());
+    await page.clock.pauseAt(now + 2_000);
     await page.locator(".agent-desk[data-agent='ceo'] .overview-paper").click();
     await expect(page.locator(".study-stage")).toHaveAttribute("data-approach", "far");
     await expect(page.locator(".study-stage")).toHaveAttribute("data-still", "false");
