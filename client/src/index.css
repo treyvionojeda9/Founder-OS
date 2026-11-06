@@ -7730,9 +7730,22 @@ html[data-recede="dim"] .mail-caption {
     transform: translate(-100%, calc(-50% + 8px));
   }
 
+  /* Between the two ink lines, one sprite cell, so the wash stays off the type. */
+  .overview-desk [data-light-pool="paper"] {
+    left: 4px;
+    top: 13px;
+    bottom: auto;
+  }
+
+  .overview-desk [data-light-pool="paper"] canvas {
+    width: 8px !important;
+    height: 5px !important;
+  }
+
+  /* Under the sheet, clear of the name. */
   .overview-desk .overview-state {
     top: auto;
-    bottom: 0;
+    bottom: -6px;
     max-width: 78%;
   }
 
