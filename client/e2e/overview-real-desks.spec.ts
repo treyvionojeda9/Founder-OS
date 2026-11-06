@@ -536,6 +536,7 @@ async function assertFitted(page: Page) {
     expect((contentBottom - contentTop) / room.height).toBeGreaterThan(0.5);
   }
   await assertTextVisible(page);
+  await assertStatusChipsClear(page);
 }
 
 /**
@@ -547,6 +548,61 @@ async function assertFitted(page: Page) {
  */
 const MIN_FIRST_LINE_CHARS = 16;
 const MIN_FIRST_LINE_WORDS = 4;
+
+/**
+ * Working, Idle, and Error. Chip boxes stay off the visible sheet ink and the nameplate title.
+ * At the short hall, the working lamp wash has to stay off that ink too: it was sitting on the f.
+ */
+async function assertStatusChipsClear(page: Page, wash = false) {
+  const issues = await page.evaluate((checkWash) => {
+    const visibleInk = (el: Element) => {
+      const host = el.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return [...range.getClientRects()].filter((box) => {
+        if (box.width < 1 || box.height < 1) return false;
+        const mid = box.top + box.height / 2;
+        return mid >= host.top - 1 && mid <= host.bottom + 1;
+      });
+    };
+    const overlapArea = (a: DOMRect, b: DOMRect) => {
+      const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+      const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      return width * height;
+    };
+    const issues: string[] = [];
+    for (const desk of document.querySelectorAll<HTMLElement>(".agent-desk")) {
+      const agent = desk.dataset.agent ?? "desk";
+      const chip = desk.querySelector(".overview-state .status-chip")?.getBoundingClientRect();
+      if (!chip) {
+        issues.push(`${agent} status chip missing`);
+        continue;
+      }
+      const sheet = desk.querySelector(".overview-line");
+      const title = desk.querySelector(".agent-desk-name");
+      for (const [kind, el] of [
+        ["sheet", sheet],
+        ["nameplate", title],
+      ] as const) {
+        if (!el) {
+          issues.push(`${agent} ${kind} missing`);
+          continue;
+        }
+        for (const frag of visibleInk(el)) {
+          if (overlapArea(chip, frag) > 0) issues.push(`${agent} chip intersects ${kind}`);
+        }
+      }
+      const pool = desk.querySelector("[data-light-pool='paper']")?.getBoundingClientRect();
+      if (checkWash && pool && sheet) {
+        for (const frag of visibleInk(sheet)) {
+          if (overlapArea(pool, frag) > 0) issues.push(`${agent} lamp wash intersects sheet`);
+        }
+      }
+    }
+    return issues;
+  }, wash);
+  expect(issues, issues.join("\n")).toEqual([]);
+}
 
 async function assertFirstLinesReadable(page: Page) {
   const lines = await page.locator(".agent-desk").evaluateAll((desks) =>
@@ -647,7 +703,10 @@ test.describe("overview desks match the fitted desk", () => {
       for (const count of [2, 3, 4]) {
         await applyTiles(page, count);
         await assertFitted(page);
-        if (size.width === 1024 && size.height === 640 && count === 3) await assertFirstLinesReadable(page);
+        if (size.width === 1024 && size.height === 640 && count === 3) {
+          await assertFirstLinesReadable(page);
+          await assertStatusChipsClear(page, true);
+        }
       }
       if (size.width !== 1024) continue;
       await applyTiles(page, 3);
@@ -719,9 +778,10 @@ test.describe("overview desks match the fitted desk", () => {
     await page.goto("/team/hale-design-lab");
     await page.getByRole("tab", { name: "Overview" }).click();
     await expect(page.locator(".agent-desk[data-agent='ceo'] .overview-paper")).toBeVisible();
-    // install() keeps time moving. The far pose lasts 32ms, which is shorter than click()
-    // on a busy runner, so the stage was already "near" when this assertion ran.
-    await page.clock.pauseAt(await page.evaluate(() => Date.now()));
+    // install() keeps time moving, and the far pose is 32ms. Pause before the click.
+    // pauseAt refuses a time already behind the clock, so the target sits ahead of the sample.
+    const now = await page.evaluate(() => Date.now());
+    await page.clock.pauseAt(now + 2_000);
     await page.locator(".agent-desk[data-agent='ceo'] .overview-paper").click();
     await expect(page.locator(".study-stage")).toHaveAttribute("data-approach", "far");
     await expect(page.locator(".study-stage")).toHaveAttribute("data-still", "false");
