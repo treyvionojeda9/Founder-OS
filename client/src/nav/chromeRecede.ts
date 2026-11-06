@@ -93,7 +93,7 @@ export function chromeZone(target: EventTarget | null): ChromeZone {
   if (!(target instanceof Element)) return "other";
   if (target.closest(".command-ledger")) return "other";
   if (target.closest(".pixel-bar")) return "top";
-  if (target.closest(".toggle-dock")) return "control";
+  if (target.closest(".agent-rail, .chat-dock, .toggle-dock")) return "control";
   if (target.closest(".hall, .study, .stub, .design")) return "room";
   return "other";
 }

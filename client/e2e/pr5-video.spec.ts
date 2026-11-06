@@ -10,9 +10,9 @@ test("overview desks open into a paper chat and back", async ({ page }) => {
   await page.goto("/team/hale-design-lab");
   await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
   await page.getByRole("tab", { name: "Overview" }).click();
-  await expect(page.getByRole("button", { name: "Atelier" })).toBeVisible();
+  await expect(page.locator(".study").getByRole("button", { name: "Atelier" })).toBeVisible();
   await page.waitForTimeout(400);
-  await page.getByRole("button", { name: "Atelier" }).click();
+  await page.locator(".study").getByRole("button", { name: "Atelier" }).click();
   await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible({ timeout: 2000 });
   await page.waitForTimeout(500);
   await page.getByRole("button", { name: "Back" }).click();

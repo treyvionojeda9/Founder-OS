@@ -59,9 +59,9 @@ test.describe("overview desks", () => {
     await expect(page.locator(".desk-grid")).toHaveAttribute("data-count", "3");
     await expect(page.locator(".desk-grid")).toHaveAttribute("data-still", "true");
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "CEO" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Atelier" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Courier" })).toBeVisible();
+    await expect(page.locator(".study").getByRole("button", { name: "CEO" })).toBeVisible();
+    await expect(page.locator(".study").getByRole("button", { name: "Atelier" })).toBeVisible();
+    await expect(page.locator(".study").getByRole("button", { name: "Courier" })).toBeVisible();
     await expect(page.getByRole("img", { name: "Desk lamp, lit" })).toBeVisible();
     await expect(page.getByRole("img", { name: "Desk lamp, dark" })).toBeVisible();
     await expect(page.getByRole("img", { name: "Desk lamp, failed" })).toBeVisible();
@@ -122,7 +122,7 @@ test("reduced motion cuts the desk open to one frame", async ({ page }, info) =>
   await page.goto("/team/hale-design-lab");
   await page.getByRole("tab", { name: "Overview" }).click();
   await expect(page.locator(".desk-grid")).toHaveAttribute("data-still", "true");
-  await page.getByRole("button", { name: "Courier" }).click();
+  await page.locator(".study").getByRole("button", { name: "Courier" }).click();
   await expect(page.getByRole("heading", { name: "Courier chat" })).toBeVisible();
   await expect(page.locator(".overview-sheet")).toHaveAttribute("data-still", "true");
   await expect(page.locator(".desk-grid")).toHaveAttribute("data-count", "3");
@@ -140,7 +140,7 @@ test("axe has no serious or critical issues on the desk grid", async ({ page }, 
   const overviewBad = overview.violations.filter((item) => item.impact === "serious" || item.impact === "critical");
   expect(overviewBad, JSON.stringify(overviewBad, null, 2)).toEqual([]);
 
-  await page.getByRole("button", { name: "CEO" }).click();
+  await page.locator(".study").getByRole("button", { name: "CEO" }).click();
   await expect(page.getByRole("heading", { name: "CEO chat" })).toBeVisible();
   const chat = await new AxeBuilder({ page }).analyze();
   const chatBad = chat.violations.filter((item) => item.impact === "serious" || item.impact === "critical");

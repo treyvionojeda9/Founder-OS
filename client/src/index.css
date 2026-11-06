@@ -1084,16 +1084,25 @@ html:has(.room-portal-layer) body {
   overflow: hidden;
 }
 
-.route-shell:has(.route-content > .study) {
+.route-shell:has(.route-content > .study),
+.route-shell:has(.shell-center > .route-content > .study) {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
 }
 
 .route-shell:has(.route-content > .study) .app,
-.route-shell:has(.route-content > .study) .route-content {
+.route-shell:has(.route-content > .study) .route-content,
+.route-shell:has(.shell-center > .route-content > .study) .app,
+.route-shell:has(.shell-center > .route-content > .study) .app-shell,
+.route-shell:has(.shell-center > .route-content > .study) .shell-center,
+.route-shell:has(.shell-center > .route-content > .study) .route-content {
   height: 100%;
   min-height: 0;
+}
+
+.route-shell:has(.shell-center > .route-content > .study) .shell-center {
+  overflow: hidden;
 }
 
 /* 40% of --enter-ms is SWING_MS / ENTER_MS. The room stays in the opening until the leaf finishes, then steps forward. */
@@ -7582,6 +7591,13 @@ html[data-recede="dim"] .mail-caption {
 .app[data-layout="desktop"] .desk-room {
   --floor-rise: 14%;
   --wainscot-rise: 10%;
+}
+
+/* 1024×640 is landscape to the device and portrait to the app. Four tiles leave the name under the pull. */
+@media (max-width: 1099px) and (max-height: 700px) {
+  .app[data-layout="portrait"] .desk-grid[data-arrange="strip"][style*="--tile-count: 4"] .desk-drawer-pull[data-placed="true"] {
+    transform: translate(calc(-100% + 16px), calc(-50% + 8px));
+  }
 }
 
 @media (max-height: 860px) {

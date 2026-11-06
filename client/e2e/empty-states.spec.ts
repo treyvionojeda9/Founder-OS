@@ -94,7 +94,7 @@ test.describe("empty states as objects", () => {
     await expect(page.locator(".desk-grid")).toHaveAttribute("data-empty", "false");
     await expect(page.locator(".desk-grid")).toHaveAttribute("data-arrange", "tiles");
     await expect(page.locator(".agent-desk")).toHaveCount(3);
-    await expect(page.locator(".status-frame")).toHaveCount(3);
+    await expect(page.locator(".study .status-frame")).toHaveCount(3);
     await expect(page.locator(".mail-slot")).toBeVisible();
     await page.getByRole("radio", { name: "4 tiles" }).click();
     await expect(page.locator(".desk-grid")).toHaveAttribute("data-tiles", "4");

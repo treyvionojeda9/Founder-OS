@@ -63,9 +63,14 @@ export function DeskDrawer({
     place();
     const frame = window.requestAnimationFrame(place);
     window.addEventListener("resize", place);
+    const observer =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(place) : null;
+    observer?.observe(host);
+    observer?.observe(front);
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", place);
+      observer?.disconnect();
     };
   }, [agentId, open]);
 

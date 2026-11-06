@@ -1,0 +1,265 @@
+/* Founder Ember only. Paper dock, night rail. Chrome stays narrow so the center leads. */
+
+.app[data-shell="columns"] {
+  --shell-rail: 52px;
+  --shell-dock: 280px;
+}
+
+.app[data-shell="columns"] .app-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--shell-rail) minmax(0, 1fr) var(--shell-dock);
+  grid-template-areas: "rail center dock";
+  grid-template-rows: minmax(0, 1fr);
+  position: relative;
+  background: var(--night);
+}
+
+.app[data-shell="columns"] .app-shell[data-dock-mode="overlay"] {
+  grid-template-columns: var(--shell-rail) minmax(0, 1fr);
+  grid-template-areas: "rail center";
+}
+
+.shell-center {
+  grid-area: center;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--night);
+  overflow: auto;
+}
+
+.shell-center > .route-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 8px 4px;
+  background: var(--night);
+  color: var(--paper);
+  border-right: 3px solid var(--darkwood);
+  overflow: auto;
+}
+
+.agent-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-rail-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-rail-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 4px 2px;
+  background: var(--darkwood);
+  color: var(--paper);
+  border: 3px solid var(--wood);
+  border-radius: 0;
+  text-decoration: none;
+  font-family: var(--font-pixel);
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  cursor: pointer;
+}
+
+.agent-rail-item[aria-pressed="true"] {
+  background: var(--ember);
+  color: var(--night);
+  border-color: var(--darkwood);
+}
+
+.agent-rail-name {
+  max-width: 44px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.agent-rail .rail-status {
+  padding: 2px;
+  gap: 0;
+  box-shadow: none;
+}
+
+.agent-rail .rail-status[data-pattern="double"] {
+  padding: 4px;
+  box-shadow:
+    inset 0 0 0 2px var(--wood),
+    inset 0 0 0 4px var(--night);
+}
+
+.shell-clip,
+.agent-rail .status-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.chat-dock {
+  grid-area: dock;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--paper);
+  color: var(--night);
+  border-left: 4px solid var(--darkwood);
+}
+
+.app-shell[data-dock-mode="overlay"] .chat-dock {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(360px, 88vw);
+  z-index: 12;
+  box-shadow: -8px 0 0 var(--night);
+}
+
+.dock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 3px solid var(--darkwood);
+}
+
+.dock-title {
+  margin: 0;
+  color: var(--night);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+.dock-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 12px;
+}
+
+.dock-line {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dock-who,
+.dock-stamp,
+.dock-wait,
+.dock-empty {
+  font-size: var(--type-meta);
+  line-height: var(--leading-meta);
+  color: var(--night);
+}
+
+.dock-stamp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--night);
+}
+
+.dock-form .composer-label {
+  color: var(--night);
+}
+
+.dock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-top: 3px solid var(--darkwood);
+  background: var(--paper);
+}
+
+.dock-form textarea {
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--paper);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
+  border-radius: 0;
+  resize: none;
+}
+
+.dock-form button {
+  align-self: flex-start;
+  background: var(--ember);
+  color: var(--night);
+  border: 3px solid var(--darkwood);
+}
+
+/* The hall's own brand column is fixed to the viewport. Shift it past this rail. */
+.app[data-shell="columns"][data-layout="desktop"] .rail {
+  left: var(--shell-rail);
+}
+
+.app[data-shell="columns"][data-layout="desktop"] .offline {
+  margin-left: calc(var(--shell-rail) + 300px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-shell[data-motion="slide"][data-dock-mode="overlay"] .chat-dock {
+    animation: dock-slide 140ms steps(4, end);
+  }
+}
+
+@keyframes dock-slide {
+  from {
+    transform: translateX(16px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  .app-shell .chat-dock,
+  .app-shell .agent-rail-item {
+    transition: none;
+    animation: none;
+  }
+}

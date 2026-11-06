@@ -17,7 +17,7 @@ test("roster, stapler slip, agent chat, and back to the study", async ({ page })
   await expect(page.getByRole("menuitem", { name: "Swatch sheet" })).toBeVisible();
   await page.waitForTimeout(350);
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: /Atelier/ }).click();
+  await page.locator(".study").getByRole("button", { name: /Atelier/ }).click();
   await expect(page.getByRole("heading", { name: "Atelier chat" })).toBeVisible();
   await page.waitForTimeout(400);
   await page.getByRole("button", { name: "Back" }).click();
